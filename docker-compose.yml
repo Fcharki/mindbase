@@ -35,10 +35,13 @@ services:
     ports:
       - "8001:8000"
 
+    volumes:
+      - ./backend:/var/www
+
     environment:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
-      DB_PORT: 5434
+      DB_PORT: 5432
       DB_DATABASE: ${POSTGRES_DB}
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
