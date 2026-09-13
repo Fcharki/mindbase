@@ -1,2 +1,7 @@
 /README.md
 /planning.md
+
+# env files (keep only committed templates)
+.env
+.env.*
+!.env.example
