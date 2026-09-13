@@ -70,6 +70,15 @@ services:
       # Browser reaches the backend through the host-mapped port.
       # NEXT_PUBLIC_* vars are read at runtime by `next dev` and inlined at build time by `next build`.
       NEXT_PUBLIC_API_URL: http://localhost:8001
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+
+    volumes:
+      # Live host code into the container (same pattern as backend).
+      # node_modules/.next keep the container's Linux build via anonymous volumes.
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
 
     depends_on:
       - backend

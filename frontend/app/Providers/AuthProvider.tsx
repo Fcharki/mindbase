@@ -10,6 +10,7 @@ import {
 import {
   getCurrentUser,
   login as loginRequest,
+  loginWithGoogle as loginWithGoogleRequest,
   logout as logoutRequest,
   register as registerRequest,
   User,
@@ -19,6 +20,7 @@ type AuthContextValue = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   register: (
     name: string,
     email: string,
@@ -81,12 +83,17 @@ export function AuthProvider({
     setUser(null);
   }
 
+  async function loginWithGoogle() {
+  await loginWithGoogleRequest();
+}
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         login,
+         loginWithGoogle,
         register,
         logout,
       }}
