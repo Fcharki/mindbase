@@ -30,4 +30,5 @@ class Workspace extends Model
     {
         return $this->hasMany(Tag::class);
     }
+    
 }

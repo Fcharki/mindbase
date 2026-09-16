@@ -50,6 +50,11 @@ class GoogleController extends Controller
             }
         }
 
+        // Google verified the email address, so mark it as verified.
+        if ($user->email_verified_at === null) {
+            $user->update(['email_verified_at' => now()]);
+        }
+
         // Authenticate the user using Laravel's session.
         Auth::login($user);
         request()->session()->regenerate();

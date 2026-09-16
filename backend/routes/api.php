@@ -2,69 +2,112 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\EmailAuthController;
+use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Email Authentication
+| Session / Cookie Authentication
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('auth')->group(function () {
+Route::middleware('web')->group(function () {
 
-    // Register / Login
-    Route::post('/register', [EmailAuthController::class, 'register']);
-    Route::post('/login', [EmailAuthController::class, 'login']);
+    Route::prefix('auth')->group(function () {
 
-    // Password reset
-    Route::post('/forgot-password', [
-        EmailAuthController::class,
-        'forgotPassword'
-    ]);
+        /*
+        |----------------------------------------------------------------------
+        | Email Authentication
+        |----------------------------------------------------------------------
+        */
 
-    Route::post('/reset-password', [
-        EmailAuthController::class,
-        'resetPassword'
-    ]);
+        Route::post('/register', [
+            EmailAuthController::class,
+            'register',
+        ]);
 
-    // Email verification
-    Route::get('/verify-email/{id}/{hash}', [
-        EmailAuthController::class,
-        'verifyEmail'
-    ])->middleware('signed')->name('auth.verification.verify');
+        Route::post('/login', [
+            EmailAuthController::class,
+            'login',
+        ]);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Google Authentication
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |----------------------------------------------------------------------
+        | Password Reset
+        |----------------------------------------------------------------------
+        */
 
- Route::middleware('web')->group(function () {
-    Route::get('/google', [GoogleController::class, 'redirect']);
-    Route::get('/google/callback', [GoogleController::class, 'callback']);
+        Route::post('/forgot-password', [
+            EmailAuthController::class,
+            'forgotPassword',
+        ]);
+
+        Route::post('/reset-password', [
+            EmailAuthController::class,
+            'resetPassword',
+        ]);
+
+        /*
+        |----------------------------------------------------------------------
+        | Email Verification
+        |----------------------------------------------------------------------
+        */
+
+        Route::get('/verify-email/{id}/{hash}', [
+            EmailAuthController::class,
+            'verifyEmail',
+        ])
+            ->middleware('signed')
+            ->name('auth.verification.verify');
+
+        /*
+        |----------------------------------------------------------------------
+        | Google Authentication
+        |----------------------------------------------------------------------
+        */
+
+        Route::get('/google', [
+            GoogleController::class,
+            'redirect',
+        ]);
+
+        Route::get('/google/callback', [
+            GoogleController::class,
+            'callback',
+        ]);
+
+        /*
+        |----------------------------------------------------------------------
+        | Authenticated Routes
+        |----------------------------------------------------------------------
+        */
+
+        Route::middleware('auth:sanctum')->group(function () {
+
+            Route::get('/user', [
+                EmailAuthController::class,
+                'me',
+            ]);
+
+            Route::post('/logout', [
+                EmailAuthController::class,
+                'logout',
+            ]);
+
+            Route::post('/resend-verification', [
+                EmailAuthController::class,
+                'resendVerificationEmail',
+            ]);
+        });
+    });
 });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Authenticated Routes
-    |--------------------------------------------------------------------------
-    */
+/*
+|--------------------------------------------------------------------------
+| Workspace API
+|--------------------------------------------------------------------------
+*/
 
-    Route::middleware('auth:sanctum')->group(function () {
-
-        Route::get('/user', [
-            EmailAuthController::class,
-            'me'
-        ]);
-
-        Route::post('/logout', [
-            EmailAuthController::class,
-            'logout'
-        ]);
-
-        Route::post('/resend-verification', [
-            EmailAuthController::class,
-            'resendVerificationEmail'
-        ]);
-    });
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('workspaces', WorkspaceController::class);
 });
