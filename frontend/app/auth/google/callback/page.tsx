@@ -14,7 +14,7 @@ export default function GoogleCallbackPage() {
       return;
     }
 
-    router.replace("/");
+    router.replace("/dashboard");
   }, [loading, router]);
 
   return (

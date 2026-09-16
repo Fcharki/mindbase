@@ -44,7 +44,7 @@ export function LoginForm() {
 
     try {
       await login(email, password);
-      router.push("/");
+      router.push("/dashboard");
     } catch {
       setError("Invalid credentials. Please try again.");
       setSubmitting(false);

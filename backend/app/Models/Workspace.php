@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Workspace extends Model
 {
     protected $fillable = ['name', 'owner_id'];
-    
+
+    protected $appends = ['role'];
+
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
@@ -30,5 +32,21 @@ class Workspace extends Model
     {
         return $this->hasMany(Tag::class);
     }
-    
+
+    public function getRoleAttribute(): ?string
+    {
+        if ($this->pivot) {
+            return $this->pivot->role;
+        }
+
+        if ($this->relationLoaded('members') && auth()->check()) {
+            $membership = $this->members->firstWhere('id', auth()->id());
+
+            if ($membership?->pivot) {
+                return $membership->pivot->role;
+            }
+        }
+
+        return null;
+    }
 }

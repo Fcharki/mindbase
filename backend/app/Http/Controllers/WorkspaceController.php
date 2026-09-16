@@ -59,7 +59,7 @@ class WorkspaceController extends Controller
     {
         Gate::authorize('view', $workspace);
 
-        $workspace->load('owner:id,name,email');
+        $workspace->load(['owner:id,name,email', 'members:id,name,email']);
 
         return response()->json([
             'data' => $workspace,

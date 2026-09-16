@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-const isLoggedIn = false;
+import { useAuth } from "@/app/Providers/AuthProvider";
 
 function Logomark() {
   return (
@@ -39,6 +39,8 @@ const features: { title: string; body: string }[] = [
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
+  const isLoggedIn = Boolean(user) && !loading;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F1F0EB] font-sans text-[#1E211D]">
@@ -128,12 +130,21 @@ export default function Home() {
             you&rsquo;ll forget to check.
           </p>
           <div className="flex items-center gap-6">
-            <Link
-              href="/auth/register"
-              className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
-            >
-              Get started free
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
+              >
+                Open your workspace
+              </Link>
+            ) : (
+              <Link
+                href="/auth/register"
+                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
+              >
+                Get started free
+              </Link>
+            )}
             <a href="#features" className="text-[#1E211D] underline decoration-[#C8C5B8] underline-offset-4 hover:decoration-[#1E211D]">
               See how it works
             </a>
@@ -170,12 +181,21 @@ export default function Home() {
             <h2 className="font-serif text-3xl tracking-tight">
               Start your archive today.
             </h2>
-            <Link
-              href="/auth/register"
-              className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
-            >
-              Create a free account
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
+              >
+                Open your workspace
+              </Link>
+            ) : (
+              <Link
+                href="/auth/register"
+                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
+              >
+                Create a free account
+              </Link>
+            )}
           </div>
         </section>
       </main>
