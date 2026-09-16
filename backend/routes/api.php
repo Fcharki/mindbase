@@ -39,16 +39,10 @@ Route::prefix('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/google', [
-        GoogleController::class,
-        'redirect'
-    ]);
-
-    Route::get('/google/callback', [
-        GoogleController::class,
-        'callback'
-    ]);
-
+ Route::middleware('web')->group(function () {
+    Route::get('/google', [GoogleController::class, 'redirect']);
+    Route::get('/google/callback', [GoogleController::class, 'callback']);
+});
 
     /*
     |--------------------------------------------------------------------------

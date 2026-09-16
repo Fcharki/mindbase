@@ -1,21 +1,19 @@
 import axios from "axios";
 
+const API_ROOT = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(
+  /\/api\/?$/,
+  "",
+);
+
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
   },
 });
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("auth_token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-
-  return config;
-});
+export async function fetchCsrfCookie() {
+  await api.get(`${API_ROOT}/sanctum/csrf-cookie`);
+}

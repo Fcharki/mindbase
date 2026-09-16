@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class GoogleController extends Controller
 {
@@ -40,18 +43,19 @@ class GoogleController extends Controller
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
+                    'password' => Str::random(40),
                     'google_id' => $googleUser->getId(),
                     'email_verified_at' => now(),
                 ]);
             }
         }
 
-        // create a Sanctum personal access token
-        $token = $user->createToken('google-auth')->plainTextToken;
+        // Authenticate the user using Laravel's session.
+        Auth::login($user);
+        request()->session()->regenerate();
 
-        // send the token to the frontend
         return redirect(
-            config('app.frontend_url') . '/auth/google/callback?token=' . urlencode($token)
+            config('app.frontend_url') . '/auth/google/callback'
         );
     }
 }

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Auth\EmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\URL;
@@ -65,13 +66,12 @@ class EmailAuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        Auth::login($user);
+        $request->session()->regenerate();
 
-        // redirect(config('app.frontend_url') .'/workspace');
         return response()->json([
             'message' => 'Login successful.',
             'user' => $user,
-            'token' => $token,
         ]);
     }
 
@@ -81,7 +81,8 @@ class EmailAuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json([
             'message' => 'Logged out successfully.',

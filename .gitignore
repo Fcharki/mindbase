@@ -1,5 +1,6 @@
 /README.md
 /planning.md
+/instructions.txt
 
 # env files (keep only committed templates)
 .env
@@ -8,3 +9,4 @@
 
 /data
 .vscode
+

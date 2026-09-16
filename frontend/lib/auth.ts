@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api, fetchCsrfCookie } from "./api";
 
 export interface User {
   id: number;
@@ -7,21 +7,19 @@ export interface User {
   email_verified_at: string | null;
 }
 
-
 export async function login(
   email: string,
   password: string,
 ) {
+  await fetchCsrfCookie();
+
   const response = await api.post<{
     message: string;
     user: User;
-    token: string;
   }>("/auth/login", {
     email,
     password,
   });
-
-  localStorage.setItem("auth_token", response.data.token);
 
   return response.data.user;
 }
@@ -36,6 +34,7 @@ export async function register(
   password: string,
   passwordConfirmation: string,
 ) {
+  await fetchCsrfCookie();
 
   await api.post("/auth/register", {
     name,
@@ -46,8 +45,9 @@ export async function register(
 }
 
 export async function logout() {
+  await fetchCsrfCookie();
+
   await api.post("/auth/logout");
-  localStorage.removeItem("auth_token");
 }
 
 export async function getCurrentUser(): Promise<User> {
