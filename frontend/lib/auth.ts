@@ -7,20 +7,23 @@ export interface User {
   email_verified_at: string | null;
 }
 
-export async function getCsrfCookie() {
-  await api.get("/sanctum/csrf-cookie");
-}
 
 export async function login(
   email: string,
   password: string,
 ) {
-  await getCsrfCookie();
-
-  await api.post("/login", {
+  const response = await api.post<{
+    message: string;
+    user: User;
+    token: string;
+  }>("/auth/login", {
     email,
     password,
   });
+
+  localStorage.setItem("auth_token", response.data.token);
+
+  return response.data.user;
 }
 
 export async function loginWithGoogle() {
@@ -33,9 +36,8 @@ export async function register(
   password: string,
   passwordConfirmation: string,
 ) {
-  await getCsrfCookie();
 
-  await api.post("/register", {
+  await api.post("/auth/register", {
     name,
     email,
     password,
@@ -44,11 +46,12 @@ export async function register(
 }
 
 export async function logout() {
-  await api.post("/logout");
+  await api.post("/auth/logout");
+  localStorage.removeItem("auth_token");
 }
 
 export async function getCurrentUser(): Promise<User> {
-  const response = await api.get<{ user: User }>("/api/user");
+  const response = await api.get<{ user: User }>("/auth/user");
 
   return response.data.user;
 }

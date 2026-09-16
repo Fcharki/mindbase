@@ -1,35 +1,42 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
 {
-    public function redirect()
+    /**
+     * Redirect the user to Google.
+     */
+    public function redirect(): RedirectResponse
     {
         return Socialite::driver('google')->redirect();
     }
 
-    public function callback()
+    /**
+     * Handle Google's callback.
+     */
+    public function callback(): RedirectResponse
     {
         $googleUser = Socialite::driver('google')->user();
 
-        $user = User::where('google_id', $googleUser->getId())
-            ->first();
+        // find the user using their Google ID
+        $user = User::where('google_id', $googleUser->getId())->first();
 
-        if (! $user) {
-            $user = User::where('email', $googleUser->getEmail())
-                ->first();
+        // if they don't have a Google ID yet, try their email
+        if (!$user) {
+            $user = User::where('email', $googleUser->getEmail())->first();
 
             if ($user) {
+                // link the Google account to the existing email account
                 $user->update([
                     'google_id' => $googleUser->getId(),
                 ]);
             } else {
+                // Completely new user.
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
@@ -39,10 +46,12 @@ class GoogleController extends Controller
             }
         }
 
-        Auth::login($user);
+        // create a Sanctum personal access token
+        $token = $user->createToken('google-auth')->plainTextToken;
 
-        request()->session()->regenerate();
-
-        return redirect(config('app.frontend_url'));
+        // send the token to the frontend
+        return redirect(
+            config('app.frontend_url') . '/auth/google/callback?token=' . urlencode($token)
+        );
     }
 }

@@ -1,18 +1,76 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\EmailAuthController;
+use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Email Authentication
+|--------------------------------------------------------------------------
+*/
 
-    Route::get('/user', function (Request $request) {
-        return response()->json([
-            'user' => $request->user(),
+Route::prefix('auth')->group(function () {
+
+    // Register / Login
+    Route::post('/register', [EmailAuthController::class, 'register']);
+    Route::post('/login', [EmailAuthController::class, 'login']);
+
+    // Password reset
+    Route::post('/forgot-password', [
+        EmailAuthController::class,
+        'forgotPassword'
+    ]);
+
+    Route::post('/reset-password', [
+        EmailAuthController::class,
+        'resetPassword'
+    ]);
+
+    // Email verification
+    Route::get('/verify-email/{id}/{hash}', [
+        EmailAuthController::class,
+        'verifyEmail'
+    ])->middleware('signed')->name('auth.verification.verify');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google Authentication
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/google', [
+        GoogleController::class,
+        'redirect'
+    ]);
+
+    Route::get('/google/callback', [
+        GoogleController::class,
+        'callback'
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authenticated Routes
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('auth:sanctum')->group(function () {
+
+        Route::get('/user', [
+            EmailAuthController::class,
+            'me'
+        ]);
+
+        Route::post('/logout', [
+            EmailAuthController::class,
+            'logout'
+        ]);
+
+        Route::post('/resend-verification', [
+            EmailAuthController::class,
+            'resendVerificationEmail'
         ]);
     });
-
 });
-
-Route::get('/auth/google', [GoogleController::class, 'redirect']);
-Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
