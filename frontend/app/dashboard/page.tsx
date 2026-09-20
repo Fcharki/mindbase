@@ -57,47 +57,80 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F1F0EB] dark:bg-[#15170F]">
-        <p className="text-sm text-[#6B6F64] dark:text-[#9C9F94]">Loading…</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2]">
+        <div className="flex items-center gap-3 text-sm text-[#686873]">
+          <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
+          Loading…
+        </div>
       </main>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F1F0EB] font-sans text-[#1E211D] dark:bg-[#15170F] dark:text-[#E7E5DC]">
-      <WorkspaceNav />
+    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+      <WorkspaceNav workspaces={workspaces ?? []} />
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-24">
+      <main className="flex flex-1 items-center justify-center px-6 py-20 sm:px-10">
         {!workspaces ? (
-          <p className="text-sm text-[#6B6F64] dark:text-[#9C9F94]">
+          <div className="flex items-center gap-3 text-sm text-[#686873]">
+            <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
             Loading your workspaces…
-          </p>
+          </div>
         ) : (
-          <section className="w-full max-w-md text-center">
-            <h1 className="font-serif text-3xl tracking-tight">
-              Welcome to Mindbase
-            </h1>
-            <p className="mx-auto mt-3 max-w-sm text-[#4A4D45] dark:text-[#9C9F94]">
-              Create a workspace to keep your knowledge organized. You&rsquo;ll
-              be taken straight into it.
-            </p>
+          <section className="w-full max-w-lg">
+            {/* Intro card */}
+            <div className="rounded-2xl border border-[#DDDCE3] bg-white p-8 shadow-sm sm:p-10">
+              <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF]">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 20V6.5C4 5.12 5.12 4 6.5 4c1.2 0 2.23.83 2.45 2M9 20V8c0-1.66 1.34-3 3-3s3 1.34 3 3M15 20v-9c0-1.38 1.12-2.5 2.5-2.5S20 9.62 20 11v9"
+                    stroke="#5146E5"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
 
-            <div className="mt-10 flex justify-center">
-              <CreateWorkspaceForm
-                onCreated={(workspace) =>
-                  router.push(`/workspaces/${workspace.id}`)
-                }
-              />
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+                Your knowledge space
+              </p>
+
+              <h1 className="text-3xl font-semibold tracking-[-0.025em]">
+                Welcome to Mindbase
+              </h1>
+
+              <p className="mt-3 max-w-md leading-relaxed text-[#686873]">
+                Create a workspace to keep your knowledge organized. Once
+                created, you&rsquo;ll go straight into it.
+              </p>
+
+              <div className="mt-8">
+                <CreateWorkspaceForm
+                  onCreated={(workspace) =>
+                    router.push(`/workspaces/${workspace.id}`)
+                  }
+                />
+              </div>
             </div>
 
-            <p className="mt-8 text-sm text-[#8B8A7D]">
+            <div className="mt-6 flex items-center justify-between px-1">
+              <span className="text-sm text-[#9897A1]">
+                You can create more workspaces later.
+              </span>
+
               <Link
                 href="/"
-                className="text-[#3B4A6B] hover:underline dark:text-[#8CA0D8]"
+                className="text-sm font-medium text-[#5146E5] transition hover:text-[#4338CA]"
               >
                 Back to home
               </Link>
-            </p>
+            </div>
           </section>
         )}
       </main>
