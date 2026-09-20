@@ -1,10 +1,13 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm-bookworm
 
-# Install system dependencies
+# Install system dependencies: Composer deps, Postgres extension, nginx + supervisor
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    curl \
     libpq-dev \
+    nginx \
+    supervisor \
     && docker-php-ext-install pdo_pgsql \
     && rm -rf /var/lib/apt/lists/*
 
@@ -19,7 +22,15 @@ COPY . .
 # Install PHP dependencies
 RUN composer install
 
-# Laravel's development server
-EXPOSE 8001
+# Ship process supervisor + boot entrypoint
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+EXPOSE 8000
+
+HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=8 \
+    CMD curl -fsS http://localhost:8000/up > /dev/null || exit 1
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
