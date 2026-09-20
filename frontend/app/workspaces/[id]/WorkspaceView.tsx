@@ -427,9 +427,12 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
               </div>
             </div>
 
-            <span className="hidden text-sm text-[#9897A1] sm:block">
-              Workspace
-            </span>
+            <Link
+              href="/workspaces/new"
+              className="shrink-0 rounded-lg bg-[#5146E5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+            >
+              New workspace
+            </Link>
           </div>
         </section>
 

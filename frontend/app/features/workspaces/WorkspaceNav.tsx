@@ -153,8 +153,8 @@ export function WorkspaceNav({
 
       {/* Mobile workspace switcher */}
       {effectiveWorkspaces.length > 0 && (
-        <div className="border-t border-[#EEEDEF] px-6 py-3 sm:hidden">
-          <div className="relative">
+        <div className="flex items-center gap-2 border-t border-[#EEEDEF] px-6 py-3 sm:hidden">
+          <div className="relative min-w-0 flex-1">
             <select
               aria-label="Switch workspace"
               value={current?.id ?? ""}
@@ -193,6 +193,27 @@ export function WorkspaceNav({
               />
             </svg>
           </div>
+
+          <Link
+            href="/workspaces/new"
+            aria-label="Create a new workspace"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#5146E5] text-white transition hover:bg-[#4338CA]"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          </Link>
         </div>
       )}
     </header>
