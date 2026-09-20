@@ -19,9 +19,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   # -------------------------
-  # Laravel Backend
+  # Laravel Backend (nginx + PHP-FPM)
   # -------------------------
   backend:
     build:
@@ -37,6 +43,7 @@ services:
 
     volumes:
       - ./backend:/var/www
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
 
     environment:
       DB_CONNECTION: pgsql
@@ -47,7 +54,15 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/up"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 30s
 
 
 # -------------------------

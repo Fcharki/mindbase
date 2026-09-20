@@ -9,6 +9,7 @@ export default function EmailVerifiedPage() {
 
   const isSuccess = status === "success";
   const isAlreadyVerified = status === "already-verified";
+  const isVerified = isSuccess || isAlreadyVerified;
 
   const title = isSuccess
     ? "Email verified successfully"
@@ -23,21 +24,21 @@ export default function EmailVerifiedPage() {
       : "This verification link is no longer valid. Please request a new verification email and try again.";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F1F0EB] px-5 py-12 font-sans dark:bg-[#15170F] sm:px-6">
+    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] px-5 py-10 font-sans sm:px-8">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-[#D8D5C9] bg-white p-7 shadow-sm dark:border-[#2C2E23] dark:bg-[#1B1E24] sm:p-10">
+        <div className="rounded-2xl border border-[#DDDCE3] bg-white p-7 shadow-sm sm:p-10">
           {/* Status icon */}
           <div
-            className={`mb-7 flex h-14 w-14 items-center justify-center rounded-full ${
-              isSuccess || isAlreadyVerified
-                ? "bg-[#E7EDE2] text-[#3B4A6B] dark:bg-[#293127] dark:text-[#9CAE8C]"
-                : "bg-[#F5E5E0] text-[#B3452C] dark:bg-[#33231F] dark:text-[#D9826D]"
+            className={`mb-7 flex h-12 w-12 items-center justify-center rounded-xl ${
+              isVerified
+                ? "bg-[#EEEDFF] text-[#5146E5]"
+                : "bg-[#FCECEF] text-[#E85D75]"
             }`}
           >
-            {isSuccess || isAlreadyVerified ? (
+            {isVerified ? (
               <svg
-                width="25"
-                height="25"
+                width="23"
+                height="23"
                 viewBox="0 0 24 24"
                 fill="none"
                 aria-hidden="true"
@@ -52,8 +53,8 @@ export default function EmailVerifiedPage() {
               </svg>
             ) : (
               <svg
-                width="25"
-                height="25"
+                width="23"
+                height="23"
                 viewBox="0 0 24 24"
                 fill="none"
                 aria-hidden="true"
@@ -82,11 +83,15 @@ export default function EmailVerifiedPage() {
 
           {/* Content */}
           <div className="space-y-3">
-            <h1 className="font-serif text-3xl leading-tight tracking-tight text-[#1E211D] dark:text-[#E7E5DC] sm:text-4xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+              {isVerified ? "Email confirmed" : "Verification issue"}
+            </p>
+
+            <h1 className="text-3xl font-semibold leading-tight tracking-[-0.025em] text-[#20202A] sm:text-4xl">
               {title}
             </h1>
 
-            <p className="text-sm leading-6 text-[#6B6F64] dark:text-[#9C9F94] sm:text-base">
+            <p className="text-sm leading-6 text-[#686873] sm:text-base">
               {description}
             </p>
           </div>
@@ -95,7 +100,7 @@ export default function EmailVerifiedPage() {
           <div className="mt-8">
             <Link
               href="/auth/login"
-              className="flex w-full items-center justify-center rounded-full bg-[#3B4A6B] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2F3C57] focus:outline-none focus:ring-2 focus:ring-[#3B4A6B] focus:ring-offset-2 dark:focus:ring-offset-[#1B1E24]"
+              className="flex w-full items-center justify-center rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#4338CA] focus:outline-none focus:ring-2 focus:ring-[#5146E5] focus:ring-offset-2"
             >
               Continue to login
             </Link>
@@ -103,10 +108,31 @@ export default function EmailVerifiedPage() {
         </div>
 
         {/* Brand */}
-        <p className="mt-6 text-center font-serif text-sm tracking-tight text-[#6B6F64] dark:text-[#9C9F94]">
-          Mindbase
-        </p>
+        <div className="mt-6 flex justify-center">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-[#20202A]"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 20V6.5C4 5.12 5.12 4 6.5 4c1.2 0 2.23.83 2.45 2M9 20V8c0-1.66 1.34-3 3-3s3 1.34 3 3M15 20v-9c0-1.38 1.12-2.5 2.5-2.5S20 9.62 20 11v9"
+                stroke="#5146E5"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+            </svg>
+
+            Mindbase
+          </Link>
+        </div>
       </div>
     </main>
   );
 }
+
