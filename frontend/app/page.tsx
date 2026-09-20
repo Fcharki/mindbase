@@ -7,33 +7,51 @@ import { useAuth } from "@/app/Providers/AuthProvider";
 
 function Logomark() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="23"
+      height="23"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M4 20V6.5C4 5.12 5.12 4 6.5 4c1.2 0 2.23.83 2.45 2M9 20V8c0-1.66 1.34-3 3-3s3 1.34 3 3M15 20v-9c0-1.38 1.12-2.5 2.5-2.5S20 9.62 20 11v9"
-        stroke="#3B4A6B"
-        strokeWidth="1.6"
+        stroke="#5146E5"
+        strokeWidth="1.7"
         strokeLinecap="round"
       />
     </svg>
   );
 }
 
-const features: { title: string; body: string }[] = [
+const features = [
   {
+    number: "01",
     title: "Capture without friction",
     body: "Jot a thought the moment it happens. No tags to choose and no folder to pick — just write, and sort it out later or never.",
+    bg: "bg-[#EEEDFF]",
+    accent: "text-[#5146E5]",
   },
   {
+    number: "02",
     title: "Notes that link themselves",
     body: "Mindbase reads what you write and quietly draws connections to related notes, so your thinking forms a web instead of a pile.",
+    bg: "bg-[#FCECEF]",
+    accent: "text-[#E85D75]",
   },
   {
+    number: "03",
     title: "Watch an idea take shape",
     body: "Open any note and see the threads running through it — every related entry, source, and earlier version of the thought.",
+    bg: "bg-[#EAF7F6]",
+    accent: "text-[#159A9C]",
   },
   {
+    number: "04",
     title: "Old notes find their way back to you",
     body: "Before something slips from memory, Mindbase resurfaces it — a quiet nudge to revisit, not another inbox to manage.",
+    bg: "bg-[#F2F1F7]",
+    accent: "text-[#5146E5]",
   },
 ];
 
@@ -43,37 +61,51 @@ export default function Home() {
   const isLoggedIn = Boolean(user) && !loading;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F1F0EB] font-sans text-[#1E211D]">
+    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
       {/* Navbar */}
-      <header className="border-b border-[#D8D5C9]">
+      <header className="border-b border-[#DDDCE3]">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4 sm:px-10">
           <Link href="/" className="flex items-center gap-2">
             <Logomark />
-            <span className="font-serif text-lg tracking-tight">Mindbase</span>
+            <span className="text-lg font-semibold tracking-tight">
+              Mindbase
+            </span>
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm sm:flex">
-            <a href="#features" className="text-[#4A4D45] hover:text-[#1E211D]">
+            <a
+              href="#features"
+              className="text-[#686873] transition hover:text-[#5146E5]"
+            >
               Features
             </a>
-            <a href="#method" className="text-[#4A4D45] hover:text-[#1E211D]">
+
+            <a
+              href="#method"
+              className="text-[#686873] transition hover:text-[#5146E5]"
+            >
               Method
             </a>
+
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
-                className="rounded-full bg-[#3B4A6B] px-4 py-2 text-white hover:bg-[#2F3C57]"
+                className="rounded-lg bg-[#5146E5] px-4 py-2 font-medium text-white transition hover:bg-[#4338CA]"
               >
                 Dashboard
               </Link>
             ) : (
-              <div className="flex items-center gap-4">
-                <Link href="/auth/login" className="text-[#4A4D45] hover:text-[#1E211D]">
+              <div className="flex items-center gap-5">
+                <Link
+                  href="/auth/login"
+                  className="text-[#686873] transition hover:text-[#20202A]"
+                >
                   Log in
                 </Link>
+
                 <Link
                   href="/auth/register"
-                  className="rounded-full bg-[#3B4A6B] px-4 py-2 text-white hover:bg-[#2F3C57]"
+                  className="rounded-lg bg-[#5146E5] px-4 py-2 font-medium text-white transition hover:bg-[#4338CA]"
                 >
                   Get started free
                 </Link>
@@ -81,35 +113,57 @@ export default function Home() {
             )}
           </nav>
 
-          {/* Mobile menu toggle */}
           <button
             onClick={() => setMenuOpen((v) => !v)}
             className="flex flex-col gap-1.5 sm:hidden"
             aria-label="Toggle menu"
           >
-            <span className="h-px w-6 bg-[#1E211D]" />
-            <span className="h-px w-6 bg-[#1E211D]" />
+            <span className="h-px w-6 bg-[#20202A]" />
+            <span className="h-px w-6 bg-[#20202A]" />
           </button>
         </div>
 
         {menuOpen && (
-          <div className="flex flex-col gap-4 border-t border-[#D8D5C9] px-6 py-4 text-sm sm:hidden">
-            <a href="#features" onClick={() => setMenuOpen(false)}>
+          <div className="flex flex-col gap-4 border-t border-[#DDDCE3] bg-white px-6 py-4 text-sm sm:hidden">
+            <a
+              href="#features"
+              onClick={() => setMenuOpen(false)}
+              className="text-[#686873]"
+            >
               Features
             </a>
-            <a href="#method" onClick={() => setMenuOpen(false)}>
+
+            <a
+              href="#method"
+              onClick={() => setMenuOpen(false)}
+              className="text-[#686873]"
+            >
               Method
             </a>
+
             {isLoggedIn ? (
-              <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
+              <Link
+                href="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                className="font-medium text-[#5146E5]"
+              >
                 Dashboard
               </Link>
             ) : (
               <>
-                <Link href="/auth/login" onClick={() => setMenuOpen(false)}>
+                <Link
+                  href="/auth/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-[#686873]"
+                >
                   Log in
                 </Link>
-                <Link href="/auth/register" onClick={() => setMenuOpen(false)} className="font-medium text-[#3B4A6B]">
+
+                <Link
+                  href="/auth/register"
+                  onClick={() => setMenuOpen(false)}
+                  className="font-medium text-[#5146E5]"
+                >
                   Get started free
                 </Link>
               </>
@@ -120,78 +174,149 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 py-24 sm:px-10 sm:py-32">
-          <h1 className="text-balance font-serif text-4xl leading-tight tracking-tight sm:text-5xl">
-            Where scattered thoughts become a body of work.
-          </h1>
-          <p className="max-w-xl text-lg text-[#4A4D45]">
-            Mindbase is a place to capture what you read, connect what you
-            learn, and find it again when you need it — without folders
-            you&rsquo;ll forget to check.
-          </p>
-          <div className="flex items-center gap-6">
-            {isLoggedIn ? (
-              <Link
-                href="/dashboard"
-                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
+        <section>
+          <div className="mx-auto flex w-full max-w-4xl flex-col items-start px-6 py-24 sm:px-10 sm:py-32">
+            <div className="mb-6 flex items-center gap-2 text-sm font-medium text-[#5146E5]">
+              <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
+              A better place for your ideas
+            </div>
+
+            <h1 className="max-w-3xl text-balance text-5xl font-semibold leading-[1.08] tracking-[-0.035em] sm:text-6xl">
+              Where scattered thoughts become{" "}
+              <span className="text-[#5146E5]">a body of work.</span>
+            </h1>
+
+            <p className="mt-7 max-w-2xl text-lg leading-relaxed text-[#686873]">
+              Mindbase is a place to capture what you read, connect what you
+              learn, and find it again when you need it — without folders
+              you&rsquo;ll forget to check.
+            </p>
+
+            <div className="mt-8 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+              {isLoggedIn ? (
+                <Link
+                  href="/dashboard"
+                  className="rounded-lg bg-[#5146E5] px-6 py-3 font-medium text-white transition hover:bg-[#4338CA]"
+                >
+                  Open your workspace
+                </Link>
+              ) : (
+                <Link
+                  href="/auth/register"
+                  className="rounded-lg bg-[#5146E5] px-6 py-3 font-medium text-white transition hover:bg-[#4338CA]"
+                >
+                  Get started free
+                </Link>
+              )}
+
+              <a
+                href="#features"
+                className="font-medium text-[#686873] underline decoration-[#C9C7D0] underline-offset-4 transition hover:text-[#20202A]"
               >
-                Open your workspace
-              </Link>
-            ) : (
-              <Link
-                href="/auth/register"
-                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
-              >
-                Get started free
-              </Link>
-            )}
-            <a href="#features" className="text-[#1E211D] underline decoration-[#C8C5B8] underline-offset-4 hover:decoration-[#1E211D]">
-              See how it works
-            </a>
+                See how it works
+              </a>
+            </div>
           </div>
         </section>
 
         {/* Features */}
-        <section id="features" className="border-t border-[#D8D5C9]">
-          <div className="mx-auto grid w-full max-w-5xl gap-x-16 gap-y-14 px-6 py-24 sm:grid-cols-2 sm:px-10">
-            {features.map((f) => (
-              <div key={f.title} className="flex flex-col gap-2">
-                <h3 className="font-serif text-xl">{f.title}</h3>
-                <p className="text-[15px] leading-relaxed text-[#4A4D45]">{f.body}</p>
-              </div>
-            ))}
+        <section
+          id="features"
+          className="border-t border-[#DDDCE3] bg-white"
+        >
+          <div className="mx-auto w-full max-w-5xl px-6 py-24 sm:px-10">
+            <div className="mb-14 max-w-xl">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#5146E5]">
+                Features
+              </p>
+
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                Your thoughts, without the busywork.
+              </h2>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {features.map((f) => (
+                <div
+                  key={f.title}
+                  className={`rounded-2xl ${f.bg} p-7 sm:p-8`}
+                >
+                  <div className="mb-12 flex items-center justify-between">
+                    <span
+                      className={`text-sm font-semibold ${f.accent}`}
+                    >
+                      {f.number}
+                    </span>
+
+                    <span
+                      className={`text-xl ${f.accent}`}
+                      aria-hidden="true"
+                    >
+                      ↗
+                    </span>
+                  </div>
+
+                  <h3 className="mb-3 text-xl font-semibold tracking-tight">
+                    {f.title}
+                  </h3>
+
+                  <p className="text-[15px] leading-relaxed text-[#686873]">
+                    {f.body}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Pull quote */}
-        <section id="method" className="border-t border-[#D8D5C9] bg-[#E7E5DC]">
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-24 sm:px-10">
-            <p className="text-balance font-serif text-2xl leading-snug sm:text-3xl">
-              &ldquo;I finally have a second brain that doesn&rsquo;t feel like
-              admin work. I write, and the connections show up on their
-              own.&rdquo;
+        {/* Method */}
+        <section
+          id="method"
+          className="border-t border-[#DDDCE3] bg-[#20202A] text-white"
+        >
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-7 px-6 py-24 sm:px-10 sm:py-28">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#A9A4FF]">
+              The Mindbase method
             </p>
-            <p className="text-sm text-[#5C6B4F]">Alex Chen, PhD researcher</p>
+
+            <p className="max-w-3xl text-balance text-2xl font-medium leading-snug tracking-tight sm:text-4xl">
+              “I finally have a second brain that doesn&rsquo;t feel like
+              admin work. I write, and the connections show up on their
+              own.”
+            </p>
+
+            <p className="text-sm text-[#A7A6B0]">
+              Alex Chen, PhD researcher
+            </p>
           </div>
         </section>
 
-        {/* Closing CTA */}
-        <section className="border-t border-[#D8D5C9]">
-          <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 py-24 sm:px-10">
-            <h2 className="font-serif text-3xl tracking-tight">
+        {/* CTA */}
+        <section className="border-t border-[#DDDCE3]">
+          <div className="mx-auto flex w-full max-w-4xl flex-col items-start gap-6 px-6 py-24 sm:px-10 sm:py-28">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#5146E5]">
+              Start today
+            </p>
+
+            <h2 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">
               Start your archive today.
             </h2>
+
+            <p className="max-w-xl text-lg text-[#686873]">
+              Give your ideas somewhere to grow, connect, and come back to you.
+            </p>
+
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
-                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
+                className="rounded-lg bg-[#5146E5] px-6 py-3 font-medium text-white transition hover:bg-[#4338CA]"
               >
                 Open your workspace
               </Link>
             ) : (
               <Link
                 href="/auth/register"
-                className="rounded-full bg-[#3B4A6B] px-6 py-3 text-white hover:bg-[#2F3C57]"
+                className="rounded-lg bg-[#5146E5] px-6 py-3 font-medium text-white transition hover:bg-[#4338CA]"
               >
                 Create a free account
               </Link>
@@ -200,13 +325,15 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-[#D8D5C9]">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-4 px-6 py-10 text-sm text-[#8B8A7D] sm:flex-row sm:items-center sm:px-10">
+      {/* Footer */}
+      <footer className="border-t border-[#DDDCE3] bg-white">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-4 px-6 py-9 text-sm text-[#888793] sm:flex-row sm:items-center sm:px-10">
           <div className="flex items-center gap-2">
             <Logomark />
-            <span>Mindbase</span>
+            <span className="font-medium text-[#20202A]">Mindbase</span>
           </div>
-          <p>© { new Date().getFullYear()} Mindbase. All notes reserved.</p>
+
+          <p>© {new Date().getFullYear()} Mindbase. All notes reserved.</p>
         </div>
       </footer>
     </div>

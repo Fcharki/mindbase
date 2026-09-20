@@ -44,6 +44,30 @@ export async function register(
   });
 }
 
+export async function forgotPassword(email: string) {
+  await fetchCsrfCookie();
+
+  await api.post("/auth/forgot-password", {
+    email,
+  });
+}
+
+export async function resetPassword(
+  token: string,
+  email: string,
+  password: string,
+  passwordConfirmation: string,
+) {
+  await fetchCsrfCookie();
+
+  await api.post("/auth/reset-password", {
+    token,
+    email,
+    password,
+    password_confirmation: passwordConfirmation,
+  });
+}
+
 export async function logout() {
   await fetchCsrfCookie();
 

@@ -8,11 +8,13 @@ import {
 } from "react";
 
 import {
+  forgotPassword as forgotPasswordRequest,
   getCurrentUser,
   login as loginRequest,
   loginWithGoogle as loginWithGoogleRequest,
   logout as logoutRequest,
   register as registerRequest,
+  resetPassword as resetPasswordRequest,
   User,
 } from "@/lib/auth";
 
@@ -23,6 +25,13 @@ type AuthContextValue = {
   loginWithGoogle: () => Promise<void>;
   register: (
     name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+  ) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (
+    token: string,
     email: string,
     password: string,
     passwordConfirmation: string,
@@ -87,14 +96,34 @@ export function AuthProvider({
   await loginWithGoogleRequest();
 }
 
+  async function forgotPassword(email: string) {
+    await forgotPasswordRequest(email);
+  }
+
+  async function resetPassword(
+    token: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+  ) {
+    await resetPasswordRequest(
+      token,
+      email,
+      password,
+      passwordConfirmation,
+    );
+  }
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         login,
-         loginWithGoogle,
+        loginWithGoogle,
         register,
+        forgotPassword,
+        resetPassword,
         logout,
       }}
     >

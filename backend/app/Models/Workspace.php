@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Workspace extends Model
 {
@@ -39,8 +40,8 @@ class Workspace extends Model
             return $this->pivot->role;
         }
 
-        if ($this->relationLoaded('members') && auth()->check()) {
-            $membership = $this->members->firstWhere('id', auth()->id());
+        if ($this->relationLoaded('members') && Auth::check()) {
+            $membership = $this->members->firstWhere('id', Auth::id());
 
             if ($membership?->pivot) {
                 return $membership->pivot->role;
