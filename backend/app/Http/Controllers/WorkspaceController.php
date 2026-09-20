@@ -10,6 +10,27 @@ use Illuminate\Support\Facades\Gate;
 
 class WorkspaceController extends Controller
 {
+    public function byInviteCode(string $inviteCode): JsonResponse
+    {
+        $workspace = Workspace::where('invite_code', $inviteCode)
+            ->with('owner:id,name')
+            ->first();
+
+        if (! $workspace) {
+            return response()->json([
+                'message' => 'Workspace not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'id' => $workspace->id,
+                'name' => $workspace->name,
+                'invite_code' => $workspace->invite_code,
+                'owner' => $workspace->owner,
+            ],
+        ]);
+    }
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Workspace::class);

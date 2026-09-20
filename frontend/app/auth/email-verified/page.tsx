@@ -1,9 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function EmailVerifiedPage() {
+function EmailVerifiedContent() {
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
 
@@ -133,6 +134,14 @@ export default function EmailVerifiedPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function EmailVerifiedPage() {
+  return (
+    <Suspense fallback={null}>
+      <EmailVerifiedContent />
+    </Suspense>
   );
 }
 
