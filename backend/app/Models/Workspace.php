@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
 class Workspace extends Model
@@ -24,9 +25,17 @@ class Workspace extends Model
             ->withTimestamps();
     }
 
-    public function entries()
+    public function knowledgeEntries(): HasMany
     {
-        return $this->hasMany(KnowledgeEntry::class);
+        return $this->hasMany(
+            KnowledgeEntry::class,
+            'workspace_id'
+        );
+    }
+
+    public function entries(): HasMany
+    {
+        return $this->knowledgeEntries();
     }
 
     public function tags()

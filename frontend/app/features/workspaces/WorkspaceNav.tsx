@@ -42,7 +42,9 @@ export function WorkspaceNav({
 
   const current =
     effectiveWorkspaces.find(
-      (workspace) => pathname === `/workspaces/${workspace.id}`,
+      (workspace) =>
+        pathname === `/workspaces/${workspace.id}` ||
+        pathname.startsWith(`/workspaces/${workspace.id}/`),
     ) ?? null;
 
   useEffect(() => {

@@ -8,6 +8,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
+import { EntryList } from "@/app/features/knowledge/components/EntryList";
+import { listEntries, KnowledgeEntry } from "@/lib/entries";
 import {
   deleteWorkspace,
   getWorkspace,
@@ -43,6 +45,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const { user, loading: authLoading } = useAuth();
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [status, setStatus] = useState<Status>("loading");
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -61,14 +64,15 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
     let cancelled = false;
 
-    getWorkspace(workspaceId)
-      .then((result) => {
+    Promise.all([getWorkspace(workspaceId), listEntries(workspaceId)])
+      .then(([workspaceResult, entryResult]) => {
         if (cancelled) {
           return;
         }
 
-        setWorkspace(result);
-        setName(result.name);
+        setWorkspace(workspaceResult);
+        setName(workspaceResult.name);
+        setEntries(entryResult);
         setStatus("ready");
       })
       .catch((requestError: unknown) => {
@@ -252,49 +256,86 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
         {/* Knowledge area */}
         <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-          <div className="border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
-              Knowledge
-            </p>
+          <div className="flex items-center justify-between border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+                Knowledge
+              </p>
 
-            <h2 className="mt-1 text-xl font-semibold tracking-tight">
-              Your workspace
-            </h2>
-          </div>
-
-          <div className="flex min-h-[260px] flex-col items-center justify-center px-7 py-12 text-center sm:px-8">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] text-[#159A9C]">
-              <svg
-                width="23"
-                height="23"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M6 4.5h9.5L19 8v11.5H6V4.5Z"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M15 4.5V8h4M9 12h7M9 15.5h5"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                Entries
+              </h2>
             </div>
 
-            <h3 className="text-lg font-semibold tracking-tight">
-              Your knowledge lives here
-            </h3>
-
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873]">
-              Entries, tags, and notes in this workspace will appear here soon.
-            </p>
+            <Link
+              href={`/workspaces/${workspace.id}/entries/new`}
+              className="rounded-lg bg-[#5146E5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+            >
+              New entry
+            </Link>
           </div>
+
+          {entries.length === 0 ? (
+            <div className="flex min-h-[260px] flex-col items-center justify-center px-7 py-12 text-center sm:px-8">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] text-[#159A9C]">
+                <svg
+                  width="23"
+                  height="23"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M6 4.5h9.5L19 8v11.5H6V4.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M15 4.5V8h4M9 12h7M9 15.5h5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+
+              <h3 className="text-lg font-semibold tracking-tight">
+                Your knowledge lives here
+              </h3>
+
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873]">
+                Capture your first thought, note, or idea — it&rsquo;ll show
+                up here alongside all of your entries.
+              </p>
+
+              <Link
+                href={`/workspaces/${workspace.id}/entries/new`}
+                className="mt-6 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+              >
+                Create your first entry
+              </Link>
+            </div>
+          ) : (
+            <>
+              <EntryList
+                entries={entries.slice(0, 5)}
+                basePath={`/workspaces/${workspace.id}/entries`}
+              />
+
+              {entries.length > 5 && (
+                <div className="border-t border-[#EEEDEF] px-7 py-4 sm:px-8">
+                  <Link
+                    href={`/workspaces/${workspace.id}/entries`}
+                    className="text-sm font-medium text-[#5146E5] transition hover:text-[#4338CA]"
+                  >
+                    View all {entries.length} entries →
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
         </section>
 
         {/* Members */}

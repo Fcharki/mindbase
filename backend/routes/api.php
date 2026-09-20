@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\EmailAuthController;
+use App\Http\Controllers\KnowledgeEntryController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
@@ -110,4 +111,17 @@ Route::middleware('web')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('workspaces', WorkspaceController::class);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Knowledge entries API
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource(
+        'workspaces.entries',
+        KnowledgeEntryController::class
+    );
 });
