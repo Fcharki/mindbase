@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
+use App\Services\TagService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +17,8 @@ class KnowledgeEntryController extends Controller
 
         $entries = $workspace
             ->knowledgeEntries()
-            ->with('creator:id,name')
+            ->with('creator:id,name', 'tags:id,name,workspace_id')
+            ->withCount('tags')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -29,7 +31,7 @@ class KnowledgeEntryController extends Controller
         Request $request,
         Workspace $workspace
     ): JsonResponse {
-        Gate::authorize('update', $workspace);
+        Gate::authorize('create', [KnowledgeEntry::class, $workspace]);
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -42,7 +44,8 @@ class KnowledgeEntryController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        $knowledgeEntry->load('creator:id,name');
+        $knowledgeEntry->load('creator:id,name', 'tags:id,name,workspace_id');
+        $knowledgeEntry->loadCount('tags');
 
         return response()->json([
             'data' => $knowledgeEntry,
@@ -53,14 +56,15 @@ class KnowledgeEntryController extends Controller
         Workspace $workspace,
         KnowledgeEntry $entry
     ): JsonResponse {
-        Gate::authorize('view', $workspace);
+        Gate::authorize('view', $entry);
 
         abort_unless(
             $entry->workspace_id === $workspace->id,
             404
         );
 
-        $entry->load('creator:id,name');
+        $entry->load('creator:id,name', 'tags:id,name,workspace_id');
+        $entry->loadCount('tags');
 
         return response()->json([
             'data' => $entry,
@@ -72,7 +76,7 @@ class KnowledgeEntryController extends Controller
         Workspace $workspace,
         KnowledgeEntry $entry
     ): JsonResponse {
-        Gate::authorize('update', $workspace);
+        Gate::authorize('update', $entry);
 
         abort_unless(
             $entry->workspace_id === $workspace->id,
@@ -89,7 +93,8 @@ class KnowledgeEntryController extends Controller
             'content' => $validated['content'] ?? null,
         ]);
 
-        $entry->load('creator:id,name');
+        $entry->load('creator:id,name', 'tags:id,name,workspace_id');
+        $entry->loadCount('tags');
 
         return response()->json([
             'data' => $entry,
@@ -100,7 +105,7 @@ class KnowledgeEntryController extends Controller
         Workspace $workspace,
         KnowledgeEntry $entry
     ): JsonResponse {
-        Gate::authorize('update', $workspace);
+        Gate::authorize('delete', $entry);
 
         abort_unless(
             $entry->workspace_id === $workspace->id,
@@ -111,6 +116,33 @@ class KnowledgeEntryController extends Controller
 
         return response()->json([
             'message' => 'Knowledge entry deleted successfully.',
+        ]);
+    }
+
+    public function syncTags(
+        Request $request,
+        Workspace $workspace,
+        KnowledgeEntry $entry
+    ): JsonResponse {
+        Gate::authorize('update', $entry);
+
+        abort_unless(
+            $entry->workspace_id === $workspace->id,
+            404
+        );
+
+        $validated = $request->validate([
+            'tags' => ['required', 'array', 'max:50'],
+            'tags.*' => ['required', 'string', 'max:60'],
+        ]);
+
+        $tags = app(TagService::class)->syncForEntry(
+            $entry,
+            $validated['tags']
+        );
+
+        return response()->json([
+            'data' => $tags,
         ]);
     }
 }

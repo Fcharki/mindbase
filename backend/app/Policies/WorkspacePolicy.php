@@ -40,20 +40,22 @@ class WorkspacePolicy
     /**
      * Determine whether the user can update the workspace
      *
-     * Owner: allowed directly
-     * Admin: allowed only through the owner-confirmation workflow
-     * Member: not allowed
+     * Only the owner can update workspace settings.
      */
     public function update(User $user, Workspace $workspace): bool
     {
-        if ($workspace->owner_id === $user->id) {
-            return true;
-        }
+        return $workspace->owner_id === $user->id;
+    }
 
-        return $workspace->members()
-            ->where('users.id', $user->id)
-            ->wherePivot('role', 'admin')
-            ->exists();
+    /**
+     * Determine whether the user can manage workspace membership
+     *
+     * Only the owner can add members, change roles, remove members,
+     * and approve or reject join requests.
+     */
+    public function manageMembers(User $user, Workspace $workspace): bool
+    {
+        return $workspace->owner_id === $user->id;
     }
 
     /**

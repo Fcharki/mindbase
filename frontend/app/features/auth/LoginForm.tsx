@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 
@@ -30,6 +30,7 @@ function GoogleIcon() {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -44,7 +45,9 @@ export function LoginForm() {
 
     try {
       await login(email, password);
-      router.push("/dashboard");
+      const next = searchParams.get("next") ?? "/dashboard";
+      router.push(next);
+      router.refresh();
     } catch {
       setError("Invalid credentials. Please try again.");
       setSubmitting(false);

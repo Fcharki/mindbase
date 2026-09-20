@@ -62,6 +62,19 @@ export function EntryList({
                 <span className="mt-0.5 block truncate text-sm text-[#9897A1]">
                   {snippet || "No content yet"}
                 </span>
+
+                {(entry.tags ?? []).length > 0 && (
+                  <span className="mt-1.5 flex flex-wrap gap-1">
+                    {(entry.tags ?? []).map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="rounded-full bg-[#EEEDFF] px-2 py-0.5 text-xs font-medium text-[#4338CA]"
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
+                  </span>
+                )}
               </div>
 
               <div className="flex shrink-0 items-center gap-2">

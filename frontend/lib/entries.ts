@@ -5,6 +5,12 @@ export interface EntryCreator {
   name: string;
 }
 
+export interface EntryTag {
+  id: number;
+  name: string;
+  workspace_id: number;
+}
+
 export interface KnowledgeEntry {
   id: number;
   title: string;
@@ -14,6 +20,8 @@ export interface KnowledgeEntry {
   created_at: string;
   updated_at: string;
   creator?: EntryCreator;
+  tags?: EntryTag[];
+  tags_count?: number;
 }
 
 interface ResourceResponse<T> {
@@ -73,4 +81,17 @@ export async function deleteEntry(
   entryId: number | string,
 ): Promise<void> {
   await api.delete(`/workspaces/${workspaceId}/entries/${entryId}`);
+}
+
+export async function tagEntry(
+  workspaceId: number | string,
+  entryId: number | string,
+  tags: string[],
+): Promise<EntryTag[]> {
+  const { data } = await api.post<ResourceResponse<EntryTag[]>>(
+    `/workspaces/${workspaceId}/entries/${entryId}/tags`,
+    { tags },
+  );
+
+  return data.data;
 }

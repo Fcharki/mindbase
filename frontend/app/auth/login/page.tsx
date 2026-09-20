@@ -119,7 +119,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
 
           <p className="text-sm text-[#686873]">
             New to Mindbase?{" "}

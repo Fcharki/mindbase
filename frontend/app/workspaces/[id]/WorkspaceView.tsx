@@ -11,10 +11,18 @@ import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
 import {
+  addWorkspaceMember,
+  approveJoinRequest,
   deleteWorkspace,
   getWorkspace,
+  listJoinRequests,
+  MembershipRequest,
+  rejectJoinRequest,
+  removeWorkspaceMember,
   updateWorkspace,
+  updateWorkspaceMemberRole,
   Workspace,
+  WorkspaceRole,
 } from "@/lib/workspaces";
 
 type Status = "loading" | "ready" | "missing";
@@ -52,6 +60,16 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [joinRequests, setJoinRequests] = useState<MembershipRequest[]>([]);
+  const [memberEmail, setMemberEmail] = useState("");
+  const [memberRole, setMemberRole] = useState<WorkspaceRole>("member");
+  const [memberError, setMemberError] = useState<string | null>(null);
+  const [addingMember, setAddingMember] = useState(false);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const isOwner = workspace?.role === "owner";
+
   useEffect(() => {
     if (authLoading) {
       return;
@@ -65,7 +83,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
     let cancelled = false;
 
     Promise.all([getWorkspace(workspaceId), listEntries(workspaceId)])
-      .then(([workspaceResult, entryResult]) => {
+      .then(async ([workspaceResult, entryResult]) => {
         if (cancelled) {
           return;
         }
@@ -74,6 +92,20 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
         setName(workspaceResult.name);
         setEntries(entryResult);
         setStatus("ready");
+
+        if (workspaceResult.role === "owner") {
+          try {
+            const requests = await listJoinRequests(workspaceId);
+
+            if (!cancelled) {
+              setJoinRequests(requests);
+            }
+          } catch {
+            if (!cancelled) {
+              setRequestsError("Could not load join requests.");
+            }
+          }
+        }
       })
       .catch((requestError: unknown) => {
         if (cancelled) {
@@ -150,7 +182,154 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
     }
   }
 
-  const canRename = workspace?.role === "owner" || workspace?.role === "admin";
+  async function handleAddMember(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!workspace) {
+      return;
+    }
+
+    const email = memberEmail.trim();
+
+    if (!email) {
+      setMemberError("Please enter an email address.");
+      return;
+    }
+
+    setAddingMember(true);
+    setMemberError(null);
+
+    try {
+      await addWorkspaceMember(workspace.id, email, memberRole);
+      const [updatedWorkspace, requests] = await Promise.all([
+        getWorkspace(workspace.id),
+        listJoinRequests(workspace.id),
+      ]);
+
+      setWorkspace(updatedWorkspace);
+      setJoinRequests(requests);
+      setMemberEmail("");
+    } catch (requestError: unknown) {
+      const message = axios.isAxiosError(requestError)
+        ? (requestError.response?.data as { message?: string } | undefined)
+            ?.message
+        : undefined;
+
+      setMemberError(message ?? "Could not add that member.");
+    } finally {
+      setAddingMember(false);
+    }
+  }
+
+  async function handleRoleChange(memberId: number, role: WorkspaceRole) {
+    if (!workspace) {
+      return;
+    }
+
+    setMemberError(null);
+
+    try {
+      const updated = await updateWorkspaceMemberRole(
+        workspace.id,
+        memberId,
+        role,
+      );
+
+      setWorkspace({
+        ...workspace,
+        members: (workspace.members ?? []).map((member) =>
+          member.id === memberId
+            ? { ...member, pivot: { role: updated.pivot.role } }
+            : member,
+        ),
+      });
+    } catch {
+      setMemberError("Could not change that member\u2019s role.");
+    }
+  }
+
+  async function handleRemoveMember(memberId: number) {
+    if (!workspace) {
+      return;
+    }
+
+    if (!window.confirm("Remove this member from the workspace?")) {
+      return;
+    }
+
+    setMemberError(null);
+
+    try {
+      await removeWorkspaceMember(workspace.id, memberId);
+      setWorkspace({
+        ...workspace,
+        members: (workspace.members ?? []).filter(
+          (member) => member.id !== memberId,
+        ),
+      });
+    } catch {
+      setMemberError("Could not remove that member.");
+    }
+  }
+
+  async function handleApproveRequest(
+    requestId: number,
+    role: WorkspaceRole,
+  ) {
+    if (!workspace) {
+      return;
+    }
+
+    setRequestsError(null);
+
+    try {
+      await approveJoinRequest(workspace.id, requestId, role);
+      const [updatedWorkspace, requests] = await Promise.all([
+        getWorkspace(workspace.id),
+        listJoinRequests(workspace.id),
+      ]);
+
+      setWorkspace(updatedWorkspace);
+      setJoinRequests(requests);
+    } catch {
+      setRequestsError("Could not approve that request.");
+    }
+  }
+
+  async function handleRejectRequest(requestId: number) {
+    if (!workspace) {
+      return;
+    }
+
+    setRequestsError(null);
+
+    try {
+      await rejectJoinRequest(workspace.id, requestId);
+      setJoinRequests((current) =>
+        current.filter((request) => request.id !== requestId),
+      );
+    } catch {
+      setRequestsError("Could not reject that request.");
+    }
+  }
+
+  async function handleCopyInviteLink() {
+    if (!workspace?.invite_code) {
+      return;
+    }
+
+    const link = `${window.location.origin}/join/${workspace.invite_code}`;
+
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setRequestsError("Could not copy the invite link.");
+    }
+  }
+
+  const canRename = workspace?.role === "owner";
   const canDelete = workspace?.role === "owner";
 
   if (status === "loading") {
@@ -350,31 +529,203 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
             </h2>
           </div>
 
-          <ul className="divide-y divide-[#EEEDEF] px-7 sm:px-8">
-            {(workspace.members ?? []).map((member) => (
-              <li
-                key={member.id}
-                className="flex items-center justify-between gap-4 py-4"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] text-sm font-semibold text-[#5146E5]">
-                    {member.name.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div className="flex min-w-0 flex-col">
-                    <span className="truncate text-sm font-medium text-[#20202A]">
-                      {member.name}
+          {isOwner && (
+            <>
+              {joinRequests.length > 0 && (
+                <div className="border-b border-[#EEEDEF] px-7 py-6 sm:px-8">
+                  <h3 className="text-sm font-semibold tracking-tight">
+                    Pending requests{" "}
+                    <span className="text-[#9897A1]">
+                      ({joinRequests.length})
                     </span>
+                  </h3>
 
-                    <span className="truncate text-sm text-[#9897A1]">
-                      {member.email}
-                    </span>
+                  {requestsError && (
+                    <p
+                      role="alert"
+                      className="mt-3 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                    >
+                      {requestsError}
+                    </p>
+                  )}
+
+                  <ul className="mt-3 divide-y divide-[#EEEDEF]">
+                    {joinRequests.map((request) => (
+                      <li
+                        key={request.id}
+                        className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] text-sm font-semibold text-[#5146E5]">
+                            {request.user?.name.charAt(0).toUpperCase()}
+                          </div>
+
+                          <div className="flex min-w-0 flex-col">
+                            <span className="truncate text-sm font-medium text-[#20202A]">
+                              {request.user?.name}
+                            </span>
+
+                            <span className="truncate text-sm text-[#9897A1]">
+                              {request.user?.email} · requested{" "}
+                              {request.requested_role}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          <select
+                            defaultValue={request.requested_role}
+                            onChange={(event) =>
+                              handleApproveRequest(
+                                request.id,
+                                event.target.value as WorkspaceRole,
+                              )
+                            }
+                            className="w-fit rounded-lg border border-[#DDDCE3] bg-white px-3 py-2 text-sm text-[#20202A] outline-none focus:border-[#5146E5]"
+                          >
+                            <option value="member">member</option>
+                            <option value="viewer">viewer</option>
+                          </select>
+
+                          <button
+                            onClick={() => handleRejectRequest(request.id)}
+                            className="rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-3 py-2 text-sm font-medium text-[#B13D55] transition hover:bg-[#F9DEE3]"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="border-b border-[#EEEDEF] px-7 py-6 sm:px-8">
+                <h3 className="text-sm font-semibold tracking-tight">
+                  Invite by email
+                </h3>
+
+                {memberError && (
+                  <p
+                    role="alert"
+                    className="mt-3 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                  >
+                    {memberError}
+                  </p>
+                )}
+
+                <form
+                  onSubmit={handleAddMember}
+                  className="mt-3 flex flex-col gap-3 sm:flex-row"
+                >
+                  <input
+                    type="email"
+                    required
+                    placeholder="colleague@example.com"
+                    value={memberEmail}
+                    onChange={(event) => setMemberEmail(event.target.value)}
+                    className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                  />
+
+                  <select
+                    value={memberRole}
+                    onChange={(event) =>
+                      setMemberRole(event.target.value as WorkspaceRole)
+                    }
+                    className="rounded-lg border border-[#DDDCE3] bg-white px-3 py-2.5 text-sm text-[#20202A] outline-none focus:border-[#5146E5]"
+                  >
+                    <option value="member">member</option>
+                    <option value="viewer">viewer</option>
+                  </select>
+
+                  <button
+                    type="submit"
+                    disabled={addingMember}
+                    className="rounded-lg bg-[#5146E5] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {addingMember ? "Adding…" : "Add member"}
+                  </button>
+                </form>
+
+                <div className="mt-5 flex flex-col gap-2">
+                  <span className="text-sm font-medium text-[#20202A]">
+                    Share link
+                  </span>
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <code className="truncate rounded-lg border border-[#DDDCE3] bg-[#F7F6F2] px-3 py-2.5 text-sm text-[#686873]">
+                      /join/{workspace?.invite_code ?? "…"}
+                    </code>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyInviteLink}
+                      className="w-fit rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#5146E5] hover:text-[#5146E5]"
+                    >
+                      {copied ? "Copied" : "Copy"}
+                    </button>
                   </div>
                 </div>
+              </div>
+            </>
+          )}
 
-                <RoleBadge role={member.pivot.role} />
-              </li>
-            ))}
+          <ul className="divide-y divide-[#EEEDEF] px-7 sm:px-8">
+            {(workspace.members ?? []).map((member) => {
+              const isSelf = workspace?.owner_id === member.id;
+
+              return (
+                <li
+                  key={member.id}
+                  className="flex items-center justify-between gap-4 py-4"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] text-sm font-semibold text-[#5146E5]">
+                      {member.name.charAt(0).toUpperCase()}
+                    </div>
+
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-medium text-[#20202A]">
+                        {member.name}
+                      </span>
+
+                      <span className="truncate text-sm text-[#9897A1]">
+                        {member.email}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    <RoleBadge role={member.pivot.role} />
+
+                    {isOwner && !isSelf && (
+                      <>
+                        <select
+                          className="rounded-lg border border-[#DDDCE3] bg-white px-2 py-1.5 text-sm text-[#20202A] outline-none focus:border-[#5146E5]"
+                          value={member.pivot.role}
+                          onChange={(event) =>
+                            handleRoleChange(
+                              member.id,
+                              event.target.value as WorkspaceRole,
+                            )
+                          }
+                        >
+                          <option value="member">member</option>
+                          <option value="viewer">viewer</option>
+                        </select>
+
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-3 py-1.5 text-sm font-medium text-[#B13D55] transition hover:bg-[#F9DEE3]"
+                        >
+                          Remove
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </section>
 

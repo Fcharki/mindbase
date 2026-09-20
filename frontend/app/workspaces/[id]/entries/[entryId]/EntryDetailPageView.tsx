@@ -3,12 +3,18 @@
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryForm } from "@/app/features/knowledge/components/EntryForm";
-import { deleteEntry, getEntry, KnowledgeEntry, updateEntry } from "@/lib/entries";
+import {
+  deleteEntry,
+  getEntry,
+  KnowledgeEntry,
+  tagEntry,
+  updateEntry,
+} from "@/lib/entries";
 import { getWorkspace, Workspace } from "@/lib/workspaces";
 
 type Status = "loading" | "ready" | "missing";
@@ -29,6 +35,9 @@ export function EntryDetailPageView({
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [tagError, setTagError] = useState<string | null>(null);
+  const [tagSaving, setTagSaving] = useState(false);
 
   useEffect(() => {
     if (authLoading) {
@@ -104,6 +113,48 @@ export function EntryDetailPageView({
       setDeleting(false);
       setError("Could not delete this entry. Please try again.");
     }
+  }
+
+  async function syncTags(tags: string[]) {
+    setTagSaving(true);
+    setTagError(null);
+
+    try {
+      const saved = await tagEntry(workspaceId, entryId, tags);
+      setEntry((current) =>
+        current ? { ...current, tags: saved, tags_count: saved.length } : current,
+      );
+    } catch {
+      setTagError("Could not save tags.");
+    } finally {
+      setTagSaving(false);
+    }
+  }
+
+  async function handleAddTag(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const currentTags = (entry?.tags ?? []).map((tag) => tag.name);
+    const additions = tagInput
+      .split(",")
+      .map((tag) => tag.trim().toLowerCase())
+      .filter((tag) => tag !== "" && !currentTags.includes(tag));
+
+    if (additions.length === 0) {
+      setTagInput("");
+      return;
+    }
+
+    await syncTags([...currentTags, ...additions]);
+    setTagInput("");
+  }
+
+  async function handleRemoveTag(tagName: string) {
+    const next = (entry?.tags ?? [])
+      .map((tag) => tag.name)
+      .filter((name) => name !== tagName);
+
+    await syncTags(next);
   }
 
   if (status === "loading" || !workspace || !entry) {
@@ -214,6 +265,82 @@ export function EntryDetailPageView({
                   This entry has no content yet.
                 </p>
               )}
+            </section>
+
+            <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
+              <div className="border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+                <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+                  Organize
+                </p>
+
+                <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                  Tags
+                </h2>
+              </div>
+
+              <div className="px-7 py-7 sm:px-8">
+                <div className="flex flex-wrap gap-2">
+                  {(entry.tags ?? []).map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#EEEDFF] px-3 py-1 text-sm font-medium text-[#4338CA]"
+                    >
+                      {tag.name}
+
+                      {workspace.role !== "viewer" && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag.name)}
+                          disabled={tagSaving}
+                          aria-label={`Remove tag ${tag.name}`}
+                          className="text-[#4338CA] opacity-60 transition hover:opacity-100 disabled:opacity-40"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </span>
+                  ))}
+
+                  {(entry.tags ?? []).length === 0 && (
+                    <span className="text-sm text-[#9897A1]">
+                      No tags yet.
+                    </span>
+                  )}
+                </div>
+
+                {tagError && (
+                  <p
+                    role="alert"
+                    className="mt-4 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                  >
+                    {tagError}
+                  </p>
+                )}
+
+                {workspace.role !== "viewer" && (
+                  <form
+                    onSubmit={handleAddTag}
+                    className="mt-5 flex max-w-md flex-col gap-2 sm:flex-row"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Add a tag, e.g. research, ideas"
+                      value={tagInput}
+                      onChange={(event) => setTagInput(event.target.value)}
+                      disabled={tagSaving}
+                      className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={tagSaving}
+                      className="rounded-lg bg-[#5146E5] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {tagSaving ? "Saving…" : "Add"}
+                    </button>
+                  </form>
+                )}
+              </div>
             </section>
           </>
         )}
