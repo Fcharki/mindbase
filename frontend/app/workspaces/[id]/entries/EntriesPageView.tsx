@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
+import { SearchPanel } from "@/app/features/search/SearchPanel";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
 import { getWorkspace, Workspace } from "@/lib/workspaces";
 
@@ -183,6 +184,11 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
             New entry
           </Link>
         </div>
+
+        <SearchPanel
+          workspaceId={workspace.id}
+          basePath={`/workspaces/${workspace.id}/entries`}
+        />
 
         <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
           {entries.length === 0 ? (

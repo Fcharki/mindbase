@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\EmailAuthController;
 use App\Http\Controllers\KnowledgeEntryController;
 use App\Http\Controllers\MembershipRequestController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
 use Illuminate\Support\Facades\Route;
@@ -189,10 +190,17 @@ Route::middleware('auth:sanctum')->group(function () {
         KnowledgeEntryController::class,
         'syncTags',
     ]);
+
+    /*
+    |----------------------------------------------------------------------
+    | Full-text search (entries + tags)
+    |----------------------------------------------------------------------
+    */
+
+    Route::get('workspaces/{workspace}/search', SearchController::class);
 });
 
 // later
 // POST /api/entries/{entry}/summarize
 // POST /api/entries/{entry}/generate-tags
-// POST /api/search
 // POST /api/chat

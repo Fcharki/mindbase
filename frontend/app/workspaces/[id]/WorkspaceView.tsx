@@ -9,6 +9,7 @@ import { useAuth } from "@/app/Providers/AuthProvider";
 import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
+import { SearchPanel } from "@/app/features/search/SearchPanel";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
 import {
   addWorkspaceMember,
@@ -437,6 +438,11 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
         </section>
 
         {/* Knowledge area */}
+        <SearchPanel
+          workspaceId={workspace.id}
+          basePath={`/workspaces/${workspace.id}/entries`}
+        />
+
         <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
             <div>
