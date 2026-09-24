@@ -88,6 +88,35 @@ class WorkspaceMembershipTest extends TestCase
         $response->assertStatus(409);
     }
 
+    public function test_adding_a_member_resolves_their_pending_request(): void
+    {
+        $workspace = $this->workspace();
+        $requester = User::factory()->create();
+        $request = $workspace->membershipRequests()->create([
+            'user_id' => $requester->id,
+            'status' => 'pending',
+            'requested_role' => 'member',
+        ]);
+
+        $this->actingAs($workspace->owner)
+            ->postJson("/api/workspaces/{$workspace->id}/members", [
+                'email' => $requester->email,
+                'role' => 'member',
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('workspace_members', [
+            'workspace_id' => $workspace->id,
+            'user_id' => $requester->id,
+            'role' => 'member',
+        ]);
+
+        $this->assertDatabaseHas('membership_requests', [
+            'id' => $request->id,
+            'status' => 'approved',
+        ]);
+    }
+
     public function test_owner_can_change_a_members_role(): void
     {
         $workspace = $this->workspace();

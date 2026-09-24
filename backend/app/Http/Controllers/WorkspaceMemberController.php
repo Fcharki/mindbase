@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MembershipRequest;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Http\JsonResponse;
@@ -39,6 +40,11 @@ class WorkspaceMemberController extends Controller
         $workspace->members()->attach($user->id, [
             'role' => $validated['role'],
         ]);
+
+        $workspace->membershipRequests()
+            ->where('user_id', $user->id)
+            ->where('status', MembershipRequest::STATUS_PENDING)
+            ->update(['status' => MembershipRequest::STATUS_APPROVED]);
 
         return response()->json([
             'data' => [
