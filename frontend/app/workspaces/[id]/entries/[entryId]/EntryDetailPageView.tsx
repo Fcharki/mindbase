@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
@@ -155,6 +155,10 @@ export function EntryDetailPageView({
       .filter((name) => name !== tagName);
 
     await syncTags(next);
+  }
+
+  if (status === "missing") {
+    notFound();
   }
 
   if (status === "loading" || !workspace || !entry) {
