@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EmailAuthController;
 use App\Http\Controllers\KnowledgeEntryController;
 use App\Http\Controllers\MembershipRequestController;
@@ -199,6 +200,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('workspaces/{workspace}/entries/{entry}/summarize', [
         KnowledgeEntryController::class,
         'summarize',
+    ]);
+
+    /*
+    |----------------------------------------------------------------------
+    | Document uploads (metadata in Postgres, binary on the documents disk)
+    |----------------------------------------------------------------------
+    */
+
+    Route::get('workspaces/{workspace}/entries/{entry}/documents', [
+        DocumentController::class,
+        'index',
+    ]);
+
+    Route::post('workspaces/{workspace}/entries/{entry}/documents', [
+        DocumentController::class,
+        'store',
+    ]);
+
+    Route::get('workspaces/{workspace}/entries/{entry}/documents/{document}/download', [
+        DocumentController::class,
+        'download',
+    ]);
+
+    Route::delete('workspaces/{workspace}/entries/{entry}/documents/{document}', [
+        DocumentController::class,
+        'destroy',
     ]);
 
     /*

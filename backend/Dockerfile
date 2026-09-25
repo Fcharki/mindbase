@@ -25,6 +25,7 @@ RUN composer install
 # Ship process supervisor + boot entrypoint
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

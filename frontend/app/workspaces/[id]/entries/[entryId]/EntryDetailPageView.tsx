@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
+import { DocumentPanel } from "@/app/features/knowledge/components/DocumentPanel";
 import { EntryForm } from "@/app/features/knowledge/components/EntryForm";
 import {
   deleteEntry,
@@ -400,6 +401,12 @@ export function EntryDetailPageView({
                 )}
               </div>
             </section>
+
+            <DocumentPanel
+              workspaceId={workspaceId}
+              entryId={entryId}
+              canWrite={canWrite}
+            />
           </>
         )}
 
