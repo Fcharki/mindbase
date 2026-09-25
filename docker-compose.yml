@@ -44,6 +44,7 @@ services:
     volumes:
       - ./backend:/var/www
       - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - documents_data:/var/www/storage/app/documents
 
     environment:
       DB_CONNECTION: pgsql
@@ -147,5 +148,6 @@ services:
 
 volumes:
   postgres_data:
+  documents_data:
 
   

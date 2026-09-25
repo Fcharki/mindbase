@@ -47,6 +47,23 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Uploaded knowledge entry documents. The path is backed by a Docker
+         * volume in local development (see docker-compose.yml) and must stay
+         * outside the public directory: downloads are streamed through the
+         * authorised controller, never served as a static file.
+         */
+        'documents' => [
+            'driver' => 'local',
+            'root' => env(
+                'DOCUMENTS_DISK_ROOT',
+                storage_path('app/documents')
+            ),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
