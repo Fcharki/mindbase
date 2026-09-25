@@ -52,9 +52,12 @@ services:
       DB_DATABASE: ${POSTGRES_DB}
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+      AI_SERVICE_URL: http://ai-service:8002
 
     depends_on:
       postgres:
+        condition: service_healthy
+      ai-service:
         condition: service_healthy
 
     healthcheck:
@@ -92,6 +95,36 @@ services:
 
     depends_on:
       - backend
+
+  # -------------------------
+  # AI Service (FastAPI + local summarization model)
+  # -------------------------
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+
+    container_name: knowledge-manager-ai-service
+    restart: unless-stopped
+
+    ports:
+      - "8002:8002"
+
+    volumes:
+      - ./ai-service:/srv
+
+    environment:
+      AI_MAX_INPUT_LENGTH: "${AI_MAX_INPUT_LENGTH:-512}"
+      AI_MAX_NEW_TOKENS: "${AI_MAX_NEW_TOKENS:-150}"
+      AI_NUM_BEAMS: "${AI_NUM_BEAMS:-1}"
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 30s
+
 
   # -------------------------
   # Mailpit

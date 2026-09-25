@@ -191,6 +191,11 @@ Route::middleware('auth:sanctum')->group(function () {
         'syncTags',
     ]);
 
+    Route::post('workspaces/{workspace}/entries/{entry}/summarize', [
+        KnowledgeEntryController::class,
+        'summarize',
+    ]);
+
     /*
     |----------------------------------------------------------------------
     | Full-text search (entries + tags)
@@ -201,6 +206,5 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // later
-// POST /api/entries/{entry}/summarize
 // POST /api/entries/{entry}/generate-tags
 // POST /api/chat
