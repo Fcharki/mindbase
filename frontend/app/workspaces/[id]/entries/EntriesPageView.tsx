@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
+import { SearchPanel } from "@/app/features/search/SearchPanel";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
 import { getWorkspace, Workspace } from "@/lib/workspaces";
 
@@ -135,6 +136,8 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
     );
   }
 
+  const canWrite = workspace.role === "owner" || workspace.role === "member";
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
       <WorkspaceNav />
@@ -176,13 +179,20 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
             </p>
           </div>
 
-          <Link
-            href={`/workspaces/${workspace.id}/entries/new`}
-            className="inline-flex w-fit items-center justify-center gap-2 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
-          >
-            New entry
-          </Link>
+          {canWrite && (
+            <Link
+              href={`/workspaces/${workspace.id}/entries/new`}
+              className="inline-flex w-fit items-center justify-center gap-2 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+            >
+              New entry
+            </Link>
+          )}
         </div>
+
+        <SearchPanel
+          workspaceId={workspace.id}
+          basePath={`/workspaces/${workspace.id}/entries`}
+        />
 
         <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
           {entries.length === 0 ? (
@@ -216,15 +226,19 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
               </h3>
 
               <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873]">
-                Capture your first thought, note, or idea in this workspace.
+                {canWrite
+                  ? "Capture your first thought, note, or idea in this workspace."
+                  : "There are no knowledge entries to browse in this workspace yet."}
               </p>
 
-              <Link
-                href={`/workspaces/${workspace.id}/entries/new`}
-                className="mt-6 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
-              >
-                Create your first entry
-              </Link>
+              {canWrite && (
+                <Link
+                  href={`/workspaces/${workspace.id}/entries/new`}
+                  className="mt-6 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+                >
+                  Create your first entry
+                </Link>
+              )}
             </div>
           ) : (
             <EntryList

@@ -25,7 +25,7 @@ export async function login(
 }
 
 export async function loginWithGoogle() {
-  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+  window.open(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, "_self");
 }
 
 export async function register(

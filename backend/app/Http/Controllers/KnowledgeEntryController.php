@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
+use App\Services\AI\SummarizationService;
 use App\Services\TagService;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -143,6 +145,47 @@ class KnowledgeEntryController extends Controller
 
         return response()->json([
             'data' => $tags,
+        ]);
+    }
+
+    public function summarize(
+        Workspace $workspace,
+        KnowledgeEntry $entry,
+        SummarizationService $service
+    ): JsonResponse {
+        Gate::authorize('view', $entry);
+
+        abort_unless(
+            $entry->workspace_id === $workspace->id,
+            404
+        );
+
+        $content = trim(strip_tags((string) $entry->content));
+
+        if ($content === '') {
+            return response()->json([
+                'message' => 'This entry has no content to summarize.',
+            ], 422);
+        }
+
+        try {
+            $summary = $service->summarize($content);
+        } catch (GuzzleException) {
+            return response()->json([
+                'message' => 'The AI service is unavailable. Please try again.',
+            ], 503);
+        }
+
+        if ($summary === '') {
+            return response()->json([
+                'message' => 'The AI service returned an empty summary.',
+            ], 502);
+        }
+
+        return response()->json([
+            'data' => [
+                'summary' => $summary,
+            ],
         ]);
     }
 }

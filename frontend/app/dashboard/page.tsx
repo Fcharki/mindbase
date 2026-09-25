@@ -1,21 +1,52 @@
 "use client";
 
+import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { CreateWorkspaceForm } from "@/app/features/workspaces/CreateWorkspaceForm";
+import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
-import { listWorkspaces, Workspace } from "@/lib/workspaces";
+import {
+  joinWorkspace,
+  listWorkspaces,
+  Workspace,
+} from "@/lib/workspaces";
+
+function WorkspaceMark() {
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEEDFF]">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M4 20V6.5C4 5.12 5.12 4 6.5 4c1.2 0 2.23.83 2.45 2M9 20V8c0-1.66 1.34-3 3-3s3 1.34 3 3M15 20v-9c0-1.38 1.12-2.5 2.5-2.5S20 9.62 20 11v9"
+          stroke="#5146E5"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null);
+  const [query, setQuery] = useState("");
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [joiningId, setJoiningId] = useState<number | null>(null);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (loading) {
+    if (authLoading) {
       return;
     }
 
@@ -30,37 +61,75 @@ export default function DashboardPage() {
       .then((result) => {
         if (!cancelled) {
           setWorkspaces(result);
+          setLoadingError(null);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setWorkspaces([]);
+          setLoadingError("Could not load workspaces. Please try again.");
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
-  useEffect(() => {
-    if (!workspaces || workspaces.length === 0) {
-      return;
+  const filteredWorkspaces = useMemo(() => {
+    if (!workspaces) {
+      return [];
     }
 
-    const primary =
-      workspaces.find((workspace) => workspace.role === "owner") ??
-      workspaces[0];
+    const normalizedQuery = query.trim().toLowerCase();
 
-    router.replace(`/workspaces/${primary.id}`);
-  }, [workspaces, router]);
+    if (!normalizedQuery) {
+      return workspaces;
+    }
 
-  if (loading) {
+    return workspaces.filter((workspace) =>
+      [workspace.name, workspace.owner.name].some((value) =>
+        value.toLowerCase().includes(normalizedQuery),
+      ),
+    );
+  }, [query, workspaces]);
+
+  async function handleJoin(workspaceId: number) {
+    setJoiningId(workspaceId);
+    setJoinError(null);
+
+    try {
+      const result = await joinWorkspace(workspaceId);
+
+      setWorkspaces((current) => {
+        if (!current) {
+          return current;
+        }
+
+        return current.map((workspace) =>
+          workspace.id === workspaceId
+            ? { ...workspace, role: result.role }
+            : workspace,
+        );
+      });
+    } catch (requestError: unknown) {
+      const message = axios.isAxiosError(requestError)
+        ? (requestError.response?.data as { message?: string } | undefined)
+            ?.message
+        : undefined;
+
+      setJoinError(message ?? "Could not join this workspace.");
+    } finally {
+      setJoiningId(null);
+    }
+  }
+
+  if (authLoading || !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] font-sans">
         <div className="flex items-center gap-3 text-sm text-[#686873]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
-          Loading…
+          Loading workspaces…
         </div>
       </main>
     );
@@ -70,69 +139,190 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
       <WorkspaceNav workspaces={workspaces ?? []} />
 
-      <main className="flex flex-1 items-center justify-center px-6 py-20 sm:px-10">
-        {!workspaces ? (
-          <div className="flex items-center gap-3 text-sm text-[#686873]">
-            <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
-            Loading your workspaces…
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 sm:px-10 sm:py-12">
+        <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+              Workspace directory
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+              Explore shared knowledge
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] sm:text-base">
+              Browse every workspace as a viewer, read its knowledge entries,
+              and join the ones you want to help build.
+            </p>
           </div>
-        ) : (
-          <section className="w-full max-w-lg">
-            {/* Intro card */}
-            <div className="rounded-2xl border border-[#DDDCE3] bg-white p-8 shadow-sm sm:p-10">
-              <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF]">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M4 20V6.5C4 5.12 5.12 4 6.5 4c1.2 0 2.23.83 2.45 2M9 20V8c0-1.66 1.34-3 3-3s3 1.34 3 3M15 20v-9c0-1.38 1.12-2.5 2.5-2.5S20 9.62 20 11v9"
-                    stroke="#5146E5"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
 
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
-                Your knowledge space
-              </p>
+          <Link
+            href="/workspaces/new"
+            className="inline-flex w-fit items-center justify-center gap-2 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+            New workspace
+          </Link>
+        </header>
 
-              <h1 className="text-3xl font-semibold tracking-[-0.025em]">
-                Welcome to Mindbase
-              </h1>
-
-              <p className="mt-3 max-w-md leading-relaxed text-[#686873]">
-                Create a workspace to keep your knowledge organized. Once
-                created, you&rsquo;ll go straight into it.
-              </p>
-
-              <div className="mt-8">
-                <CreateWorkspaceForm
-                  onCreated={(workspace) =>
-                    router.push(`/workspaces/${workspace.id}`)
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-between px-1">
-              <span className="text-sm text-[#9897A1]">
-                You can create more workspaces later.
-              </span>
-
-              <Link
-                href="/"
-                className="text-sm font-medium text-[#5146E5] transition hover:text-[#4338CA]"
-              >
-                Back to home
-              </Link>
-            </div>
-          </section>
+        {loadingError && (
+          <p
+            role="alert"
+            className="mt-6 rounded-xl border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm text-[#B13D55]"
+          >
+            {loadingError}
+          </p>
         )}
+
+        <div className="mt-9 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <section className="min-w-0">
+            <div className="relative">
+              <svg
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9897A1]"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="6.5"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                />
+                <path
+                  d="m16 16 4 4"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search workspaces or owners"
+                aria-label="Search workspaces or owners"
+                className="h-12 w-full rounded-xl border border-[#DDDCE3] bg-white pl-11 pr-4 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+              />
+            </div>
+
+            <div className="mt-4 flex items-center justify-between text-sm text-[#686873]">
+              <span>
+                {workspaces
+                  ? `${filteredWorkspaces.length} ${filteredWorkspaces.length === 1 ? "workspace" : "workspaces"}`
+                  : "Loading workspaces…"}
+              </span>
+              <span>Viewing as viewer until you join</span>
+            </div>
+
+            {joinError && (
+              <p
+                role="alert"
+                className="mt-4 rounded-xl border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm text-[#B13D55]"
+              >
+                {joinError}
+              </p>
+            )}
+
+            {!workspaces ? (
+              <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-[#DDDCE3] bg-white text-sm text-[#686873] shadow-sm">
+                Loading workspaces…
+              </div>
+            ) : filteredWorkspaces.length === 0 ? (
+              <div className="mt-5 flex min-h-64 flex-col items-center justify-center rounded-2xl border border-[#DDDCE3] bg-white px-7 py-12 text-center shadow-sm">
+                <WorkspaceMark />
+                <h2 className="mt-5 text-lg font-semibold tracking-tight">
+                  {query ? "No matching workspaces" : "No workspaces yet"}
+                </h2>
+                <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873]">
+                  {query
+                    ? "Try a different workspace or owner name."
+                    : "Create the first workspace to start sharing knowledge."}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                {filteredWorkspaces.map((workspace) => (
+                  <article
+                    key={workspace.id}
+                    className="flex min-h-64 flex-col rounded-2xl border border-[#DDDCE3] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <WorkspaceMark />
+                      <RoleBadge role={workspace.role} />
+                    </div>
+
+                    <Link
+                      href={`/workspaces/${workspace.id}`}
+                      className="mt-5 text-xl font-semibold tracking-tight text-[#20202A] transition hover:text-[#5146E5]"
+                    >
+                      {workspace.name}
+                    </Link>
+                    <p className="mt-1 text-sm text-[#686873]">
+                      Owned by {workspace.owner.name}
+                    </p>
+                    <p className="mt-3 text-sm text-[#9897A1]">
+                      {workspace.entries_count ?? 0}{" "}
+                      {workspace.entries_count === 1 ? "entry" : "entries"}
+                    </p>
+
+                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-6">
+                      <Link
+                        href={`/workspaces/${workspace.id}/entries`}
+                        className="rounded-lg bg-[#5146E5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+                      >
+                        View entries
+                      </Link>
+                      {workspace.role === "viewer" && (
+                        <button
+                          type="button"
+                          onClick={() => handleJoin(workspace.id)}
+                          disabled={joiningId === workspace.id}
+                          className="rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {joiningId === workspace.id ? "Joining…" : "Join"}
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <aside className="rounded-2xl border border-[#DDDCE3] bg-white p-6 shadow-sm lg:sticky lg:top-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+              Start something new
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight">
+              Create a workspace
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#686873]">
+              You&rsquo;ll become its owner and can add entries and members.
+            </p>
+            <div className="mt-6">
+              <CreateWorkspaceForm
+                onCreated={(workspace) =>
+                  router.push(`/workspaces/${workspace.id}`)
+                }
+              />
+            </div>
+          </aside>
+        </div>
       </main>
     </div>
   );

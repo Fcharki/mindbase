@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MembershipRequest;
 use App\Models\Workspace;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,19 +32,67 @@ class WorkspaceController extends Controller
             ],
         ]);
     }
+
     public function index(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Workspace::class);
 
-        $workspaces = $request->user()
-            ->workspaces()
-            ->with('owner:id,name,email')
+        $user = $request->user();
+
+        $workspaces = Workspace::query()
+            ->with([
+                'owner:id,name,email',
+                'members' => fn ($query) => $query->where('users.id', $user->id),
+            ])
+            ->withCount(['knowledgeEntries as entries_count'])
             ->orderBy('name')
             ->get();
 
         return response()->json([
             'data' => $workspaces,
         ]);
+    }
+
+    public function join(Request $request, Workspace $workspace): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($workspace->owner_id === $user->id) {
+            return response()->json([
+                'message' => 'You already own this workspace.',
+            ], 409);
+        }
+
+        $status = DB::transaction(function () use ($user, $workspace) {
+            $membership = $workspace->members()
+                ->where('users.id', $user->id)
+                ->first();
+
+            if ($membership) {
+                $workspace->members()->updateExistingPivot($user->id, [
+                    'role' => 'member',
+                ]);
+            } else {
+                $workspace->members()->attach($user->id, [
+                    'role' => 'member',
+                ]);
+            }
+
+            $workspace->membershipRequests()
+                ->where('user_id', $user->id)
+                ->where('status', MembershipRequest::STATUS_PENDING)
+                ->update(['status' => MembershipRequest::STATUS_APPROVED]);
+
+            return $membership ? 200 : 201;
+        });
+
+        return response()->json([
+            'data' => [
+                'workspace_id' => $workspace->id,
+                'user_id' => $user->id,
+                'role' => 'member',
+            ],
+        ], $status);
     }
 
     public function store(Request $request): JsonResponse

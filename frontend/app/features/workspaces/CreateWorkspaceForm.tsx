@@ -28,11 +28,11 @@ export function CreateWorkspaceForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
-      <div className="flex flex-col gap-1.5">
+    <form onSubmit={handleSubmit} className="w-full space-y-5">
+      <div className="flex flex-col gap-2">
         <label
           htmlFor="workspace-name"
-          className="text-sm text-[#4A4D45] dark:text-[#9C9F94]"
+          className="text-sm font-medium text-[#20202A]"
         >
           Workspace name
         </label>
@@ -45,16 +45,20 @@ export function CreateWorkspaceForm({
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="e.g. Research, Personal, Team"
-          className="w-full border-b border-[#C8C5B8] bg-transparent py-1.5 text-[#1E211D] focus:border-[#3B4A6B] focus:outline-none dark:border-[#3A3D30] dark:text-[#E7E5DC] dark:focus:border-[#8CA0D8]"
+          className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
         />
       </div>
 
-      {error && <p className="text-sm text-[#B3452C]">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm leading-relaxed text-[#B13D55]">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-full bg-[#3B4A6B] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2F3C57] disabled:opacity-50"
+        className="w-full rounded-lg bg-[#5146E5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? "Creating…" : "Create workspace"}
       </button>

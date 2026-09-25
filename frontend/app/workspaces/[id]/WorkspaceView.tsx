@@ -9,6 +9,7 @@ import { useAuth } from "@/app/Providers/AuthProvider";
 import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
+import { SearchPanel } from "@/app/features/search/SearchPanel";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
 import {
   addWorkspaceMember,
@@ -69,6 +70,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const [copied, setCopied] = useState(false);
 
   const isOwner = workspace?.role === "owner";
+  const canWrite = workspace?.role === "owner" || workspace?.role === "member";
 
   useEffect(() => {
     if (authLoading) {
@@ -437,6 +439,11 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
         </section>
 
         {/* Knowledge area */}
+        <SearchPanel
+          workspaceId={workspace.id}
+          basePath={`/workspaces/${workspace.id}/entries`}
+        />
+
         <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
             <div>
@@ -449,12 +456,14 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
               </h2>
             </div>
 
-            <Link
-              href={`/workspaces/${workspace.id}/entries/new`}
-              className="rounded-lg bg-[#5146E5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA]"
-            >
-              New entry
-            </Link>
+            {canWrite && (
+              <Link
+                href={`/workspaces/${workspace.id}/entries/new`}
+                className="rounded-lg bg-[#5146E5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+              >
+                New entry
+              </Link>
+            )}
           </div>
 
           {entries.length === 0 ? (
@@ -484,20 +493,25 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
               </div>
 
               <h3 className="text-lg font-semibold tracking-tight">
-                Your knowledge lives here
+                {workspace.role === "viewer"
+                  ? "No entries yet"
+                  : "Your knowledge lives here"}
               </h3>
 
               <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873]">
-                Capture your first thought, note, or idea — it&rsquo;ll show
-                up here alongside all of your entries.
+                {workspace.role === "viewer"
+                  ? "There are no knowledge entries to browse in this workspace yet."
+                  : "Capture your first thought, note, or idea — it’ll show up here alongside all of your entries."}
               </p>
 
-              <Link
-                href={`/workspaces/${workspace.id}/entries/new`}
-                className="mt-6 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
-              >
-                Create your first entry
-              </Link>
+              {canWrite && (
+                <Link
+                  href={`/workspaces/${workspace.id}/entries/new`}
+                  className="mt-6 rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+                >
+                  Create your first entry
+                </Link>
+              )}
             </div>
           ) : (
             <>

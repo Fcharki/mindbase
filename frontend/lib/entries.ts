@@ -95,3 +95,20 @@ export async function tagEntry(
 
   return data.data;
 }
+
+interface SummarizeResponse {
+  data: {
+    summary: string;
+  };
+}
+
+export async function summarizeEntry(
+  workspaceId: number | string,
+  entryId: number | string,
+): Promise<string> {
+  const { data } = await api.post<SummarizeResponse>(
+    `/workspaces/${workspaceId}/entries/${entryId}/summarize`,
+  );
+
+  return data.data.summary;
+}

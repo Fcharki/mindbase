@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
@@ -12,6 +12,7 @@ import {
   deleteEntry,
   getEntry,
   KnowledgeEntry,
+  summarizeEntry,
   tagEntry,
   updateEntry,
 } from "@/lib/entries";
@@ -38,6 +39,9 @@ export function EntryDetailPageView({
   const [tagInput, setTagInput] = useState("");
   const [tagError, setTagError] = useState<string | null>(null);
   const [tagSaving, setTagSaving] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) {
@@ -157,6 +161,26 @@ export function EntryDetailPageView({
     await syncTags(next);
   }
 
+  async function handleSummarize() {
+    setSummarizing(true);
+    setSummaryError(null);
+
+    try {
+      const result = await summarizeEntry(workspaceId, entryId);
+      setSummary(result);
+    } catch {
+      setSummaryError(
+        "Could not summarize this entry. The AI service may be starting up – please try again in a moment.",
+      );
+    } finally {
+      setSummarizing(false);
+    }
+  }
+
+  if (status === "missing") {
+    notFound();
+  }
+
   if (status === "loading" || !workspace || !entry) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] font-sans">
@@ -170,6 +194,7 @@ export function EntryDetailPageView({
 
   const updatedAt = new Date(entry.updated_at ?? entry.created_at);
   const author = entry.creator?.name ?? user?.name ?? "you";
+  const canWrite = workspace.role === "owner" || workspace.role === "member";
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
@@ -223,36 +248,48 @@ export function EntryDetailPageView({
                 </p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-3">
-                <button
-                  onClick={() => {
-                    setError(null);
-                    setEditing(true);
-                  }}
-                  className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A]"
-                >
-                  Edit
-                </button>
+              {canWrite && (
+                <div className="flex shrink-0 items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      setEditing(true);
+                    }}
+                    className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A]"
+                  >
+                    Edit
+                  </button>
 
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="rounded-lg border border-[#E85D75] px-5 py-3 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {deleting ? "Deleting…" : "Delete"}
-                </button>
-              </div>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="rounded-lg border border-[#E85D75] px-5 py-3 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deleting ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              )}
             </div>
 
             <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-              <div className="border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
-                <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
-                  {workspace.name}
-                </p>
+              <div className="flex items-start justify-between gap-4 border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+                    {workspace.name}
+                  </p>
 
-                <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                  Content
-                </h2>
+                  <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                    Content
+                  </h2>
+                </div>
+
+                <button
+                  onClick={handleSummarize}
+                  disabled={summarizing || !entry.content}
+                  className="shrink-0 rounded-lg border border-[#5146E5] px-4 py-2 text-sm font-medium text-[#5146E5] transition hover:bg-[#EEEDFF] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {summarizing ? "Summarizing…" : "Summarize"}
+                </button>
               </div>
 
               {entry.content ? (
@@ -263,6 +300,27 @@ export function EntryDetailPageView({
               ) : (
                 <p className="px-7 py-7 text-sm leading-relaxed text-[#9897A1] sm:px-8">
                   This entry has no content yet.
+                </p>
+              )}
+
+              {summary && (
+                <div className="border-t border-[#DDDCE3] px-7 py-6 sm:px-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+                    AI Summary
+                  </p>
+
+                  <p className="mt-2 text-sm leading-relaxed text-[#20202A]">
+                    {summary}
+                  </p>
+                </div>
+              )}
+
+              {summaryError && (
+                <p
+                  role="alert"
+                  className="mx-7 mb-6 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55] sm:mx-8"
+                >
+                  {summaryError}
                 </p>
               )}
             </section>

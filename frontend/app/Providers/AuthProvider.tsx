@@ -63,7 +63,28 @@ export function AuthProvider({
   }
 
   useEffect(() => {
-    loadUser();
+    let cancelled = false;
+
+    getCurrentUser()
+      .then((currentUser) => {
+        if (!cancelled) {
+          setUser(currentUser);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function login(email: string, password: string) {
@@ -93,8 +114,8 @@ export function AuthProvider({
   }
 
   async function loginWithGoogle() {
-  await loginWithGoogleRequest();
-}
+    await loginWithGoogleRequest();
+  }
 
   async function forgotPassword(email: string) {
     await forgotPasswordRequest(email);

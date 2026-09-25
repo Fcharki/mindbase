@@ -11,11 +11,11 @@ class KnowledgeEntryPolicy
     /**
      * Determine whether the user can view any entries in the workspace
      *
-     * Owner, member, and viewer can all view entries.
+     * Authenticated users can browse entries as viewers by default.
      */
     public function view(User $user, KnowledgeEntry $entry): bool
     {
-        return $this->isMember($user, $entry);
+        return true;
     }
 
     /**
@@ -60,11 +60,6 @@ class KnowledgeEntryPolicy
         return false;
     }
 
-    private function isMember(User $user, KnowledgeEntry $entry): bool
-    {
-        return $this->membershipExists($user, $entry->workspace_id);
-    }
-
     private function isMemberWithWriteAccess(
         User $user,
         KnowledgeEntry|Workspace $model
@@ -74,29 +69,14 @@ class KnowledgeEntryPolicy
             : $model->workspace_id;
 
         return $this->isOwner($user, $workspaceId)
-            || (
-                $this->membershipExists($user, $workspaceId)
-                && ! $this->isViewer($user, $workspaceId)
-            );
+            || $user->workspaces()
+                ->where('workspaces.id', $workspaceId)
+                ->wherePivotIn('role', ['owner', 'member'])
+                ->exists();
     }
 
     private function isOwner(User $user, int $workspaceId): bool
     {
         return Workspace::whereKey($workspaceId)->value('owner_id') === $user->id;
-    }
-
-    private function membershipExists(User $user, int $workspaceId): bool
-    {
-        return $user->workspaces()
-            ->where('workspaces.id', $workspaceId)
-            ->exists();
-    }
-
-    private function isViewer(User $user, int $workspaceId): bool
-    {
-        return $user->workspaces()
-            ->where('workspaces.id', $workspaceId)
-            ->wherePivot('role', 'viewer')
-            ->exists();
     }
 }

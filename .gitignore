@@ -9,4 +9,10 @@
 
 /data
 .vscode
+/ai-service/app/models
+/AI_SERVICE.md
+
+# python
+__pycache__/
+*.py[cod]
 

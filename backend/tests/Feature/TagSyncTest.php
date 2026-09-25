@@ -40,7 +40,7 @@ class TagSyncTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $response = $this->actingAs($workspace->owner)
-            ->postJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
                 'tags' => ['PHP', 'Laravel'],
             ]);
 
@@ -60,13 +60,13 @@ class TagSyncTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $this->actingAs($workspace->owner)
-            ->postJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
                 'tags' => ['PHP'],
             ])
             ->assertOk();
 
         $this->actingAs($workspace->owner)
-            ->postJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
                 'tags' => ['PHP', 'Laravel'],
             ])
             ->assertOk()
@@ -84,13 +84,13 @@ class TagSyncTest extends TestCase
         $entryB = $this->entry($workspaceB, $workspaceB->owner);
 
         $this->actingAs($workspaceA->owner)
-            ->postJson("/api/workspaces/{$workspaceA->id}/entries/{$entryA->id}/tags", [
+            ->postJson("/api/v1/workspaces/{$workspaceA->id}/entries/{$entryA->id}/tags", [
                 'tags' => ['shared'],
             ])
             ->assertOk();
 
         $this->actingAs($workspaceB->owner)
-            ->postJson("/api/workspaces/{$workspaceB->id}/entries/{$entryB->id}/tags", [
+            ->postJson("/api/v1/workspaces/{$workspaceB->id}/entries/{$entryB->id}/tags", [
                 'tags' => ['shared'],
             ])
             ->assertOk();
@@ -106,7 +106,7 @@ class TagSyncTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $response = $this->actingAs($viewer)
-            ->postJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/tags", [
                 'tags' => ['PHP'],
             ]);
 
@@ -121,7 +121,7 @@ class TagSyncTest extends TestCase
         $entry->tags()->attach($tag->id);
 
         $response = $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}");
+            ->getJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}");
 
         $response->assertOk()
             ->assertJsonPath('data.tags_count', 1)

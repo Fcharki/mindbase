@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\KnowledgeEntry;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\AI\SummarizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,14 +25,17 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         return $workspace;
     }
 
-    private function entry(Workspace $workspace, User $creator): KnowledgeEntry
-    {
-        return KnowledgeEntry::create([
+    private function entry(
+        Workspace $workspace,
+        User $creator,
+        array $attributes = []
+    ): KnowledgeEntry {
+        return KnowledgeEntry::create(array_merge([
             'workspace_id' => $workspace->id,
             'created_by' => $creator->id,
             'title' => 'An entry',
             'content' => 'Body',
-        ]);
+        ], $attributes));
     }
 
     public function test_member_can_create_an_entry(): void
@@ -41,7 +45,7 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $workspace->members()->attach($member->id, ['role' => 'member']);
 
         $response = $this->actingAs($member)
-            ->postJson("/api/workspaces/{$workspace->id}/entries", [
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries", [
                 'title' => 'My entry',
                 'content' => 'Body',
             ]);
@@ -57,7 +61,7 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $workspace->members()->attach($viewer->id, ['role' => 'viewer']);
 
         $response = $this->actingAs($viewer)
-            ->postJson("/api/workspaces/{$workspace->id}/entries", [
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries", [
                 'title' => 'My entry',
                 'content' => 'Body',
             ]);
@@ -73,10 +77,74 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $response = $this->actingAs($viewer)
-            ->getJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}");
+            ->getJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}");
 
         $response->assertOk()
             ->assertJsonPath('data.id', $entry->id);
+    }
+
+    public function test_default_viewer_can_browse_workspace_entries(): void
+    {
+        $workspace = $this->workspace();
+        $viewer = User::factory()->create();
+        $entry = $this->entry($workspace, $workspace->owner);
+
+        $this->actingAs($viewer)
+            ->getJson("/api/v1/workspaces/{$workspace->id}")
+            ->assertOk()
+            ->assertJsonPath('data.role', 'viewer');
+
+        $this->actingAs($viewer)
+            ->getJson("/api/v1/workspaces/{$workspace->id}/entries")
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $entry->id);
+
+        $this->actingAs($viewer)
+            ->getJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $entry->id);
+    }
+
+    public function test_default_viewer_cannot_create_an_entry(): void
+    {
+        $workspace = $this->workspace();
+        $viewer = User::factory()->create();
+
+        $this->actingAs($viewer)
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries", [
+                'title' => 'My entry',
+                'content' => 'Body',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_default_viewer_can_summarize_an_entry(): void
+    {
+        $workspace = $this->workspace();
+        $viewer = User::factory()->create();
+        $entry = $this->entry($workspace, $workspace->owner, [
+            'content' => '<p>Important shared knowledge.</p>',
+        ]);
+
+        $service = new class extends SummarizationService
+        {
+            public function __construct() {}
+
+            public function summarize(string $text): string
+            {
+                return 'A concise summary of the shared knowledge.';
+            }
+        };
+
+        $this->app->instance(SummarizationService::class, $service);
+
+        $this->actingAs($viewer)
+            ->postJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/summarize")
+            ->assertOk()
+            ->assertJsonPath(
+                'data.summary',
+                'A concise summary of the shared knowledge.'
+            );
     }
 
     public function test_member_can_update_an_entry(): void
@@ -87,7 +155,7 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $response = $this->actingAs($member)
-            ->putJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}", [
+            ->putJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}", [
                 'title' => 'Updated',
                 'content' => 'New body',
             ]);
@@ -104,7 +172,7 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $response = $this->actingAs($viewer)
-            ->putJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}", [
+            ->putJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}", [
                 'title' => 'Updated',
                 'content' => 'New body',
             ]);
@@ -120,7 +188,7 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $response = $this->actingAs($member)
-            ->deleteJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}");
+            ->deleteJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}");
 
         $response->assertOk();
 
@@ -137,7 +205,7 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $entry = $this->entry($workspace, $workspace->owner);
 
         $response = $this->actingAs($viewer)
-            ->deleteJson("/api/workspaces/{$workspace->id}/entries/{$entry->id}");
+            ->deleteJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}");
 
         $response->assertForbidden();
     }
@@ -149,12 +217,12 @@ class KnowledgeEntryAuthorizationTest extends TestCase
         $workspace->members()->attach($member->id, ['role' => 'member']);
 
         $response = $this->actingAs($member)
-            ->putJson("/api/workspaces/{$workspace->id}", ['name' => 'Renamed']);
+            ->putJson("/api/v1/workspaces/{$workspace->id}", ['name' => 'Renamed']);
 
         $response->assertForbidden();
 
         $this->actingAs($workspace->owner)
-            ->putJson("/api/workspaces/{$workspace->id}", ['name' => 'Renamed'])
+            ->putJson("/api/v1/workspaces/{$workspace->id}", ['name' => 'Renamed'])
             ->assertOk();
     }
 }
