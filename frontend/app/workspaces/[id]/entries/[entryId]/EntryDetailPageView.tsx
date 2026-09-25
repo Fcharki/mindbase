@@ -194,6 +194,7 @@ export function EntryDetailPageView({
 
   const updatedAt = new Date(entry.updated_at ?? entry.created_at);
   const author = entry.creator?.name ?? user?.name ?? "you";
+  const canWrite = workspace.role === "owner" || workspace.role === "member";
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
@@ -247,25 +248,27 @@ export function EntryDetailPageView({
                 </p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-3">
-                <button
-                  onClick={() => {
-                    setError(null);
-                    setEditing(true);
-                  }}
-                  className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A]"
-                >
-                  Edit
-                </button>
+              {canWrite && (
+                <div className="flex shrink-0 items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      setEditing(true);
+                    }}
+                    className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A]"
+                  >
+                    Edit
+                  </button>
 
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="rounded-lg border border-[#E85D75] px-5 py-3 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {deleting ? "Deleting…" : "Delete"}
-                </button>
-              </div>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="rounded-lg border border-[#E85D75] px-5 py-3 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deleting ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              )}
             </div>
 
             <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">

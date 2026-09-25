@@ -43,7 +43,8 @@ export interface Workspace {
   owner_id: number;
   created_at: string;
   updated_at: string;
-  role: WorkspaceRole | null;
+  entries_count?: number;
+  role: WorkspaceRole;
   owner: WorkspaceOwner;
   members?: WorkspaceMember[];
 }
@@ -86,6 +87,20 @@ export async function getWorkspaceByInviteCode(
   const { data } = await api.get<ResourceResponse<JoinableWorkspace>>(
     `/join/${inviteCode}`,
   );
+
+  return data.data;
+}
+
+export async function joinWorkspace(
+  workspaceId: number | string,
+): Promise<{ workspace_id: number; user_id: number; role: WorkspaceRole }> {
+  const { data } = await api.post<
+    ResourceResponse<{
+      workspace_id: number;
+      user_id: number;
+      role: WorkspaceRole;
+    }>
+  >(`/workspaces/${workspaceId}/join`);
 
   return data.data;
 }

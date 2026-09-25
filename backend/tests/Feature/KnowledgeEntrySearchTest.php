@@ -37,14 +37,18 @@ class KnowledgeEntrySearchTest extends TestCase
         ], $attributes));
     }
 
-    public function test_non_member_cannot_search_a_workspace(): void
+    public function test_default_viewer_can_search_a_workspace(): void
     {
         $workspace = $this->workspace();
-        $outsider = User::factory()->create();
+        $viewer = User::factory()->create();
+        $entry = $this->entry($workspace, $workspace->owner, [
+            'title' => 'Laravel deployment guide',
+        ]);
 
-        $this->actingAs($outsider)
-            ->getJson("/api/workspaces/{$workspace->id}/search?q=laravel")
-            ->assertForbidden();
+        $this->actingAs($viewer)
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search?q=laravel")
+            ->assertOk()
+            ->assertJsonPath('data.entries.0.id', $entry->id);
     }
 
     public function test_search_matches_entries_by_title(): void
@@ -58,7 +62,7 @@ class KnowledgeEntrySearchTest extends TestCase
         ]);
 
         $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/search?q=laravel")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search?q=laravel")
             ->assertOk()
             ->assertJsonPath('data.entries.0.id', $match->id)
             ->assertJsonCount(1, 'data.entries');
@@ -73,7 +77,7 @@ class KnowledgeEntrySearchTest extends TestCase
         ]);
 
         $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/search?q=hiked")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search?q=hiked")
             ->assertOk()
             ->assertJsonPath('data.entries.0.id', $match->id);
     }
@@ -93,7 +97,7 @@ class KnowledgeEntrySearchTest extends TestCase
         $workspaceB->members()->attach($user->id, ['role' => 'member']);
 
         $this->actingAs($user)
-            ->getJson("/api/workspaces/{$workspaceB->id}/search?q=laravel")
+            ->getJson("/api/v1/workspaces/{$workspaceB->id}/search?q=laravel")
             ->assertOk()
             ->assertJsonCount(1, 'data.entries')
             ->assertJsonPath('data.entries.0.id', $visible->id);
@@ -121,7 +125,7 @@ class KnowledgeEntrySearchTest extends TestCase
         $entry->tags()->attach($tag->id);
 
         $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/search?q=design")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search?q=design")
             ->assertOk()
             ->assertJsonPath('data.entries.0.id', $entry->id);
     }
@@ -136,7 +140,7 @@ class KnowledgeEntrySearchTest extends TestCase
         $match->tags()->attach($tag->id);
 
         $response = $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/search?q=php")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search?q=php")
             ->assertOk();
 
         $response->assertJsonPath('data.tags.0.name', 'php');
@@ -157,7 +161,7 @@ class KnowledgeEntrySearchTest extends TestCase
         $tagged->tags()->attach($tag->id);
 
         $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/search?q=laravel&tag=queues")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search?q=laravel&tag=queues")
             ->assertOk()
             ->assertJsonCount(1, 'data.entries')
             ->assertJsonPath('data.entries.0.id', $tagged->id)
@@ -174,7 +178,7 @@ class KnowledgeEntrySearchTest extends TestCase
         ]);
 
         $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/search")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search")
             ->assertOk()
             ->assertJsonCount(0, 'data.entries')
             ->assertJsonCount(0, 'data.tags');
@@ -190,7 +194,7 @@ class KnowledgeEntrySearchTest extends TestCase
         ]);
 
         $this->actingAs($viewer)
-            ->getJson("/api/workspaces/{$workspace->id}/search?q=laravel")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/search?q=laravel")
             ->assertOk()
             ->assertJsonPath('data.entries.0.id', $match->id);
     }

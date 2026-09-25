@@ -58,11 +58,19 @@ class Workspace extends Model
 
     public function getRoleAttribute(): ?string
     {
+        if (! Auth::check()) {
+            return null;
+        }
+
+        if ($this->owner_id === Auth::id()) {
+            return 'owner';
+        }
+
         if ($this->pivot) {
             return $this->pivot->role;
         }
 
-        if ($this->relationLoaded('members') && Auth::check()) {
+        if ($this->relationLoaded('members')) {
             $membership = $this->members->firstWhere('id', Auth::id());
 
             if ($membership?->pivot) {
@@ -70,6 +78,6 @@ class Workspace extends Model
             }
         }
 
-        return null;
+        return 'viewer';
     }
 }

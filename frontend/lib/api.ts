@@ -1,7 +1,9 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
+// Sanctum's CSRF route lives at the server root, outside the versioned
+// API prefix, so strip the whole "/api/vN" base off before using it.
 const API_ROOT = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(
-  /\/api\/?$/,
+  /\/api(?:\/v\d+)?\/?$/,
   "",
 );
 

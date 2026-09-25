@@ -29,7 +29,7 @@ class MembershipRequestTest extends TestCase
         $requester = User::factory()->create();
 
         $response = $this->actingAs($requester)
-            ->postJson("/api/workspaces/{$workspace->id}/join-requests", [
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests", [
                 'role' => 'viewer',
             ]);
 
@@ -49,7 +49,7 @@ class MembershipRequestTest extends TestCase
         $workspace = $this->workspace();
 
         $response = $this->actingAs($workspace->owner)
-            ->postJson("/api/workspaces/{$workspace->id}/join-requests");
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertStatus(409);
     }
@@ -61,7 +61,7 @@ class MembershipRequestTest extends TestCase
         $workspace->members()->attach($member->id, ['role' => 'member']);
 
         $response = $this->actingAs($member)
-            ->postJson("/api/workspaces/{$workspace->id}/join-requests");
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertStatus(409);
     }
@@ -76,7 +76,7 @@ class MembershipRequestTest extends TestCase
         ]);
 
         $response = $this->actingAs($requester)
-            ->postJson("/api/workspaces/{$workspace->id}/join-requests");
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertStatus(409);
     }
@@ -88,7 +88,7 @@ class MembershipRequestTest extends TestCase
         $workspace->members()->attach($member->id, ['role' => 'member']);
 
         $response = $this->actingAs($member)
-            ->getJson("/api/workspaces/{$workspace->id}/join-requests");
+            ->getJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertForbidden();
     }
@@ -103,7 +103,7 @@ class MembershipRequestTest extends TestCase
         ]);
 
         $response = $this->actingAs($workspace->owner)
-            ->getJson("/api/workspaces/{$workspace->id}/join-requests");
+            ->getJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertOk()
             ->assertJsonCount(1, 'data')
@@ -122,7 +122,7 @@ class MembershipRequestTest extends TestCase
 
         $response = $this->actingAs($workspace->owner)
             ->postJson(
-                "/api/workspaces/{$workspace->id}/join-requests/{$request->id}/approve",
+                "/api/v1/workspaces/{$workspace->id}/join-requests/{$request->id}/approve",
                 ['role' => 'member']
             );
 
@@ -147,7 +147,7 @@ class MembershipRequestTest extends TestCase
         ]);
 
         $this->actingAs($workspace->owner)
-            ->postJson("/api/workspaces/{$workspace->id}/join-requests/{$request->id}/approve")
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests/{$request->id}/approve")
             ->assertOk();
 
         $this->assertDatabaseHas('workspace_members', [
@@ -167,7 +167,7 @@ class MembershipRequestTest extends TestCase
         ]);
 
         $response = $this->actingAs($workspace->owner)
-            ->deleteJson("/api/workspaces/{$workspace->id}/join-requests/{$request->id}");
+            ->deleteJson("/api/v1/workspaces/{$workspace->id}/join-requests/{$request->id}");
 
         $response->assertOk();
 
@@ -186,11 +186,11 @@ class MembershipRequestTest extends TestCase
         ]);
 
         $this->actingAs($workspace->owner)
-            ->deleteJson("/api/workspaces/{$workspace->id}/join-requests/{$request->id}")
+            ->deleteJson("/api/v1/workspaces/{$workspace->id}/join-requests/{$request->id}")
             ->assertOk();
 
         $this->actingAs($requester)
-            ->postJson("/api/workspaces/{$workspace->id}/join-requests")
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests")
             ->assertCreated();
     }
 }

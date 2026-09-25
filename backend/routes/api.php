@@ -132,6 +132,11 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
 
+    Route::post('workspaces/{workspace}/join', [
+        WorkspaceController::class,
+        'join',
+    ]);
+
     Route::post('workspaces/{workspace}/members', [
         WorkspaceMemberController::class,
         'store',
@@ -206,5 +211,5 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // later
-// POST /api/entries/{entry}/generate-tags
-// POST /api/chat
+// POST /api/v1/entries/{entry}/generate-tags
+// POST /api/v1/chat

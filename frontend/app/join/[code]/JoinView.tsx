@@ -2,25 +2,24 @@
 
 import axios from "axios";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import {
   getWorkspaceByInviteCode,
+  joinWorkspace,
   JoinableWorkspace,
-  requestJoin,
-  WorkspaceRole,
 } from "@/lib/workspaces";
 
 type Status = "loading" | "ready" | "missing";
 
 export function JoinView({ inviteCode }: { inviteCode: string }) {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
   const [workspace, setWorkspace] = useState<JoinableWorkspace | null>(null);
   const [status, setStatus] = useState<Status>("loading");
-  const [role, setRole] = useState<WorkspaceRole>("member");
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -45,29 +44,25 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
     };
   }, [inviteCode]);
 
-  async function handleRequest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleJoin() {
     if (!workspace) {
       return;
     }
 
     setSubmitting(true);
     setError(null);
-    setMessage(null);
 
     try {
-      await requestJoin(workspace.id, role);
-      setMessage(
-        "Your request has been sent. The workspace owner will approve it shortly.",
-      );
+      await joinWorkspace(workspace.id);
+      router.push(`/workspaces/${workspace.id}/entries`);
+      router.refresh();
     } catch (requestError: unknown) {
       const responseMessage = axios.isAxiosError(requestError)
         ? (requestError.response?.data as { message?: string } | undefined)
             ?.message
         : undefined;
 
-      setError(responseMessage ?? "Could not send your request.");
+      setError(responseMessage ?? "Could not join this workspace.");
     } finally {
       setSubmitting(false);
     }
@@ -120,38 +115,26 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
             aria-hidden="true"
           >
             <path
-              d="M6 4.5h9.5L19 8v11.5H6V4.5Z"
+              d="M4 20V6.5C4 5.12 5.12 4 6.5 4c1.2 0 2.23.83 2.45 2M9 20V8c0-1.66 1.34-3 3-3s3 1.34 3 3M15 20v-9c0-1.38 1.12-2.5 2.5-2.5S20 9.62 20 11v9"
               stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M15 4.5V8h4M9 12h7M9 15.5h5"
-              stroke="currentColor"
-              strokeWidth="1.6"
+              strokeWidth="1.7"
               strokeLinecap="round"
-              strokeLinejoin="round"
             />
           </svg>
         </div>
 
-        <h1 className="text-2xl font-semibold tracking-[-0.025em]">
+        <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+          You have viewer access
+        </p>
+
+        <h1 className="mt-2 text-2xl font-semibold tracking-[-0.025em]">
           {workspace.name}
         </h1>
 
         <p className="mt-3 text-sm leading-relaxed text-[#686873]">
-          Owned by {workspace.owner.name}. Request access to start capturing
-          knowledge together.
+          Owned by {workspace.owner.name}. Join as a member to add and manage
+          knowledge entries.
         </p>
-
-        {message && (
-          <p
-            role="status"
-            className="mt-5 rounded-lg border border-[#C8ECD9] bg-[#E9F9F0] px-4 py-3 text-sm leading-relaxed text-[#1F7A44]"
-          >
-            {message}
-          </p>
-        )}
 
         {error && (
           <p
@@ -165,37 +148,21 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
         {authLoading ? (
           <p className="mt-7 text-sm text-[#686873]">Loading…</p>
         ) : user ? (
-          <form onSubmit={handleRequest} className="mt-7 space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-sm text-[#686873]">Request role:</span>
-
-              <select
-                value={role}
-                onChange={(event) =>
-                  setRole(event.target.value as WorkspaceRole)
-                }
-                className="rounded-lg border border-[#DDDCE3] bg-white px-3 py-2 text-sm text-[#20202A] outline-none focus:border-[#5146E5]"
-              >
-                <option value="member">member</option>
-                <option value="viewer">viewer</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex w-full items-center justify-center rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting ? "Sending request…" : "Request to join"}
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={handleJoin}
+            disabled={submitting}
+            className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? "Joining…" : "Join as member"}
+          </button>
         ) : (
           <>
             <Link
               href={`/auth/login?next=${encodeURIComponent(`/join/${inviteCode}`)}`}
               className="mt-7 inline-flex w-full items-center justify-center rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
             >
-              Log in to request access
+              Log in to join
             </Link>
 
             <p className="mt-4 text-sm text-[#686873]">

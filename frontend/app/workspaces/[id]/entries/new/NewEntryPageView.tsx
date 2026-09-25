@@ -67,6 +67,32 @@ export function NewEntryPageView({ workspaceId }: { workspaceId: string }) {
     );
   }
 
+  if (workspace.role === "viewer") {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+        <WorkspaceNav />
+
+        <main className="flex flex-1 items-center justify-center px-6 py-20 sm:px-10">
+          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] bg-white p-8 text-center shadow-sm sm:p-10">
+            <h1 className="text-2xl font-semibold tracking-[-0.025em]">
+              Viewer access
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-[#686873]">
+              Join {workspace.name} from the workspace directory before creating
+              entries.
+            </p>
+            <Link
+              href="/dashboard"
+              className="mt-7 inline-flex items-center justify-center rounded-lg bg-[#5146E5] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+            >
+              Browse workspaces
+            </Link>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
       <WorkspaceNav />
