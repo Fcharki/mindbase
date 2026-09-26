@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Auth\EmailService;
 use Illuminate\Http\JsonResponse;
@@ -14,13 +15,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\URL;
+use Symfony\Component\HttpFoundation\Response;
 
 class EmailAuthController extends Controller
 {
     public function __construct(
         private EmailService $emailService
-    ) {
-    }
+    ) {}
 
     /**
      * Register a new user.
@@ -39,10 +40,9 @@ class EmailAuthController extends Controller
 
         return response()->json([
             'message' => 'Account created successfully. Please verify your email.',
-            'user' => $user,
+            'user' => UserResource::make($user),
         ], 201);
     }
-
 
     /**
      * Login.
@@ -53,13 +53,13 @@ class EmailAuthController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'message' => 'Invalid email or password.',
             ], 401);
         }
 
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'message' => 'Please verify your email before logging in.',
                 'email_verified' => false,
@@ -71,10 +71,9 @@ class EmailAuthController extends Controller
 
         return response()->json([
             'message' => 'Login successful.',
-            'user' => $user,
+            'user' => UserResource::make($user),
         ]);
     }
-
 
     /**
      * Logout.
@@ -89,17 +88,15 @@ class EmailAuthController extends Controller
         ]);
     }
 
-
     /**
      * Get authenticated user.
      */
     public function me(Request $request): JsonResponse
     {
         return response()->json([
-            'user' => $request->user(),
+            'user' => UserResource::make($request->user()),
         ]);
     }
-
 
     /**
      * Verify email.
@@ -108,27 +105,27 @@ class EmailAuthController extends Controller
         Request $request,
         int $id,
         string $hash
-    ): \Symfony\Component\HttpFoundation\Response {
-        if (!URL::hasValidSignature($request)) {
-            return redirect(config('app.frontend_url') .'/auth/email-verified?status=invalid');
+    ): Response {
+        if (! URL::hasValidSignature($request)) {
+            return redirect(config('app.frontend_url').'/auth/email-verified?status=invalid');
         }
 
         $user = User::findOrFail($id);
 
-        if (!hash_equals(
+        if (! hash_equals(
             sha1($user->getEmailForVerification()),
             $hash
         )) {
-            return redirect(config('app.frontend_url') .'/auth/email-verified?status=invalid');
+            return redirect(config('app.frontend_url').'/auth/email-verified?status=invalid');
         }
 
         if ($user->hasVerifiedEmail()) {
-            return redirect(config('app.frontend_url') .'/auth/email-verified?status=already-verified');
+            return redirect(config('app.frontend_url').'/auth/email-verified?status=already-verified');
         }
 
         $user->markEmailAsVerified();
 
-        return redirect(config('app.frontend_url') .'/auth/email-verified?status=success');
+        return redirect(config('app.frontend_url').'/auth/email-verified?status=success');
     }
 
     /**
@@ -150,7 +147,6 @@ class EmailAuthController extends Controller
             'message' => 'Verification email sent successfully.',
         ]);
     }
-
 
     /**
      * Send password reset email.
@@ -174,7 +170,6 @@ class EmailAuthController extends Controller
             'message' => 'If an account with that email exists, a password reset link has been sent.',
         ]);
     }
-
 
     /**
      * Reset password.

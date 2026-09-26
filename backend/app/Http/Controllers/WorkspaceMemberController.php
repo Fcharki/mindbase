@@ -2,101 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MembershipRequest;
+use App\Actions\Workspace\AddWorkspaceMember;
+use App\Actions\Workspace\RemoveWorkspaceMember;
+use App\Actions\Workspace\UpdateWorkspaceMemberRole;
+use App\Http\Requests\Workspace\AddMemberRequest;
+use App\Http\Requests\Workspace\UpdateMemberRoleRequest;
+use App\Http\Resources\WorkspaceMemberResource;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 
 class WorkspaceMemberController extends Controller
 {
     public function store(
-        Request $request,
+        AddMemberRequest $request,
         Workspace $workspace
     ): JsonResponse {
         Gate::authorize('manageMembers', $workspace);
 
-        $validated = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255'],
-            'role' => ['required', Rule::in(['member', 'viewer'])],
-        ]);
+        $validated = $request->validated();
 
-        $user = User::where('email', $validated['email'])->first();
-
-        if (! $user) {
-            return response()->json([
-                'message' => 'No account exists for that email address.',
-            ], 422);
-        }
-
-        if ($workspace->members()->where('users.id', $user->id)->exists()) {
-            return response()->json([
-                'message' => 'That user is already a member of this workspace.',
-            ], 409);
-        }
-
-        $workspace->members()->attach($user->id, [
+        $member = app(AddWorkspaceMember::class, [
+            'workspace' => $workspace,
+            'email' => $validated['email'],
             'role' => $validated['role'],
-        ]);
+        ])->handle();
 
-        $workspace->membershipRequests()
-            ->where('user_id', $user->id)
-            ->where('status', MembershipRequest::STATUS_PENDING)
-            ->update(['status' => MembershipRequest::STATUS_APPROVED]);
-
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'pivot' => [
-                    'role' => $validated['role'],
-                ],
-            ],
-        ], 201);
+        return WorkspaceMemberResource::make($member)
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function update(
-        Request $request,
+        UpdateMemberRoleRequest $request,
         Workspace $workspace,
         User $user
-    ): JsonResponse {
+    ): JsonResource {
         Gate::authorize('manageMembers', $workspace);
 
-        if ($workspace->owner_id === $user->id) {
-            return response()->json([
-                'message' => 'The owner\'s role cannot be changed.',
-            ], 422);
-        }
-
-        $validated = $request->validate([
-            'role' => ['required', Rule::in(['member', 'viewer'])],
-        ]);
-
-        $updated = $workspace
-            ->members()
-            ->updateExistingPivot($user->id, [
-                'role' => $validated['role'],
-            ]);
-
-        if (! $updated) {
-            return response()->json([
-                'message' => 'That user is not a member of this workspace.',
-            ], 404);
-        }
-
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'pivot' => [
-                    'role' => $validated['role'],
-                ],
-            ],
-        ]);
+        return WorkspaceMemberResource::make(app(UpdateWorkspaceMemberRole::class, [
+            'workspace' => $workspace,
+            'user' => $user,
+            'role' => $request->validated('role'),
+        ])->handle());
     }
 
     public function destroy(
@@ -105,19 +55,10 @@ class WorkspaceMemberController extends Controller
     ): JsonResponse {
         Gate::authorize('manageMembers', $workspace);
 
-        if ($workspace->owner_id === $user->id) {
-            return response()->json([
-                'message' => 'The workspace owner cannot be removed.',
-            ], 422);
-        }
-
-        $removed = $workspace->members()->detach($user->id);
-
-        if ($removed === 0) {
-            return response()->json([
-                'message' => 'That user is not a member of this workspace.',
-            ], 404);
-        }
+        app(RemoveWorkspaceMember::class, [
+            'workspace' => $workspace,
+            'user' => $user,
+        ])->handle();
 
         return response()->json([
             'message' => 'Member removed successfully.',

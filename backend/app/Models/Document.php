@@ -28,14 +28,15 @@ class Document extends Model
      * The on-disk location and digest are storage internals; the browser only
      * ever addresses a document by id and downloads it through the API.
      *
+     * DocumentResource also leaves them out. This stays as a second line of
+     * defence in case the model is ever serialised without that resource.
+     *
      * @var list<string>
      */
     protected $hidden = [
         'path',
         'checksum',
     ];
-
-    protected $appends = ['human_size'];
 
     /**
      * Remove the binary from the disk whenever its metadata row goes away.

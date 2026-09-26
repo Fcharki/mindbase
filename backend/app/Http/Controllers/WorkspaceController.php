@@ -2,89 +2,61 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MembershipRequest;
+use App\Actions\Workspace\CreateWorkspace;
+use App\Actions\Workspace\JoinWorkspace;
+use App\Http\Requests\Workspace\WorkspaceRequest;
+use App\Http\Resources\JoinableWorkspaceResource;
+use App\Http\Resources\WorkspaceResource;
 use App\Models\Workspace;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 
 class WorkspaceController extends Controller
 {
-    public function byInviteCode(string $inviteCode): JsonResponse
+    public function byInviteCode(string $inviteCode): JsonResource
     {
         $workspace = Workspace::where('invite_code', $inviteCode)
             ->with('owner:id,name')
             ->first();
 
-        if (! $workspace) {
-            return response()->json([
-                'message' => 'Workspace not found.',
-            ], 404);
-        }
+        abort_if($workspace === null, 404, 'Workspace not found.');
 
-        return response()->json([
-            'data' => [
-                'id' => $workspace->id,
-                'name' => $workspace->name,
-                'invite_code' => $workspace->invite_code,
-                'owner' => $workspace->owner,
-            ],
-        ]);
+        return JoinableWorkspaceResource::make($workspace);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         Gate::authorize('viewAny', Workspace::class);
 
         $user = $request->user();
 
         $workspaces = Workspace::query()
-            ->with([
-                'owner:id,name,email',
-                'members' => fn ($query) => $query->where('users.id', $user->id),
-            ])
+            ->leftJoin('workspace_members as current_user_membership', function (JoinClause $join) use ($user) {
+                $join->on('current_user_membership.workspace_id', '=', 'workspaces.id')
+                    ->where('current_user_membership.user_id', '=', $user->id);
+            })
+            ->addSelect('workspaces.*')
+            ->addSelect('current_user_membership.role as current_user_role')
+            ->with('owner:id,name,email')
             ->withCount(['knowledgeEntries as entries_count'])
-            ->orderBy('name')
+            ->orderBy('workspaces.name')
             ->get();
 
-        return response()->json([
-            'data' => $workspaces,
-        ]);
+        return WorkspaceResource::collection($workspaces);
     }
 
     public function join(Request $request, Workspace $workspace): JsonResponse
     {
         $user = $request->user();
 
-        if ($workspace->owner_id === $user->id) {
-            return response()->json([
-                'message' => 'You already own this workspace.',
-            ], 409);
-        }
-
-        $status = DB::transaction(function () use ($user, $workspace) {
-            $membership = $workspace->members()
-                ->where('users.id', $user->id)
-                ->first();
-
-            if ($membership) {
-                $workspace->members()->updateExistingPivot($user->id, [
-                    'role' => 'member',
-                ]);
-            } else {
-                $workspace->members()->attach($user->id, [
-                    'role' => 'member',
-                ]);
-            }
-
-            $workspace->membershipRequests()
-                ->where('user_id', $user->id)
-                ->where('status', MembershipRequest::STATUS_PENDING)
-                ->update(['status' => MembershipRequest::STATUS_APPROVED]);
-
-            return $membership ? 200 : 201;
-        });
+        $created = app(JoinWorkspace::class, [
+            'workspace' => $workspace,
+            'user' => $user,
+        ])->handle();
 
         return response()->json([
             'data' => [
@@ -92,67 +64,45 @@ class WorkspaceController extends Controller
                 'user_id' => $user->id,
                 'role' => 'member',
             ],
-        ], $status);
+        ], $created ? 201 : 200);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(WorkspaceRequest $request): JsonResponse
     {
         Gate::authorize('create', Workspace::class);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
-
         $user = $request->user();
 
-        $workspace = DB::transaction(function () use ($user, $validated) {
-            $workspace = Workspace::create([
-                'name' => $validated['name'],
-                'owner_id' => $user->id,
-            ]);
+        $workspace = app(CreateWorkspace::class, [
+            'name' => $request->validated('name'),
+            'owner' => $user,
+        ])->handle();
 
-            $workspace->members()->attach($user->id, [
-                'role' => 'owner',
-            ]);
-
-            return $workspace;
-        });
-
-        $workspace->load('owner:id,name,email');
-
-        return response()->json([
-            'data' => $workspace,
-        ], 201);
+        return WorkspaceResource::make(
+            $workspace->load('owner:id,name,email')
+        )->response()->setStatusCode(201);
     }
 
-    public function show(Workspace $workspace): JsonResponse
+    public function show(Workspace $workspace): WorkspaceResource
     {
         Gate::authorize('view', $workspace);
 
         $workspace->load(['owner:id,name,email', 'members:id,name,email']);
 
-        return response()->json([
-            'data' => $workspace,
-        ]);
+        return WorkspaceResource::make($workspace);
     }
 
     public function update(
-        Request $request,
+        WorkspaceRequest $request,
         Workspace $workspace
-    ): JsonResponse {
+    ): WorkspaceResource {
         Gate::authorize('update', $workspace);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
-
-        $workspace->update($validated);
+        $workspace->update($request->validated());
 
         $workspace->load('owner:id,name,email');
 
-        return response()->json([
-            'data' => $workspace,
-        ]);
+        return WorkspaceResource::make($workspace);
     }
 
     public function destroy(Workspace $workspace): JsonResponse

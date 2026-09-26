@@ -52,6 +52,7 @@ class MembershipRequestTest extends TestCase
             ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertStatus(409);
+        $response->assertJsonPath('message', 'You already own this workspace.');
     }
 
     public function test_member_cannot_request_to_join(): void
@@ -64,6 +65,7 @@ class MembershipRequestTest extends TestCase
             ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertStatus(409);
+        $response->assertJsonPath('message', 'You are already a member of this workspace.');
     }
 
     public function test_duplicate_pending_request_returns_409(): void
@@ -79,6 +81,10 @@ class MembershipRequestTest extends TestCase
             ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests");
 
         $response->assertStatus(409);
+        $response->assertJsonPath(
+            'message',
+            'You already have a pending request for this workspace.'
+        );
     }
 
     public function test_only_owner_can_view_pending_requests(): void
