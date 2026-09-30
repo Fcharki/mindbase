@@ -4,6 +4,8 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
+from app.util import clean_text
+
 MODEL_PATH = Path(__file__).resolve().parent.parent / "models"
 
 MAX_INPUT_LENGTH = int(os.getenv("AI_MAX_INPUT_LENGTH", "512"))
@@ -39,7 +41,12 @@ class ModelService:
     def generate(self, text: str, max_new_tokens: int = MAX_NEW_TOKENS) -> str:
         self._load()
 
-        prompt = f"summarize: {text}"
+        cleaned = clean_text(text)
+
+        if not cleaned:
+            return ""
+
+        prompt = f"summarize: {cleaned}"
 
         inputs = self._tokenizer(
             prompt,

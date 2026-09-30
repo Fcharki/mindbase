@@ -50,6 +50,23 @@ class SummarizeEntryTest extends TestCase
         };
     }
 
+    private function serviceRecordingText(): SummarizationService
+    {
+        return new class extends SummarizationService
+        {
+            public string $received = '';
+
+            public function __construct() {}
+
+            public function summarize(string $text): string
+            {
+                $this->received = $text;
+
+                return 'A concise summary.';
+            }
+        };
+    }
+
     public function test_it_returns_the_summary(): void
     {
         $summary = (new SummarizeEntry(
@@ -58,6 +75,16 @@ class SummarizeEntryTest extends TestCase
         ))->handle();
 
         $this->assertSame('A concise summary.', $summary);
+    }
+
+    public function test_it_forwards_the_original_markup_for_the_service_to_flatten(): void
+    {
+        $service = $this->serviceRecordingText();
+        $markup = '<h2>Parser</h2><p>We hiked</p><p>the Blue Ridge trail.</p>';
+
+        (new SummarizeEntry($this->entry($markup), $service))->handle();
+
+        $this->assertSame($markup, $service->received);
     }
 
     public function test_it_rejects_an_entry_with_no_content(): void

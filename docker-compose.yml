@@ -118,6 +118,8 @@ services:
       AI_MAX_INPUT_LENGTH: "${AI_MAX_INPUT_LENGTH:-512}"
       AI_MAX_NEW_TOKENS: "${AI_MAX_NEW_TOKENS:-150}"
       AI_NUM_BEAMS: "${AI_NUM_BEAMS:-1}"
+      AI_STRIP_FORMATTING: "${AI_STRIP_FORMATTING:-true}"
+      AI_DROP_CODE_BLOCKS: "${AI_DROP_CODE_BLOCKS:-true}"
 
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8002/health"]
