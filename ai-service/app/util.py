@@ -38,7 +38,15 @@ _BLOCK_TAGS = (
 )
 
 _FENCED_CODE = re.compile(r"```.*?```|```.*\Z", re.DOTALL)
-_FENCE_LINE = re.compile(r"^[ \t]*```[^\n]*$", re.MULTILINE)
+# A fence that is genuinely alone on its line, optionally tagged with a language.
+# The trailing "nothing else on the line" requirement is load-bearing: an earlier
+# version accepted any content up to the newline, which silently deleted the whole
+# line whenever a fenced block arrived with its newlines already collapsed. That is
+# not a hypothetical -- ChunkingService flattens entry content to a single line
+# before storing it as a chunk, so a pasted code block reaches here as
+# "```sql SELECT ... ```" and came back empty, which then failed indexing of the
+# entire entry.
+_FENCE_LINE = re.compile(r"^[ \t]*```[ \t]*[\w.+-]*[ \t]*$", re.MULTILINE)
 _INLINE_CODE = re.compile(r"`+[^`]*`+")
 _IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
 _LINK = re.compile(r"\[([^\]]+)\]\([^)]*\)")
@@ -109,6 +117,48 @@ def _strip_markdown(text: str, drop_code: bool) -> str:
     text = _ITALIC_ASTERISK.sub(r"\1", text)
 
     return text
+
+
+# A seq2seq decoder left to greedy search will happily fall into a loop and emit
+# the same phrase until it hits max_new_tokens: "timeout 504 timeout 504 ...".
+# The ratio is only consulted once there is enough text to judge, because short
+# summaries are legitimately repetitive -- "The parser parses. The lexer lexes."
+# repeats vocabulary by nature.
+_MIN_WORDS_FOR_RATIO = 12
+_MIN_UNIQUE_RATIO = 0.30
+
+# How long a phrase has to repeat back-to-back before it counts as a loop.
+_LOOP_PHRASE = 5
+
+
+def is_degenerate_output(text: str) -> bool:
+    """True when generated text is a repetition loop rather than an answer.
+
+    Decoders on greedy/narrow beam search degrade into emitting one phrase over
+    and over when the input is short, keyword-like or itself repetitive. Such
+    output is worse than no output: it is fluent, plausible, and wrong, so it
+    gets stored as the entry's summary and later indexed.
+    """
+    words = text.split()
+
+    if not words:
+        return True
+
+    if len(words) >= _MIN_WORDS_FOR_RATIO:
+        if len(set(words)) / len(words) < _MIN_UNIQUE_RATIO:
+            return True
+
+    # An immediately repeated phrase catches loops that still manage to pad
+    # themselves with enough distinct words to slip past the ratio above.
+    for size in range(1, _LOOP_PHRASE + 1):
+        if len(words) < 3 * size:
+            break
+
+        head = words[:size]
+        if words[size:2 * size] == head and words[2 * size:3 * size] == head:
+            return True
+
+    return False
 
 
 def clean_text(raw: str, strip_formatting: bool | None = None, drop_code: bool | None = None) -> str:

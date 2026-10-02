@@ -9,7 +9,7 @@ that actually reaches the model.
 
 import pytest
 
-from app.util import clean_text
+from app.util import clean_text, is_degenerate_output
 
 
 class TestHtmlMarkup:
@@ -84,6 +84,22 @@ class TestCodeBlocks:
 
         assert clean_text(text) == "Intro paragraph."
 
+    def test_a_fence_collapsed_onto_one_line_keeps_its_body_when_asked(self):
+        # ChunkingService flattens entry content to a single line before storing
+        # it, so a pasted code block arrives here with its newlines gone. Treated
+        # as a fence line it used to delete the whole thing, which emptied the
+        # chunk and failed indexing of the entire entry.
+        text = "```sql SELECT id FROM orders WHERE total IS NULL;```"
+
+        assert clean_text(text, drop_code=False) == (
+            "sql SELECT id FROM orders WHERE total IS NULL;"
+        )
+
+    def test_a_lone_fence_line_is_still_stripped_when_asked(self):
+        text = "Fix it:\n```bash\nrm -rf /\n```\nThen restart."
+
+        assert clean_text(text, drop_code=False) == "Fix it: rm -rf / Then restart."
+
 
 class TestMarkdownSyntax:
     def test_emphasis_markers_are_removed(self):
@@ -149,3 +165,40 @@ class TestEdgeCases:
 
     def test_markup_that_hides_its_only_text_behind_a_dropped_tag(self):
         assert clean_text("<pre><code>secret()</code></pre>") == ""
+
+
+class TestDegeneracyDetection:
+    """A loop is fluent, plausible and wrong, so it must never be served."""
+
+    def test_blank_output_is_degenerate(self):
+        assert is_degenerate_output("") is True
+        assert is_degenerate_output("   ") is True
+
+    def test_an_ordinary_summary_is_not_degenerate(self):
+        assert (
+            is_degenerate_output(
+                "The gateway exhausted its connection pool after the "
+                "idempotency cache grew without bound."
+            )
+            is False
+        )
+
+    def test_a_repeated_phrase_is_degenerate(self):
+        assert is_degenerate_output("timeout 504 " * 12) is True
+
+    def test_a_low_unique_word_ratio_is_degenerate(self):
+        assert is_degenerate_output("the the the the the the the the") is True
+
+    def test_short_text_is_judged_on_repetition_not_ratio(self):
+        # Summaries are legitimately repetitive, and three words is too short
+        # to judge a vocabulary ratio on.
+        assert is_degenerate_output("timeout 504") is False
+        assert is_degenerate_output("The parser parses. The lexer lexes.") is False
+
+    def test_a_long_summary_repeating_key_terms_is_allowed(self):
+        text = (
+            "The parser was rewritten because the parser could not handle "
+            "the lexer input; the parser now shares code with the lexer."
+        )
+
+        assert is_degenerate_output(text) is False

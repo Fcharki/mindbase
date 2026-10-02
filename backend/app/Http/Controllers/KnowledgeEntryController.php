@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\KnowledgeEntry\ScheduleEntrySummary;
 use App\Actions\KnowledgeEntry\SummarizeEntry;
 use App\Actions\KnowledgeEntry\SyncEntryTags;
+use App\Exceptions\ActionFailedException;
 use App\Http\Requests\KnowledgeEntry\KnowledgeEntryRequest;
+use App\Http\Requests\KnowledgeEntry\RegenerateSummaryRequest;
 use App\Http\Requests\KnowledgeEntry\SyncTagsRequest;
 use App\Http\Resources\KnowledgeEntryResource;
 use App\Http\Resources\TagResource;
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
+use App\Services\AI\BackendBudget;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -45,6 +49,8 @@ class KnowledgeEntryController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
+        app(ScheduleEntrySummary::class, ['entry' => $knowledgeEntry])->handle();
+
         $knowledgeEntry->load('creator:id,name', 'tags:id,name,workspace_id');
         $knowledgeEntry->loadCount('tags');
 
@@ -78,10 +84,18 @@ class KnowledgeEntryController extends Controller
 
         $validated = $request->validated();
 
+        // Captured before the write so a rename, which cannot change a summary,
+        // does not queue a regeneration that would only reproduce it.
+        $previousContent = $entry->getOriginal('content');
+
         $entry->update([
             'title' => $validated['title'],
             'content' => $validated['content'] ?? null,
         ]);
+
+        if ($previousContent !== ($validated['content'] ?? null)) {
+            app(ScheduleEntrySummary::class, ['entry' => $entry])->handle();
+        }
 
         $entry->load('creator:id,name', 'tags:id,name,workspace_id');
         $entry->loadCount('tags');
@@ -138,6 +152,44 @@ class KnowledgeEntryController extends Controller
                 'summary' => $summary,
             ],
         ]);
+    }
+
+    public function regenerateSummary(
+        RegenerateSummaryRequest $request,
+        Workspace $workspace,
+        KnowledgeEntry $entry
+    ): JsonResponse {
+        Gate::authorize('update', $entry);
+
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
+
+        if (trim(strip_tags((string) $entry->content)) === '') {
+            throw new ActionFailedException(
+                'This entry has no content to summarize.'
+            );
+        }
+
+        $backend = $request->validated('backend');
+
+        // Refused before the job is queued, and with the reason, rather than
+        // accepted and then killed at the budget with a transport error the
+        // caller cannot interpret.
+        app(BackendBudget::class)->assertAffordable($backend);
+
+        app(ScheduleEntrySummary::class, [
+            'entry' => $entry,
+            'backend' => $backend,
+        ])->handle();
+
+        // Which model ends up being used is reported by the stored summary
+        // itself, so nothing is claimed here that could turn out to be wrong
+        // once the job falls back to the service default.
+        return response()->json([
+            'message' => 'Summary regeneration queued.',
+            'data' => [
+                'status' => 'queued',
+            ],
+        ], 202);
     }
 
     private function abortUnlessEntryBelongsToWorkspace(

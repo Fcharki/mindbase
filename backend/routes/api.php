@@ -202,6 +202,14 @@ Route::middleware('auth:sanctum')->group(function () {
         'summarize',
     ]);
 
+    // Queues a regeneration of the stored summary, optionally naming the model.
+    // Distinct from /summarize above, which answers immediately and stores
+    // nothing.
+    Route::post('workspaces/{workspace}/entries/{entry}/summary/regenerate', [
+        KnowledgeEntryController::class,
+        'regenerateSummary',
+    ]);
+
     /*
     |----------------------------------------------------------------------
     | Document uploads (metadata in Postgres, binary on the documents disk)
@@ -235,8 +243,18 @@ Route::middleware('auth:sanctum')->group(function () {
     */
 
     Route::get('workspaces/{workspace}/search', SearchController::class);
+
+    /*
+    |----------------------------------------------------------------------
+    | Retrieval over embedded chunks (keyword + vector, fused by rank)
+    |----------------------------------------------------------------------
+    */
+
+    Route::get('workspaces/{workspace}/search/chunks', [
+        SearchController::class,
+        'chunks',
+    ]);
 });
 
 // later
-// POST /api/v1/entries/{entry}/generate-tags
 // POST /api/v1/chat
