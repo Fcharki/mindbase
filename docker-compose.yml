@@ -4,7 +4,10 @@ services:
   # PostgreSQL
   # -------------------------
   postgres:
-    image: postgres:18
+    # The stock postgres image ships without pgvector, so entry chunk
+    # embeddings have nowhere to live. Same major version as before, so the
+    # existing data volume carries over untouched.
+    image: pgvector/pgvector:pg18
     container_name: knowledge-manager-postgres
     restart: unless-stopped
 
@@ -54,6 +57,22 @@ services:
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       AI_SERVICE_URL: http://ai-service:8002
+      # The synchronous path. The first call after a container start also pays
+      # the lazy model load, so this is not only generation time.
+      AI_SERVICE_TIMEOUT: "${AI_SERVICE_TIMEOUT:-120}"
+      # Budget for a queued summary or chunk index, which is allowed to wait for
+      # the model to load. Must exceed AI_SERVICE_TIMEOUT.
+      AI_SERVICE_BACKGROUND_TIMEOUT: "${AI_SERVICE_BACKGROUND_TIMEOUT:-600}"
+      # Off by default, which is what turns backend_seconds below into an
+      # up-front refusal rather than a job that dies at its own timeout.
+      AI_ALLOW_SLOW_BACKENDS: "${AI_ALLOW_SLOW_BACKENDS:-false}"
+      # Width of the vectors the AI service returns, and so of the vector
+      # column. Changing it invalidates every stored chunk vector.
+      AI_EMBEDDING_DIMENSION: "${AI_EMBEDDING_DIMENSION:-1024}"
+      # Must exceed AI_SERVICE_TIMEOUT, AI_SERVICE_BACKGROUND_TIMEOUT and both
+      # jobs' own $timeout (900), otherwise a worker re-reserves a job that is
+      # still running.
+      DB_QUEUE_RETRY_AFTER: "${DB_QUEUE_RETRY_AFTER:-960}"
 
     depends_on:
       postgres:
@@ -115,11 +134,19 @@ services:
       - ./ai-service:/srv
 
     environment:
+      AI_SUMMARY_BACKEND: "${AI_SUMMARY_BACKEND:-t5}"
       AI_MAX_INPUT_LENGTH: "${AI_MAX_INPUT_LENGTH:-512}"
       AI_MAX_NEW_TOKENS: "${AI_MAX_NEW_TOKENS:-150}"
       AI_NUM_BEAMS: "${AI_NUM_BEAMS:-1}"
+      AI_NO_REPEAT_NGRAM_SIZE: "${AI_NO_REPEAT_NGRAM_SIZE:-3}"
+      AI_REPETITION_PENALTY: "${AI_REPETITION_PENALTY:-1.15}"
       AI_STRIP_FORMATTING: "${AI_STRIP_FORMATTING:-true}"
       AI_DROP_CODE_BLOCKS: "${AI_DROP_CODE_BLOCKS:-true}"
+      EMBEDDING_MAX_INPUT_LENGTH: "${EMBEDDING_MAX_INPUT_LENGTH:-8192}"
+      LLM_DTYPE: "${LLM_DTYPE:-bfloat16}"
+      LLM_MAX_NEW_TOKENS: "${LLM_MAX_NEW_TOKENS:-200}"
+      LLM_THINKING: "${LLM_THINKING:-false}"
+      LLM_REPETITION_PENALTY: "${LLM_REPETITION_PENALTY:-1.1}"
 
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8002/health"]

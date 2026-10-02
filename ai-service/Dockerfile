@@ -7,7 +7,13 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+
+# Pinned with +cpu from the PyTorch index rather than left to requirements.txt.
+# PyPI's plain `torch` resolves to a CUDA build that adds several gigabytes to
+# the image and buys nothing on a CPU-only service, and --extra-index-url does
+# not prevent that: pip treats both indexes as equal candidates.
+RUN pip install --no-cache-dir torch==2.14.0+cpu --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
