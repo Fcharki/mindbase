@@ -111,7 +111,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - /app/.next
+      - frontend_next:/app/.next
 
     depends_on:
       - backend
@@ -178,5 +178,6 @@ services:
 volumes:
   postgres_data:
   documents_data:
+  frontend_next:
 
   
