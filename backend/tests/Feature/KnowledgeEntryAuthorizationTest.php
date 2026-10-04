@@ -7,11 +7,22 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\AI\SummarizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class KnowledgeEntryAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // These tests are about who may do what, so nothing should reach the
+        // models. Writing an entry queues background work, and a queue that is
+        // not faked runs it inline against whatever happens to be listening.
+        Queue::fake();
+    }
 
     private function workspace(): Workspace
     {

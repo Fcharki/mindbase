@@ -2,62 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Workspace\ApproveMembershipRequest;
+use App\Actions\Workspace\RequestWorkspaceMembership;
+use App\Http\Requests\MembershipRequest\ApproveJoinRequest;
+use App\Http\Requests\MembershipRequest\StoreJoinRequest;
+use App\Http\Resources\MembershipRequestResource;
 use App\Models\MembershipRequest;
 use App\Models\Workspace;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 
 class MembershipRequestController extends Controller
 {
     public function store(
-        Request $request,
+        StoreJoinRequest $request,
         Workspace $workspace
     ): JsonResponse {
-        $user = $request->user();
+        Gate::authorize('create', [MembershipRequest::class, $workspace]);
 
-        if ($workspace->owner_id === $user->id) {
-            return response()->json([
-                'message' => 'You already own this workspace.',
-            ], 409);
-        }
+        $membershipRequest = app(RequestWorkspaceMembership::class, [
+            'workspace' => $workspace,
+            'user' => $request->user(),
+            'role' => $request->validated('role'),
+        ])->handle();
 
-        if ($workspace->members()->where('users.id', $user->id)->exists()) {
-            return response()->json([
-                'message' => 'You are already a member of this workspace.',
-            ], 409);
-        }
-
-        $pending = $workspace->membershipRequests()
-            ->where('user_id', $user->id)
-            ->where('status', MembershipRequest::STATUS_PENDING)
-            ->exists();
-
-        if ($pending) {
-            return response()->json([
-                'message' => 'You already have a pending request for this workspace.',
-            ], 409);
-        }
-
-        $validated = $request->validate([
-            'role' => ['nullable', Rule::in(['member', 'viewer'])],
-        ]);
-
-        $membershipRequest = $workspace->membershipRequests()->create([
-            'user_id' => $user->id,
-            'status' => MembershipRequest::STATUS_PENDING,
-            'requested_role' => $validated['role'] ?? 'member',
-        ]);
-
-        $membershipRequest->load('user:id,name,email');
-
-        return response()->json([
-            'data' => $membershipRequest,
-        ], 201);
+        return MembershipRequestResource::make(
+            $membershipRequest->load('user:id,name,email')
+        )->response()->setStatusCode(201);
     }
 
-    public function index(Workspace $workspace): JsonResponse
+    public function index(Workspace $workspace): AnonymousResourceCollection
     {
         Gate::authorize('manageMembers', $workspace);
 
@@ -67,16 +43,14 @@ class MembershipRequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'data' => $requests,
-        ]);
+        return MembershipRequestResource::collection($requests);
     }
 
     public function approve(
-        Request $request,
+        ApproveJoinRequest $request,
         Workspace $workspace,
         MembershipRequest $membershipRequest
-    ): JsonResponse {
+    ): JsonResource {
         Gate::authorize('manageMembers', $workspace);
 
         abort_unless(
@@ -84,29 +58,13 @@ class MembershipRequestController extends Controller
             404
         );
 
-        if ($membershipRequest->status !== MembershipRequest::STATUS_PENDING) {
-            return response()->json([
-                'message' => 'This request has already been resolved.',
-            ], 409);
-        }
-
-        $validated = $request->validate([
-            'role' => ['nullable', Rule::in(['member', 'viewer'])],
-        ]);
-
-        $role = $validated['role'] ?? $membershipRequest->requested_role;
-
-        $workspace->members()->syncWithoutDetaching([
-            $membershipRequest->user_id => ['role' => $role],
-        ]);
-
-        $membershipRequest->update([
-            'status' => MembershipRequest::STATUS_APPROVED,
-        ]);
-
-        return response()->json([
-            'data' => $membershipRequest->load('user:id,name,email'),
-        ]);
+        return MembershipRequestResource::make(
+            app(ApproveMembershipRequest::class, [
+                'workspace' => $workspace,
+                'membershipRequest' => $membershipRequest,
+                'role' => $request->validated('role'),
+            ])->handle()->load('user:id,name,email')
+        );
     }
 
     public function destroy(

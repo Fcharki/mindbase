@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class KnowledgeEntry extends Model
 {
@@ -51,5 +52,29 @@ class KnowledgeEntry extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
+    }
+
+    /**
+     * The summary of this entry's current content, if one has been generated.
+     *
+     * Not eager loaded by the entry endpoints: it is absent for the majority of
+     * entries until a job has run, and nothing in the list or detail views
+     * needs it.
+     */
+    public function summary(): HasOne
+    {
+        return $this->hasOne(Summary::class);
+    }
+
+    /**
+     * The embedded passages retrieval searches over.
+     *
+     * Not eager loaded by the entry endpoints: a viewer only sees these when
+     * something retrieves them, and there is one row per couple of thousand
+     * characters of content.
+     */
+    public function chunks(): HasMany
+    {
+        return $this->hasMany(EntryChunk::class);
     }
 }

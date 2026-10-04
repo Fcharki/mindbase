@@ -2,51 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Document\StoreDocumentRequest;
+use App\Http\Resources\DocumentResource;
 use App\Models\Document;
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
 use App\Services\DocumentStorageService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
-    /**
-     * Maximum accepted upload size, in kilobytes. Kept in step with
-     * upload_max_filesize in backend/docker/uploads.ini, which is itself below
-     * the client_max_body_size ceiling in docker/nginx/nginx.conf.
-     */
-    private const MAX_UPLOAD_KB = 20480;
-
-    /**
-     * Allowed upload types, validated against the reported extension.
-     *
-     * Content sniffing ("mimes:") is deliberately not used: the MIME guesser
-     * reports text/plain for .md and .csv, and cannot identify every .docx,
-     * so it rejects legitimate uploads. The extensions rule also blocks PHP
-     * uploads outright. Downloads are always streamed as an attachment with
-     * a stored filename, so the browser never renders the binary inline.
-     */
-    private const ALLOWED_EXTENSIONS = [
-        'pdf',
-        'doc',
-        'docx',
-        'xls',
-        'xlsx',
-        'ppt',
-        'pptx',
-        'txt',
-        'md',
-        'csv',
-    ];
-
     public function index(
         Workspace $workspace,
         KnowledgeEntry $entry
-    ): JsonResponse {
+    ): AnonymousResourceCollection {
         $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
         Gate::authorize('viewAny', [Document::class, $entry]);
@@ -57,13 +30,11 @@ class DocumentController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'data' => $documents,
-        ]);
+        return DocumentResource::collection($documents);
     }
 
     public function store(
-        Request $request,
+        StoreDocumentRequest $request,
         Workspace $workspace,
         KnowledgeEntry $entry,
         DocumentStorageService $storage
@@ -72,26 +43,17 @@ class DocumentController extends Controller
 
         Gate::authorize('create', [Document::class, $entry]);
 
-        $validated = $request->validate([
-            'file' => [
-                'required',
-                'file',
-                'max:'.self::MAX_UPLOAD_KB,
-                'extensions:'.implode(',', self::ALLOWED_EXTENSIONS),
-            ],
-        ]);
-
         $document = $storage->store(
-            $validated['file'],
+            $request->file('file'),
             $entry,
             $request->user()->id
         );
 
         $document->load('uploader:id,name');
 
-        return response()->json([
-            'data' => $document,
-        ], 201);
+        return DocumentResource::make($document)
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function download(

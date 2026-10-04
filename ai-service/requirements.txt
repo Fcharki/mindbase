@@ -1,5 +1,12 @@
-fastapi
-uvicorn
-pydantic
-torch
-transformers
+# torch is deliberately absent: the Dockerfile installs it from the CPU wheel
+# index as a separate step, because resolving it from PyPI here would pull a
+# CUDA build that adds gigabytes and changes nothing for a CPU service.
+#
+# transformers is capped at 5.x on purpose. app/services/llm.py loads the model
+# with the v5 `dtype=` keyword, which does not exist on 4.x, so an unpinned
+# resolver is a coin flip on whether the LLM still imports.
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+pydantic>=2.9,<3
+transformers>=5.0,<6
+beautifulsoup4>=4.12,<5

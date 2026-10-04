@@ -1,13 +1,13 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
 {
@@ -30,7 +30,7 @@ class GoogleController extends Controller
         $user = User::where('google_id', $googleUser->getId())->first();
 
         // if they don't have a Google ID yet, try their email
-        if (!$user) {
+        if (! $user) {
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if ($user) {
@@ -60,7 +60,7 @@ class GoogleController extends Controller
         request()->session()->regenerate();
 
         return redirect(
-            config('app.frontend_url') . '/auth/google/callback'
+            config('app.frontend_url').'/auth/google/callback'
         );
     }
 }

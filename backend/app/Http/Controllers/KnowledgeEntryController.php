@@ -2,18 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\KnowledgeEntry\ScheduleEntrySummary;
+use App\Actions\KnowledgeEntry\SummarizeEntry;
+use App\Actions\KnowledgeEntry\SyncEntryTags;
+use App\Exceptions\ActionFailedException;
+use App\Http\Requests\KnowledgeEntry\KnowledgeEntryRequest;
+use App\Http\Requests\KnowledgeEntry\RegenerateSummaryRequest;
+use App\Http\Requests\KnowledgeEntry\SyncTagsRequest;
+use App\Http\Resources\KnowledgeEntryResource;
+use App\Http\Resources\TagResource;
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
-use App\Services\AI\SummarizationService;
-use App\Services\TagService;
-use GuzzleHttp\Exception\GuzzleException;
+use App\Services\AI\BackendBudget;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 
 class KnowledgeEntryController extends Controller
 {
-    public function index(Workspace $workspace): JsonResponse
+    public function index(Workspace $workspace): AnonymousResourceCollection
     {
         Gate::authorize('view', $workspace);
 
@@ -24,21 +32,16 @@ class KnowledgeEntryController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'data' => $entries,
-        ]);
+        return KnowledgeEntryResource::collection($entries);
     }
 
     public function store(
-        Request $request,
+        KnowledgeEntryRequest $request,
         Workspace $workspace
     ): JsonResponse {
         Gate::authorize('create', [KnowledgeEntry::class, $workspace]);
 
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
 
         $knowledgeEntry = $workspace->knowledgeEntries()->create([
             'title' => $validated['title'],
@@ -46,61 +49,58 @@ class KnowledgeEntryController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
+        app(ScheduleEntrySummary::class, ['entry' => $knowledgeEntry])->handle();
+
         $knowledgeEntry->load('creator:id,name', 'tags:id,name,workspace_id');
         $knowledgeEntry->loadCount('tags');
 
-        return response()->json([
-            'data' => $knowledgeEntry,
-        ], 201);
+        return KnowledgeEntryResource::make($knowledgeEntry)
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(
         Workspace $workspace,
         KnowledgeEntry $entry
-    ): JsonResponse {
+    ): JsonResource {
         Gate::authorize('view', $entry);
 
-        abort_unless(
-            $entry->workspace_id === $workspace->id,
-            404
-        );
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
         $entry->load('creator:id,name', 'tags:id,name,workspace_id');
         $entry->loadCount('tags');
 
-        return response()->json([
-            'data' => $entry,
-        ]);
+        return KnowledgeEntryResource::make($entry);
     }
 
     public function update(
-        Request $request,
+        KnowledgeEntryRequest $request,
         Workspace $workspace,
         KnowledgeEntry $entry
-    ): JsonResponse {
+    ): JsonResource {
         Gate::authorize('update', $entry);
 
-        abort_unless(
-            $entry->workspace_id === $workspace->id,
-            404
-        );
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
+
+        // Captured before the write so a rename, which cannot change a summary,
+        // does not queue a regeneration that would only reproduce it.
+        $previousContent = $entry->getOriginal('content');
 
         $entry->update([
             'title' => $validated['title'],
             'content' => $validated['content'] ?? null,
         ]);
 
+        if ($previousContent !== ($validated['content'] ?? null)) {
+            app(ScheduleEntrySummary::class, ['entry' => $entry])->handle();
+        }
+
         $entry->load('creator:id,name', 'tags:id,name,workspace_id');
         $entry->loadCount('tags');
 
-        return response()->json([
-            'data' => $entry,
-        ]);
+        return KnowledgeEntryResource::make($entry);
     }
 
     public function destroy(
@@ -109,10 +109,7 @@ class KnowledgeEntryController extends Controller
     ): JsonResponse {
         Gate::authorize('delete', $entry);
 
-        abort_unless(
-            $entry->workspace_id === $workspace->id,
-            404
-        );
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
         $entry->delete();
 
@@ -122,70 +119,86 @@ class KnowledgeEntryController extends Controller
     }
 
     public function syncTags(
-        Request $request,
+        SyncTagsRequest $request,
         Workspace $workspace,
         KnowledgeEntry $entry
-    ): JsonResponse {
+    ): AnonymousResourceCollection {
         Gate::authorize('update', $entry);
 
-        abort_unless(
-            $entry->workspace_id === $workspace->id,
-            404
-        );
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
-        $validated = $request->validate([
-            'tags' => ['required', 'array', 'max:50'],
-            'tags.*' => ['required', 'string', 'max:60'],
-        ]);
+        $tags = app(SyncEntryTags::class, [
+            'entry' => $entry,
+            'tags' => $request->validated('tags', []),
+        ])->handle();
 
-        $tags = app(TagService::class)->syncForEntry(
-            $entry,
-            $validated['tags']
-        );
-
-        return response()->json([
-            'data' => $tags,
-        ]);
+        return TagResource::collection($tags);
     }
 
     public function summarize(
         Workspace $workspace,
-        KnowledgeEntry $entry,
-        SummarizationService $service
+        KnowledgeEntry $entry
     ): JsonResponse {
         Gate::authorize('view', $entry);
 
-        abort_unless(
-            $entry->workspace_id === $workspace->id,
-            404
-        );
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
-        $content = trim(strip_tags((string) $entry->content));
-
-        if ($content === '') {
-            return response()->json([
-                'message' => 'This entry has no content to summarize.',
-            ], 422);
-        }
-
-        try {
-            $summary = $service->summarize($content);
-        } catch (GuzzleException) {
-            return response()->json([
-                'message' => 'The AI service is unavailable. Please try again.',
-            ], 503);
-        }
-
-        if ($summary === '') {
-            return response()->json([
-                'message' => 'The AI service returned an empty summary.',
-            ], 502);
-        }
+        $summary = app(SummarizeEntry::class, [
+            'entry' => $entry,
+        ])->handle();
 
         return response()->json([
             'data' => [
                 'summary' => $summary,
             ],
         ]);
+    }
+
+    public function regenerateSummary(
+        RegenerateSummaryRequest $request,
+        Workspace $workspace,
+        KnowledgeEntry $entry
+    ): JsonResponse {
+        Gate::authorize('update', $entry);
+
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
+
+        if (trim(strip_tags((string) $entry->content)) === '') {
+            throw new ActionFailedException(
+                'This entry has no content to summarize.'
+            );
+        }
+
+        $backend = $request->validated('backend');
+
+        // Refused before the job is queued, and with the reason, rather than
+        // accepted and then killed at the budget with a transport error the
+        // caller cannot interpret.
+        app(BackendBudget::class)->assertAffordable($backend);
+
+        app(ScheduleEntrySummary::class, [
+            'entry' => $entry,
+            'backend' => $backend,
+        ])->handle();
+
+        // Which model ends up being used is reported by the stored summary
+        // itself, so nothing is claimed here that could turn out to be wrong
+        // once the job falls back to the service default.
+        return response()->json([
+            'message' => 'Summary regeneration queued.',
+            'data' => [
+                'status' => 'queued',
+            ],
+        ], 202);
+    }
+
+    private function abortUnlessEntryBelongsToWorkspace(
+        KnowledgeEntry $entry,
+        Workspace $workspace
+    ): void {
+        abort_unless(
+            $entry->workspace_id === $workspace->id,
+            404
+        );
     }
 }

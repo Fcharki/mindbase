@@ -10,6 +10,7 @@ import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
 import { SearchPanel } from "@/app/features/search/SearchPanel";
+import { AssistantPanel } from "@/app/features/assistant/AssistantPanel";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
 import {
   addWorkspaceMember,
@@ -443,6 +444,8 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
           workspaceId={workspace.id}
           basePath={`/workspaces/${workspace.id}/entries`}
         />
+
+        <AssistantPanel workspaceId={workspace.id} />
 
         <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
