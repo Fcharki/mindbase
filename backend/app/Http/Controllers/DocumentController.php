@@ -68,7 +68,7 @@ class DocumentController extends Controller
             404
         );
 
-        Gate::authorize('view', $document);
+        Gate::authorize('view', [$document, $entry]);
 
         abort_unless(
             Storage::disk($document->disk)->exists($document->path),
@@ -94,7 +94,7 @@ class DocumentController extends Controller
             404
         );
 
-        Gate::authorize('delete', $document);
+        Gate::authorize('delete', [$document, $entry]);
 
         $document->delete();
 

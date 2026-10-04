@@ -156,7 +156,7 @@ export function AssistantPanel({ workspaceId }: { workspaceId: number | string }
           </p>
 
           <h2 className="mt-1 text-xl font-semibold tracking-tight">
-            Ask this workspace
+            AsK about this workspace
           </h2>
         </div>
 
@@ -193,7 +193,7 @@ export function AssistantPanel({ workspaceId }: { workspaceId: number | string }
                   {stillWorking && (
                     <p className="flex flex-wrap items-center gap-2 text-sm text-[#686873]">
                       <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
-                      Working on it — {elapsedLabel(waited)} so far. You can leave
+                      Working on it - {elapsedLabel(waited)} so far. You can leave
                       this open or come back later.
                     </p>
                   )}
@@ -231,7 +231,7 @@ export function AssistantPanel({ workspaceId }: { workspaceId: number | string }
                                 <span className="font-medium text-[#20202A]">
                                   {source.title ?? "Untitled entry"}
                                 </span>
-                                {" — "}
+                                {" - "}
                                 {source.body.length > 160
                                   ? `${source.body.slice(0, 160)}…`
                                   : source.body}

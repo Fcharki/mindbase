@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -350,6 +351,42 @@ class DocumentUploadTest extends TestCase
 
         $this->assertSame(1, Document::count());
         Storage::disk('documents')->assertExists($document->path);
+    }
+
+    public function test_authorizing_a_document_does_not_reload_its_entry(): void
+    {
+        $workspace = $this->workspace();
+        $entry = $this->entry($workspace, $workspace->owner);
+
+        $this->actingAs($workspace->owner)
+            ->postJson($this->url($workspace, $entry), [
+                'file' => UploadedFile::fake()->create('notes.pdf', 4, 'application/pdf'),
+            ]);
+
+        $document = Document::sole();
+
+        // The policy takes the route-bound entry rather than resolving
+        // $document->knowledgeEntry, which would be one extra query per
+        // document on any path that authorizes a collection. Asserted on the
+        // document query specifically, so an unrelated extra query elsewhere
+        // does not make this pass or fail for the wrong reason.
+        $entryQueries = 0;
+
+        DB::listen(function ($query) use (&$entryQueries): void {
+            if (str_contains($query->sql, 'from "knowledge_entries"')
+                || str_contains($query->sql, 'from `knowledge_entries`')) {
+                $entryQueries++;
+            }
+        });
+
+        $this->actingAs($workspace->owner)
+            ->deleteJson($this->url($workspace, $entry)."/{$document->id}")
+            ->assertOk();
+
+        // Exactly one: route model binding resolving the entry from the URL.
+        // Before the policy took the entry as an argument it read
+        // $document->knowledgeEntry instead, which added a second.
+        $this->assertSame(1, $entryQueries);
     }
 
     public function test_deleting_an_entry_removes_its_documents_from_the_disk(): void

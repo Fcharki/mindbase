@@ -22,10 +22,19 @@ class DocumentPolicy
 
     /**
      * Determine whether the user can download the document
+     *
+     * The owning entry is passed in rather than resolved from the document.
+     * Every caller has it route-bound and has already asserted the document
+     * belongs to it, so reading $document->knowledgeEntry here would spend a
+     * query to re-derive something the caller just proved — and would do it
+     * once per document on any path that authorizes a collection.
      */
-    public function view(User $user, Document $document): bool
-    {
-        return $this->isMember($user, $this->workspaceIdFor($document));
+    public function view(
+        User $user,
+        Document $document,
+        KnowledgeEntry $entry
+    ): bool {
+        return $this->isMember($user, (int) $entry->workspace_id);
     }
 
     /**
@@ -43,14 +52,12 @@ class DocumentPolicy
      *
      * Owner and member can delete; viewer cannot.
      */
-    public function delete(User $user, Document $document): bool
-    {
-        return $this->hasWriteAccess($user, $this->workspaceIdFor($document));
-    }
-
-    private function workspaceIdFor(Document $document): int
-    {
-        return (int) $document->knowledgeEntry->workspace_id;
+    public function delete(
+        User $user,
+        Document $document,
+        KnowledgeEntry $entry
+    ): bool {
+        return $this->hasWriteAccess($user, (int) $entry->workspace_id);
     }
 
     private function isMember(User $user, int $workspaceId): bool

@@ -80,6 +80,16 @@ export function WorkspaceNav({
 
           <nav className="hidden items-center gap-1 sm:flex">
             <Link
+              href="/workspaces"
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                pathname === "/workspaces"
+                  ? "bg-[#EEEDFF] text-[#5146E5]"
+                  : "text-[#686873] hover:bg-[#F7F6F2] hover:text-[#20202A]"
+              }`}
+            >
+              Workspaces
+            </Link>
+            <Link
               href="/dashboard"
               className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
                 pathname === "/dashboard"
@@ -87,7 +97,7 @@ export function WorkspaceNav({
                   : "text-[#686873] hover:bg-[#F7F6F2] hover:text-[#20202A]"
               }`}
             >
-              Workspaces
+              Directory
             </Link>
           </nav>
         </div>

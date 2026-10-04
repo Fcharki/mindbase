@@ -178,7 +178,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
     try {
       await deleteWorkspace(workspace.id);
-      router.replace("/dashboard");
+      router.replace("/workspaces");
     } catch {
       setDeleting(false);
       setError("Could not delete the workspace.");

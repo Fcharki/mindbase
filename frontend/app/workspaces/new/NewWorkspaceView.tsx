@@ -57,7 +57,7 @@ export function NewWorkspaceView() {
 
           <div className="mt-6 flex items-center justify-between px-1">
             <Link
-              href="/dashboard"
+              href="/workspaces"
               className="text-sm font-medium text-[#5146E5] transition hover:text-[#4338CA]"
             >
               Back to workspaces
