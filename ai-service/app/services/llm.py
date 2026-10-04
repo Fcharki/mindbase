@@ -11,14 +11,10 @@ MODEL_PATH = MODELS_DIR / "qwen3-0.6B"
 
 MAX_NEW_TOKENS = int(os.getenv("LLM_MAX_NEW_TOKENS", "200"))
 
-# bfloat16 is both smaller and, on a CPU with AVX512-BF16, faster and more
-# accurate than float32 for this model: on an incident document it produced the
-# correct wording where float32 substituted "compromised" for "exhausted".
-#
-# That speed half is hardware-conditional and this project runs on a 4-core
-# container with no such support, where the model decodes at ~0.1 tokens/second.
-# See LLMService for the measurements. The default is unchanged because the
-# accuracy difference is real and the alternative has not been benchmarked here.
+# bfloat16 is smaller and, on a CPU with AVX512-BF16, more accurate than
+# float32 for this model. That speed and accuracy gain is hardware-conditional
+# and this project runs on a 4-core container without it, so the default is
+# unchanged. See LLMService for the measurements.
 DTYPE_NAME = os.getenv("LLM_DTYPE", "bfloat16").lower()
 DTYPES = {
     "bfloat16": torch.bfloat16,
@@ -49,25 +45,17 @@ class LLMService:
 
     Serves both /summarize and /rag.
 
-    This backend is not viable on a CPU-only box, and the numbers say so rather
-    than leaving it to be discovered as a timeout. Measured on the 4-core
-    container this project ships on:
+    Measured on the 4-core container this project ships on: ~535 s to load the
+    1.5 GB checkpoint, then ~0.10 tokens/second, so a 200 token answer takes
+    about half an hour. Budgets downstream were once sized from a claimed 0.4
+    tokens/second, which is why this model used to fail as an opaque 10 minute
+    Guzzle abort instead of being refused up front.
 
-      - load:  ~535 s for the 1.5 GB checkpoint
-      - decode: ~0.10 tokens/second
-      - a 200 token answer: ~33 minutes
+    LLM_DTYPE=bfloat16 is the prime suspect: it is native only on CPUs with
+    AVX512-BF16 and emulated elsewhere, so it can lose to float32 outright. Not
+    measured here, so the default is left alone.
 
-    An earlier version of this comment claimed 0.4 tokens/second, four times
-    faster than what it actually achieves. Every timeout budget downstream was
-    sized from that wrong figure, which is why this model used to fail as an
-    opaque 10 minute Guzzle abort instead of being refused up front.
-
-    LLM_DTYPE=bfloat16 is the prime suspect for the decode speed: bfloat16 has
-    native support only on CPUs with AVX512-BF16, and is emulated elsewhere,
-    which is why it can lose to float32 outright. That has not been measured
-    here, so the default is left alone rather than changed on a guess.
-
-    Callers that need a real answer should reach for the T5 summarizer; see
+    Callers wanting a real answer should use the T5 summarizer; see
     app/services/summarizer.py.
     """
 

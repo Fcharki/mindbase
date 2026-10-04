@@ -14,24 +14,17 @@ use Illuminate\Support\Facades\Log;
  * Finds the entry chunks that could answer a question, using keyword search and
  * vector search together.
  *
- * The two search methods are good at opposite things, which is the whole reason
- * for running both:
+ * Each is good at what the other cannot do. Full-text search is the only thing
+ * here that finds an exact identifier like "E4021" or a UUID, but it is blind to
+ * meaning: "how do tokens expire" shares no words with a passage about
+ * credential lifetimes. Vector search answers that paraphrase easily, but has no
+ * notion of an exact string and will happily rank a fluent passage that is about
+ * something else.
  *
- *  - Full-text search matches literal words. It is the only thing here that can
- *    find "E4021", a UUID, or `summarizeWithMetadata` after a typo in the
- *    surrounding prose. It is blind to meaning: "how do tokens expire" shares no
- *    words with a passage about credential lifetimes, so it finds nothing.
- *  - Vector search matches meaning. It answers that same paraphrase question
- *    easily, and it will match a question to a passage that never uses the same
- *    vocabulary. But it has no notion of an exact string, so it can miss a
- *    specific identifier, and it can rank a fluent passage that is about
- *    something else quite highly.
- *
- * Their scores are combined by rank, not by value. A ts_rank of 0.08 and a
- * cosine distance of 0.31 are not comparable numbers, and neither is calibrated
- * across queries, so adding them together with weights would mostly measure the
- * two scoring functions. Reciprocal Rank Fusion instead scores each result by
- * where it landed in each list, which is scale free and has no weight to tune.
+ * Scores are combined by rank rather than by value. A ts_rank of 0.08 and a
+ * cosine distance of 0.31 are not comparable and neither is calibrated across
+ * queries, so weighting them together would mostly measure the two scoring
+ * functions. RRF scores by position in each list instead, which is scale free.
  */
 class HybridSearchService
 {
@@ -50,24 +43,21 @@ class HybridSearchService
     /**
      * How many candidates to pull from each side before fusing.
      *
-     * Each engine only sees part of the picture, so a chunk that one engine
-     * ranked 30th may well be the best answer overall. Fusing a shortlist would
-     * throw that away, so each side fetches several times the final limit.
+     * Each engine sees only part of the picture, so a chunk one of them ranked
+     * 30th may be the best answer overall. Fusing a shortlist would throw that
+     * away, so each side fetches several times the final limit.
      */
     private const CANDIDATE_MULTIPLIER = 5;
 
     /**
      * Cosine distance above which a vector hit is not a match at all.
      *
-     * bge-m3 does not spread its vectors over the full range. Measured on three
-     * unrelated knowledge entries, a question paraphrasing the right passage
-     * landed at 0.25 to 0.39 and three genuinely unrelated questions at 0.72 to
-     * 0.75, so the gap is wide and 0.7 sits inside it. Past that, the vectors
-     * retain too little shared direction to mean anything and the hit is noise.
+     * bge-m3 does not spread its vectors over the full range. Measured here, a
+     * question paraphrasing the right passage landed at 0.25 to 0.39 and
+     * unrelated ones at 0.72 to 0.75, so 0.7 sits inside that gap. Past it the
+     * vectors share too little direction to mean anything.
      *
-     * This is a floor for "not a match", not a relevance ranking. Which passage
-     * is the best answer is decided by position in the two lists, which is what
-     * the fusion below is for.
+     * A floor for "not a match", not a relevance ranking -- fusion decides that.
      */
     private const MAX_SEMANTIC_DISTANCE = 0.7;
 

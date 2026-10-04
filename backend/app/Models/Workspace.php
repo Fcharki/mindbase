@@ -52,4 +52,9 @@ class Workspace extends Model
     {
         return $this->hasMany(MembershipRequest::class);
     }
+
+    public function assistantMessages(): HasMany
+    {
+        return $this->hasMany(AssistantMessage::class);
+    }
 }

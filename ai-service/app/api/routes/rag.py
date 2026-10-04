@@ -9,6 +9,7 @@ router = APIRouter()
 
 class RagRequest(BaseModel):
     prompt: str
+    system: str | None = None
 
 
 class RagResponse(BaseModel):
@@ -17,7 +18,10 @@ class RagResponse(BaseModel):
 
 @router.post("/rag", response_model=RagResponse)
 def chat(request: RagRequest):
-    response = llm_service.generate(request.prompt)
+    response = llm_service.generate(
+        request.prompt,
+        system=request.system,
+    )
 
     return {
         "response": response

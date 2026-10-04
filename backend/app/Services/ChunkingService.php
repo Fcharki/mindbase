@@ -9,18 +9,11 @@ use Illuminate\Support\Facades\Log;
 /**
  * Splits an entry into the pieces that get embedded.
  *
- * Two kinds of piece, deliberately kept apart:
- *
- *  - 'summary' is the compressed overview. It is cheap to embed and reads like
- *    the document, so it matches broad questions well.
- *  - 'content' is the entry text split into paragraphs. A summary cannot answer
- *    a question about a specific term because it dropped exactly those details,
- *    so the original text is still needed, just in pieces small enough that each
- *    vector means one thing.
- *
- * Embedding the whole entry as a single vector is what this replaces: one vector
- * per entry averages every topic in it together, so a question about any one of
- * them lands in the same blur.
+ * 'summary' is the compressed overview: cheap to embed and reads like the
+ * document, so it matches broad questions. 'content' is the entry text split
+ * into paragraphs, because a summary has dropped the specific terms a question
+ * may be about. One vector per entry would average every topic together, so a
+ * question about any one of them lands in the same blur.
  */
 class ChunkingService
 {

@@ -254,7 +254,24 @@ Route::middleware('auth:sanctum')->group(function () {
         SearchController::class,
         'chunks',
     ]);
-});
 
-// later
-// POST /api/v1/chat
+    /*
+    |----------------------------------------------------------------------
+    | Ask a question about the workspace, answered from its own entries
+    |----------------------------------------------------------------------
+    */
+
+    Route::post('workspaces/{workspace}/ask', [
+        WorkspaceController::class,
+        'ask',
+    ]);
+
+    /**
+     * Poll a question asked above, since the answer arrives via the queue
+     * rather than in the response.
+     */
+    Route::get('workspaces/{workspace}/ask/{message}', [
+        WorkspaceController::class,
+        'answer',
+    ])->whereNumber('message');
+});

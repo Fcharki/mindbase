@@ -7,8 +7,8 @@ return [
     | AI Service
     |--------------------------------------------------------------------------
     |
-    | Base URL of the FastAPI service that runs the local summarization
-    | model. Used by the summarization feature to proxy requests.
+    | Base URL of the FastAPI service that runs the local models. Requests are
+    | proxied through it rather than made from the browser.
     |
     */
 
@@ -21,10 +21,9 @@ return [
     | Background Timeout
     |--------------------------------------------------------------------------
     |
-    | Budget for a queued summary generation. The fast backend answers well
-    | inside the synchronous timeout, but the instruction-tuned one takes
-    | minutes on CPU, so a regeneration that is allowed to pick it cannot share
-    | the shorter budget. DB_QUEUE_RETRY_AFTER must stay above this.
+    | Budget for a queued summary generation. The instruction-tuned backend takes
+    | minutes on CPU, so a regeneration allowed to pick it cannot share the
+    | synchronous budget. DB_QUEUE_RETRY_AFTER must stay above this.
     |
     */
 
@@ -32,18 +31,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Answer Timeout
+    |--------------------------------------------------------------------------
+    |
+    | Budget for one queued assistant answer. Separate from the background
+    | timeout above, because raising that would also let a summary pick the
+    | instruction-tuned backend, which is a different decision.
+    |
+    | Must stay below the job's own $timeout and DB_QUEUE_RETRY_AFTER.
+    |
+    */
+
+    'answer_timeout' => (int) env('AI_SERVICE_ANSWER_TIMEOUT', 2400),
+
+    /*
+    |--------------------------------------------------------------------------
     | Backend Cost
     |--------------------------------------------------------------------------
     |
-    | What each summarization backend actually costs to run, in seconds, measured
-    | on the 4-core CPU container this project ships on: t5 answers in seconds,
-    | qwen loads in about 535s and then decodes at roughly 0.1 tokens/second,
-    | which is about 33 minutes for a 200 token answer.
+    | What each summarization backend costs to run in seconds, measured on the
+    | 4-core container: t5 answers in seconds, qwen loads in about 535s and
+    | decodes at roughly 0.1 tokens/second.
     |
-    | These numbers exist so a request naming a backend that cannot finish is
-    | refused with an explanation, rather than accepted, left to occupy a worker
-    | for the full budget, and then failing as an opaque transport error. The
-    | second summary used to do exactly that.
+    | These exist so a request naming a backend that cannot finish is refused
+    | with an explanation, rather than occupying a worker for the full budget
+    | and then failing as an opaque transport error.
     |
     */
 
@@ -57,10 +69,9 @@ return [
     | Allow Slow Backends
     |--------------------------------------------------------------------------
     |
-    | Off by default, which is what turns the cost above into a refusal. Set it
-    | to queue a backend that exceeds the budget anyway, on hardware where the
-    | estimate is wrong or the work is genuinely worth waiting for. The job will
-    | still be killed at its own timeout if the estimate was optimistic.
+    | Off by default, which is what turns the cost above into a refusal. Set it to
+    | queue an over-budget backend anyway, on hardware where the estimate is
+    | wrong. The job still dies at its own timeout if the estimate was low.
     |
     */
 
@@ -71,9 +82,8 @@ return [
     | Summary Backends
     |--------------------------------------------------------------------------
     |
-    | The models the AI service can summarize with, which is what a caller may
-    | name when asking for one entry to be regenerated. Kept here rather than
-    | in the request so there is one list to extend when a model is added.
+    | The models the AI service can summarize with, and so what a caller may name
+    | when asking for a regeneration.
     |
     */
 
@@ -84,9 +94,9 @@ return [
     | Embedding Dimension
     |--------------------------------------------------------------------------
     |
-    | Width of the vectors the embedding model returns, and therefore of the
-    | vector column. Changing the model means changing this, which means
-    | rebuilding the column and every chunk vector stored in it.
+    | Width of the vectors the embedding model returns, and so of the vector
+    | column. Changing the model means changing this, which means rebuilding
+    | the column and every vector in it.
     |
     */
 

@@ -63,16 +63,19 @@ services:
       # Budget for a queued summary or chunk index, which is allowed to wait for
       # the model to load. Must exceed AI_SERVICE_TIMEOUT.
       AI_SERVICE_BACKGROUND_TIMEOUT: "${AI_SERVICE_BACKGROUND_TIMEOUT:-600}"
+      # Budget for one queued assistant answer. Separate from the background
+      # timeout above, which would also change what a summary may pick.
+      # Must stay below GenerateAssistantAnswer::$timeout.
+      AI_SERVICE_ANSWER_TIMEOUT: "${AI_SERVICE_ANSWER_TIMEOUT:-2400}"
       # Off by default, which is what turns backend_seconds below into an
       # up-front refusal rather than a job that dies at its own timeout.
       AI_ALLOW_SLOW_BACKENDS: "${AI_ALLOW_SLOW_BACKENDS:-false}"
       # Width of the vectors the AI service returns, and so of the vector
       # column. Changing it invalidates every stored chunk vector.
       AI_EMBEDDING_DIMENSION: "${AI_EMBEDDING_DIMENSION:-1024}"
-      # Must exceed AI_SERVICE_TIMEOUT, AI_SERVICE_BACKGROUND_TIMEOUT and both
-      # jobs' own $timeout (900), otherwise a worker re-reserves a job that is
-      # still running.
-      DB_QUEUE_RETRY_AFTER: "${DB_QUEUE_RETRY_AFTER:-960}"
+      # Must exceed the slowest job's $timeout, or a worker re-reserves a job that
+      # is still running.
+      DB_QUEUE_RETRY_AFTER: "${DB_QUEUE_RETRY_AFTER:-3000}"
 
     depends_on:
       postgres:

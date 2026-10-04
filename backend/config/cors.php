@@ -2,13 +2,8 @@
 
 return [
 
-    
-    // |--------------------------------------------------------------------------
-    // | Cross-Origin Resource Sharing (CORS) Configuration
-    // |--------------------------------------------------------------------------
-    
-  
-
+    // The frontend runs on its own origin, so every credentialed call from it
+    // has to be allowed explicitly.
     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',

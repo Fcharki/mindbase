@@ -7,18 +7,16 @@ use App\Exceptions\ActionFailedException;
 /**
  * Marker for a single-purpose, invokable unit of work.
  *
- * An action owns one business operation end to end: the rules, the writes, and
- * the transactions. Controllers stay responsible for the things that are
- * genuinely about HTTP -- resolving the request, authorizing the caller,
- * choosing a status code, and wrapping the result in a resource.
+ * An action owns one business operation end to end: rules, writes, transactions.
+ * Controllers keep what is genuinely about HTTP -- resolving the request,
+ * authorizing the caller, picking a status code, wrapping the result.
  *
- * Actions signal failure by throwing, not by returning null or a falsy value,
- * so a caller cannot silently ignore a rejected operation. The status on the
- * exception says how the rejection should be reported without the action
- * having to build a response.
+ * Failure is signalled by throwing rather than returning a falsy value, so a
+ * caller cannot silently drop a rejected operation. The exception carries the
+ * status, which keeps response building out of the action.
  *
- * The return type is left off handle() so an action can declare void, bool or
- * a model without the interface forcing a meaningless common type on it.
+ * handle() has no declared return type so an action can return void, bool or a
+ * model without the interface forcing a meaningless common type on it.
  */
 interface Action
 {

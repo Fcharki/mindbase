@@ -11,13 +11,9 @@ use App\Services\EntrySummaryService;
 /**
  * Queues a summary of the entry's content as it stands right now.
  *
- * Dispatching rather than generating inline is what lets an entry stay
- * responsive while the model works; the fingerprint handed to the job is what
- * lets the job tell whether the content it was asked about still exists.
- *
- * Naming a backend regenerates with that model instead of the configured
- * default, which is how a single entry is upgraded without changing what every
- * other entry uses.
+ * Dispatching keeps the entry responsive while the model works; the fingerprint
+ * passed to the job is how the job tells whether that content still exists.
+ * Naming a backend regenerates with that model rather than the default.
  */
 class ScheduleEntrySummary implements Action
 {

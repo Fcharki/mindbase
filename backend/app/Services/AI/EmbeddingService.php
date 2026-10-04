@@ -9,8 +9,8 @@ use GuzzleHttp\Exception\GuzzleException;
 /**
  * Client for the embedding endpoint of the AI service.
  *
- * The model runs locally and takes about a minute to load, so text is sent in
- * batches: one call per entry rather than one call per chunk.
+ * The model takes about a minute to load, so text goes over in batches: one
+ * call per entry rather than one per chunk.
  */
 class EmbeddingService
 {
@@ -27,10 +27,9 @@ class EmbeddingService
     /**
      * Embed a list of strings, returning vectors in the same order.
      *
-     * The ordering guarantee is the whole point of this method. A chunk with no
-     * prose comes back as an empty vector rather than being dropped, so callers
-     * can zip chunks to vectors positionally without losing track of which chunk
-     * is which.
+     * Ordering is the point: text with no prose comes back as an empty vector
+     * rather than being dropped, so callers can zip chunks to vectors without
+     * losing track of which is which.
      *
      * @param  list<string>  $texts
      * @return list<list<float>>

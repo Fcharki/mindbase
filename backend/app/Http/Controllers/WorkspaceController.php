@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Workspace\AskWorkspace;
 use App\Actions\Workspace\CreateWorkspace;
 use App\Actions\Workspace\JoinWorkspace;
+use App\Http\Requests\Workspace\AskWorkspaceRequest;
 use App\Http\Requests\Workspace\WorkspaceRequest;
 use App\Http\Resources\JoinableWorkspaceResource;
 use App\Http\Resources\WorkspaceResource;
@@ -17,6 +19,43 @@ use Illuminate\Support\Facades\Gate;
 
 class WorkspaceController extends Controller
 {
+    /**
+     * Accept a question about the workspace from its own entries.
+     *
+     * Returns 202 with a pending message, not the answer: generation takes
+     * minutes here, so the client polls answer() until the status flips.
+     */
+    public function ask(AskWorkspaceRequest $request, Workspace $workspace): JsonResponse
+    {
+        Gate::authorize('view', $workspace);
+
+        return response()->json([
+            'data' => app(AskWorkspace::class, [
+                'workspace' => $workspace,
+                'user' => $request->user(),
+                'question' => $request->question(),
+            ])->handle(),
+        ], 202);
+    }
+
+    /**
+     * One question and its answer, for polling after an ask.
+     */
+    public function answer(Request $request, Workspace $workspace, int $message): JsonResponse
+    {
+        Gate::authorize('view', $workspace);
+
+        // Scoped to the workspace so an id from elsewhere reads as absent rather
+        // than as someone else's conversation.
+        $found = $workspace->assistantMessages()
+            ->whereKey($message)
+            ->first();
+
+        abort_if($found === null, 404, 'Question not found.');
+
+        return response()->json(['data' => $found]);
+    }
+
     public function byInviteCode(string $inviteCode): JsonResource
     {
         $workspace = Workspace::where('invite_code', $inviteCode)
