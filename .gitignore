@@ -1,4 +1,3 @@
-/README.md
 /planning.md
 /instructions.txt
 
@@ -15,4 +14,5 @@
 # python
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
