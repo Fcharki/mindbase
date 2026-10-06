@@ -94,7 +94,7 @@ load, which otherwise killed the first request of a session as a bare 504.
 ## Tests
 
 ```bash
-cd backend    && php artisan test      # 192 tests
+cd backend    && php artisan test      # 230 tests
 cd ai-service && python -m pytest -q   # 85 tests
 cd frontend   && npx tsc --noEmit && npm run lint
 ```

@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
+import { CommentsPanel } from "@/app/features/knowledge/components/CommentsPanel";
 import { DocumentPanel } from "@/app/features/knowledge/components/DocumentPanel";
 import { EntryForm } from "@/app/features/knowledge/components/EntryForm";
 import {
@@ -18,15 +19,22 @@ import {
   updateEntry,
 } from "@/lib/entries";
 import { getWorkspace, Workspace } from "@/lib/workspaces";
+import { permissionsFor } from "@/lib/permissions";
 
 type Status = "loading" | "ready" | "missing";
 
 export function EntryDetailPageView({
   workspaceId,
   entryId,
+  highlightCommentId,
+  highlightReplyId,
 }: {
   workspaceId: string;
   entryId: string;
+  // Set when the page was opened from a notification, naming the comment or
+  // reply the discussion panel should scroll to.
+  highlightCommentId?: string;
+  highlightReplyId?: string;
 }) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -195,7 +203,7 @@ export function EntryDetailPageView({
 
   const updatedAt = new Date(entry.updated_at ?? entry.created_at);
   const author = entry.creator?.name ?? user?.name ?? "you";
-  const canWrite = workspace.role === "owner" || workspace.role === "member";
+  const permissions = permissionsFor(workspace.role, workspace.is_member);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
@@ -249,7 +257,7 @@ export function EntryDetailPageView({
                 </p>
               </div>
 
-              {canWrite && (
+              {permissions.canContribute && (
                 <div className="flex shrink-0 items-center gap-3">
                   <button
                     onClick={() => {
@@ -346,7 +354,7 @@ export function EntryDetailPageView({
                     >
                       {tag.name}
 
-                      {workspace.role !== "viewer" && (
+                      {permissions.canContribute && (
                         <button
                           type="button"
                           onClick={() => handleRemoveTag(tag.name)}
@@ -376,7 +384,7 @@ export function EntryDetailPageView({
                   </p>
                 )}
 
-                {workspace.role !== "viewer" && (
+                {permissions.canContribute && (
                   <form
                     onSubmit={handleAddTag}
                     className="mt-5 flex max-w-md flex-col gap-2 sm:flex-row"
@@ -402,11 +410,41 @@ export function EntryDetailPageView({
               </div>
             </section>
 
-            <DocumentPanel
-              workspaceId={workspaceId}
-              entryId={entryId}
-              canWrite={canWrite}
-            />
+            {/* Entry text is readable by any signed-in user, so a non-member can
+                land here. Say why the panels are closed instead of letting both
+                requests fail with a bare 403. */}
+            {permissions.isMember ? (
+              <>
+                <DocumentPanel
+                  workspaceId={workspaceId}
+                  entryId={entryId}
+                  canUpload={permissions.canContribute}
+                  canDownload={permissions.canDownload}
+                />
+
+                <CommentsPanel
+                  workspaceId={workspaceId}
+                  entryId={entryId}
+                  canPost={permissions.canDiscuss}
+                  isOwner={permissions.isOwner}
+                  highlightCommentId={highlightCommentId}
+                  highlightReplyId={highlightReplyId}
+                />
+              </>
+            ) : (
+              <section className="rounded-2xl border border-[#E8E7EC] bg-white px-6 py-8">
+                <h2 className="text-lg font-semibold tracking-tight text-[#20202A]">
+                  Documents and discussion are private
+                </h2>
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873]">
+                  You are not a member of this workspace, so its documents and
+                  discussions are closed to you. You can still read this entry.
+                </p>
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873]">
+                  Ask a member or the owner to add you if you need access.
+                </p>
+              </section>
+            )}
           </>
         )}
 

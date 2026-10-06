@@ -13,13 +13,17 @@ import {
 interface DocumentPanelProps {
   workspaceId: string;
   entryId: string;
-  canWrite: boolean;
+  canUpload: boolean;
+  // Uploading and downloading are separate capabilities: a viewer sees which
+  // documents exist but cannot take the bytes behind them.
+  canDownload: boolean;
 }
 
 export function DocumentPanel({
   workspaceId,
   entryId,
-  canWrite,
+  canUpload,
+  canDownload,
 }: DocumentPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -131,7 +135,7 @@ export function DocumentPanel({
           </h2>
         </div>
 
-        {canWrite && (
+        {canUpload && (
           <>
             <input
               ref={inputRef}
@@ -189,16 +193,22 @@ export function DocumentPanel({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleDownload(document)}
-                      disabled={busy}
-                      className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {busy ? "Working…" : "Download"}
-                    </button>
+                    {canDownload ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(document)}
+                        disabled={busy}
+                        className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busy ? "Working…" : "Download"}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-[#9897A1]">
+                        Download not available
+                      </span>
+                    )}
 
-                    {canWrite && (
+                    {canUpload && (
                       <button
                         type="button"
                         onClick={() => handleDelete(document)}

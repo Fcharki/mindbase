@@ -77,4 +77,17 @@ class KnowledgeEntry extends Model
     {
         return $this->hasMany(EntryChunk::class);
     }
+
+    /**
+     * The discussion on this entry.
+     *
+     * Not eager loaded by the entry endpoints for the same reason as chunks,
+     * and for an additional reason: a deleted author leaves user_id null, so the
+     * count alone would not tell a client who to show. The discussion is read
+     * through CommentController::index, which needs its own eager loads.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
 }

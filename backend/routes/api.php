@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EmailAuthController;
 use App\Http\Controllers\KnowledgeEntryController;
 use App\Http\Controllers\MembershipRequestController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
@@ -234,6 +237,83 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('workspaces/{workspace}/entries/{entry}/documents/{document}', [
         DocumentController::class,
         'destroy',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Comments and replies on an entry
+    |--------------------------------------------------------------------------
+    |
+    | The discussion is workspace data, so these routes are gated by
+    | CommentPolicy and ReplyPolicy rather than by the looser KnowledgeEntryPolicy
+    | that lets any authenticated user browse entry text.
+    |
+    | Replies are nested under both the entry and the comment so that every
+    | request carries a route-bound entry to authorize against, and so a reply
+    | cannot be reached through a comment it does not belong to.
+    |
+    */
+
+    Route::get('workspaces/{workspace}/entries/{entry}/comments', [
+        CommentController::class,
+        'index',
+    ]);
+
+    Route::post('workspaces/{workspace}/entries/{entry}/comments', [
+        CommentController::class,
+        'store',
+    ]);
+
+    Route::patch('workspaces/{workspace}/entries/{entry}/comments/{comment}', [
+        CommentController::class,
+        'update',
+    ]);
+
+    Route::delete('workspaces/{workspace}/entries/{entry}/comments/{comment}', [
+        CommentController::class,
+        'destroy',
+    ]);
+
+    Route::get('workspaces/{workspace}/entries/{entry}/comments/{comment}/replies', [
+        ReplyController::class,
+        'index',
+    ]);
+
+    Route::post('workspaces/{workspace}/entries/{entry}/comments/{comment}/replies', [
+        ReplyController::class,
+        'store',
+    ]);
+
+    Route::patch('workspaces/{workspace}/entries/{entry}/comments/{comment}/replies/{reply}', [
+        ReplyController::class,
+        'update',
+    ]);
+
+    Route::delete('workspaces/{workspace}/entries/{entry}/comments/{comment}/replies/{reply}', [
+        ReplyController::class,
+        'destroy',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    |
+    | Not workspace scoped: a notification belongs to the reader, not to a
+    | workspace, and a reader who belongs to no workspace still has an
+    | inboxes worth reading. Both routes reach only the authenticated user's own
+    | rows, via the notifiable relation on the User model.
+    |
+    */
+
+    Route::get('notifications', [
+        NotificationController::class,
+        'index',
+    ]);
+
+    Route::post('notifications/read-all', [
+        NotificationController::class,
+        'readAll',
     ]);
 
     /*

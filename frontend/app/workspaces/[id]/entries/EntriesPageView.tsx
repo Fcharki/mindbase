@@ -10,6 +10,7 @@ import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
 import { SearchPanel } from "@/app/features/search/SearchPanel";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
+import { permissionsFor } from "@/lib/permissions";
 import { getWorkspace, Workspace } from "@/lib/workspaces";
 
 type Status = "loading" | "ready" | "missing";
@@ -136,7 +137,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
     );
   }
 
-  const canWrite = workspace.role === "owner" || workspace.role === "member";
+  const canWrite = permissionsFor(workspace.role, workspace.is_member).canContribute;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">

@@ -238,6 +238,36 @@ class DocumentUploadTest extends TestCase
             ->assertDownload('notes.pdf');
     }
 
+    public function test_a_member_can_download_a_document_but_a_viewer_cannot(): void
+    {
+        $workspace = $this->workspace();
+        $entry = $this->entry($workspace, $workspace->owner);
+        $member = $this->attach($workspace, User::factory()->create(), 'member');
+        $viewer = $this->attach($workspace, User::factory()->create(), 'viewer');
+
+        $this->actingAs($workspace->owner)
+            ->postJson($this->url($workspace, $entry), [
+                'file' => UploadedFile::fake()->create('notes.pdf', 4, 'application/pdf'),
+            ]);
+
+        $document = Document::sole();
+
+        $this->actingAs($member)
+            ->get($this->url($workspace, $entry)."/{$document->id}/download")
+            ->assertOk()
+            ->assertDownload('notes.pdf');
+
+        // A viewer may still see that a document exists; the bytes are withheld.
+        $this->actingAs($viewer)
+            ->getJson($this->url($workspace, $entry))
+            ->assertOk()
+            ->assertJsonPath('data.0.original_name', 'notes.pdf');
+
+        $this->actingAs($viewer)
+            ->get($this->url($workspace, $entry)."/{$document->id}/download")
+            ->assertForbidden();
+    }
+
     public function test_non_members_cannot_download_a_document(): void
     {
         $workspace = $this->workspace();

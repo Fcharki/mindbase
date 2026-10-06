@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
+import { NotificationBell } from "@/app/features/notifications/NotificationBell";
 import { listWorkspaces, Workspace } from "@/lib/workspaces";
 
 function Logomark() {
@@ -145,6 +146,8 @@ export function WorkspaceNav({
               </svg>
             </div>
           )}
+
+          <NotificationBell />
 
           <div className="hidden h-6 w-px bg-[#DDDCE3] sm:block" />
 

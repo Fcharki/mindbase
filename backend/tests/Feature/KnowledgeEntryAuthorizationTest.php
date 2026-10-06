@@ -116,6 +116,35 @@ class KnowledgeEntryAuthorizationTest extends TestCase
             ->assertJsonPath('data.id', $entry->id);
     }
 
+    public function test_is_member_separates_a_real_viewer_from_a_stranger(): void
+    {
+        $workspace = $this->workspace();
+        $realViewer = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $workspace->members()->attach($realViewer->id, ['role' => 'viewer']);
+
+        // Both are reported as role "viewer", so the role alone cannot tell the
+        // frontend which panels will 403.
+        $this->actingAs($realViewer)
+            ->getJson("/api/v1/workspaces/{$workspace->id}")
+            ->assertOk()
+            ->assertJsonPath('data.role', 'viewer')
+            ->assertJsonPath('data.is_member', true);
+
+        $this->actingAs($stranger)
+            ->getJson("/api/v1/workspaces/{$workspace->id}")
+            ->assertOk()
+            ->assertJsonPath('data.role', 'viewer')
+            ->assertJsonPath('data.is_member', false);
+
+        $this->actingAs($workspace->owner)
+            ->getJson("/api/v1/workspaces/{$workspace->id}")
+            ->assertOk()
+            ->assertJsonPath('data.role', 'owner')
+            ->assertJsonPath('data.is_member', true);
+    }
+
     public function test_default_viewer_cannot_create_an_entry(): void
     {
         $workspace = $this->workspace();

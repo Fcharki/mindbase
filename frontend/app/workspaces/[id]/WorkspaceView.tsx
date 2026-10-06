@@ -12,6 +12,7 @@ import { EntryList } from "@/app/features/knowledge/components/EntryList";
 import { SearchPanel } from "@/app/features/search/SearchPanel";
 import { AssistantPanel } from "@/app/features/assistant/AssistantPanel";
 import { listEntries, KnowledgeEntry } from "@/lib/entries";
+import { permissionsFor } from "@/lib/permissions";
 import {
   addWorkspaceMember,
   approveJoinRequest,
@@ -70,8 +71,9 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const [requestsError, setRequestsError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const isOwner = workspace?.role === "owner";
-  const canWrite = workspace?.role === "owner" || workspace?.role === "member";
+  const permissions = permissionsFor(workspace?.role, workspace?.is_member);
+  const isOwner = permissions.isOwner;
+  const canWrite = permissions.canContribute;
 
   useEffect(() => {
     if (authLoading) {
@@ -332,8 +334,8 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
     }
   }
 
-  const canRename = workspace?.role === "owner";
-  const canDelete = workspace?.role === "owner";
+  const canRename = permissions.isOwner;
+  const canDelete = permissions.isOwner;
 
   if (status === "loading") {
     return (

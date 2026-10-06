@@ -45,6 +45,9 @@ export interface Workspace {
   updated_at: string;
   entries_count?: number;
   role: WorkspaceRole;
+  // False for a caller who is not a member at all, who the API also reports as
+  // role "viewer". Needed to explain a 403 instead of rendering a broken panel.
+  is_member: boolean;
   owner: WorkspaceOwner;
   members?: WorkspaceMember[];
 }
