@@ -30,8 +30,9 @@ class SummarizationService
     /**
      * Summarize the given text and report which model answered.
      *
-     * Summaries are cached, so a stored summary has to say which backend wrote
-     * it: after a backend swap the older rows are the ones worth regenerating.
+     * Nothing is cached here, so every call re-runs the model. That is why a
+     * stored summary has to record which backend wrote it: after a backend swap
+     * the older rows are the ones worth regenerating.
      *
      * @param  string|null  $backend  Ask for a specific model. The AI service
      *                                falls back to its configured default for an

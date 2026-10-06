@@ -1,5 +1,4 @@
 /planning.md
-/instructions.txt
 
 # env files (keep only committed templates)
 .env
@@ -9,7 +8,6 @@
 /data
 .vscode
 /ai-service/app/models
-/AI_SERVICE.md
 
 # python
 __pycache__/
