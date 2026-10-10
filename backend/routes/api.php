@@ -355,3 +355,21 @@ Route::middleware('auth:sanctum')->group(function () {
         'answer',
     ])->whereNumber('message');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Audit Logs
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('workspaces/{workspace}/audit-logs', [
+        \App\Http\Controllers\AuditLogController::class,
+        'index',
+    ]);
+
+    Route::get('workspaces/{workspace}/audit-logs/{auditLog}', [
+        \App\Http\Controllers\AuditLogController::class,
+        'show',
+    ]);
+});

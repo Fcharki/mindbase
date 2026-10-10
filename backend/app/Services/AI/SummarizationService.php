@@ -48,22 +48,45 @@ class SummarizationService
         ?string $backend = null,
         ?int $timeout = null,
     ): array {
+        $start = microtime(true);
         $payload = ['prompt' => $text];
 
         if ($backend !== null) {
             $payload['backend'] = $backend;
         }
 
-        $response = $this->client->post('summarize', array_filter([
-            'json' => $payload,
-            'timeout' => $timeout,
-        ]));
+        try {
+            $response = $this->client->post('summarize', array_filter([
+                'json' => $payload,
+                'timeout' => $timeout,
+            ]));
 
-        $body = json_decode($response->getBody()->getContents(), true);
+            $body = json_decode($response->getBody()->getContents(), true);
+            $latency = (int) round((microtime(true) - $start) * 1000);
+            $resultBackend = $body['backend'] ?? null;
 
-        return [
-            'summary' => $body['response'] ?? '',
-            'backend' => $body['backend'] ?? null,
-        ];
+            app(AiOperationLogger::class)->log(
+                'summarize',
+                $resultBackend ?? $backend ?? 't5',
+                $latency,
+                null,
+                true
+            );
+
+            return [
+                'summary' => $body['response'] ?? '',
+                'backend' => $resultBackend,
+            ];
+        } catch (\Throwable $e) {
+            $latency = (int) round((microtime(true) - $start) * 1000);
+            app(AiOperationLogger::class)->log(
+                'summarize',
+                $backend ?? 't5',
+                $latency,
+                null,
+                false
+            );
+            throw $e;
+        }
     }
 }

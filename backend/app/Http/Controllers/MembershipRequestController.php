@@ -7,6 +7,7 @@ use App\Actions\Workspace\RequestWorkspaceMembership;
 use App\Http\Requests\MembershipRequest\ApproveJoinRequest;
 use App\Http\Requests\MembershipRequest\StoreJoinRequest;
 use App\Http\Resources\MembershipRequestResource;
+use App\Models\AuditLog;
 use App\Models\MembershipRequest;
 use App\Models\Workspace;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +28,18 @@ class MembershipRequestController extends Controller
             'user' => $request->user(),
             'role' => $request->validated('role'),
         ])->handle();
+
+        AuditLog::record(
+            $workspace->id,
+            'requested',
+            AuditLog::ENTITY_JOIN_REQUEST,
+            $membershipRequest->id,
+            [
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+                'role' => $membershipRequest->requested_role,
+            ],
+        );
 
         return MembershipRequestResource::make(
             $membershipRequest->load('user:id,name,email')
@@ -58,12 +71,26 @@ class MembershipRequestController extends Controller
             404
         );
 
+        $resolved = app(ApproveMembershipRequest::class, [
+            'workspace' => $workspace,
+            'membershipRequest' => $membershipRequest,
+            'role' => $request->validated('role'),
+        ])->handle();
+
+        AuditLog::record(
+            $workspace->id,
+            'approved',
+            AuditLog::ENTITY_JOIN_REQUEST,
+            $resolved->id,
+            [
+                'name' => $resolved->user?->name,
+                'email' => $resolved->user?->email,
+                'role' => $request->validated('role') ?? $resolved->requested_role,
+            ],
+        );
+
         return MembershipRequestResource::make(
-            app(ApproveMembershipRequest::class, [
-                'workspace' => $workspace,
-                'membershipRequest' => $membershipRequest,
-                'role' => $request->validated('role'),
-            ])->handle()->load('user:id,name,email')
+            $resolved->load('user:id,name,email')
         );
     }
 
@@ -76,6 +103,17 @@ class MembershipRequestController extends Controller
         abort_unless(
             $membershipRequest->workspace_id === $workspace->id,
             404
+        );
+
+        AuditLog::record(
+            $workspace->id,
+            'rejected',
+            AuditLog::ENTITY_JOIN_REQUEST,
+            $membershipRequest->id,
+            [
+                'name' => $membershipRequest->user?->name,
+                'email' => $membershipRequest->user?->email,
+            ],
         );
 
         $membershipRequest->delete();

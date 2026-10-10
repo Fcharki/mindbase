@@ -46,17 +46,39 @@ class RagService
         ?string $system = null,
         ?int $timeout = null,
     ): string {
+        $start = microtime(true);
         $payload = ['prompt' => $this->withContext($prompt, $context)];
 
         if ($system !== null) {
             $payload['system'] = $system;
         }
 
-        $response = $this->client($timeout)->post('rag', ['json' => $payload]);
+        try {
+            $response = $this->client($timeout)->post('rag', ['json' => $payload]);
 
-        $body = json_decode($response->getBody()->getContents(), true);
+            $body = json_decode($response->getBody()->getContents(), true);
+            $latency = (int) round((microtime(true) - $start) * 1000);
 
-        return $body['response'] ?? '';
+            app(AiOperationLogger::class)->log(
+                'rag',
+                'rag-model',
+                $latency,
+                null,
+                true
+            );
+
+            return $body['response'] ?? '';
+        } catch (\Throwable $e) {
+            $latency = (int) round((microtime(true) - $start) * 1000);
+            app(AiOperationLogger::class)->log(
+                'rag',
+                'rag-model',
+                $latency,
+                null,
+                false
+            );
+            throw $e;
+        }
     }
 
     /**

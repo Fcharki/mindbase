@@ -239,6 +239,13 @@ export function WorkspaceCard({
               Manage
             </Link>
 
+            <Link
+              href={`/workspaces/${workspace.id}/logs`}
+              className="rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2]"
+            >
+              Logs
+            </Link>
+
             <button
               type="button"
               onClick={() => {

@@ -8,6 +8,7 @@ use App\Actions\Workspace\UpdateWorkspaceMemberRole;
 use App\Http\Requests\Workspace\AddMemberRequest;
 use App\Http\Requests\Workspace\UpdateMemberRoleRequest;
 use App\Http\Resources\WorkspaceMemberResource;
+use App\Models\AuditLog;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Http\JsonResponse;
@@ -30,6 +31,18 @@ class WorkspaceMemberController extends Controller
             'role' => $validated['role'],
         ])->handle();
 
+        AuditLog::record(
+            $workspace->id,
+            'added',
+            AuditLog::ENTITY_MEMBER,
+            $member->id,
+            [
+                'name' => $member->name,
+                'email' => $member->email,
+                'role' => $validated['role'],
+            ],
+        );
+
         return WorkspaceMemberResource::make($member)
             ->response()
             ->setStatusCode(201);
@@ -42,11 +55,30 @@ class WorkspaceMemberController extends Controller
     ): JsonResource {
         Gate::authorize('manageMembers', $workspace);
 
-        return WorkspaceMemberResource::make(app(UpdateWorkspaceMemberRole::class, [
+        $previousRole = $workspace->members()
+            ->where('users.id', $user->id)
+            ->first()?->pivot->role;
+
+        $member = app(UpdateWorkspaceMemberRole::class, [
             'workspace' => $workspace,
             'user' => $user,
             'role' => $request->validated('role'),
-        ])->handle());
+        ])->handle();
+
+        AuditLog::record(
+            $workspace->id,
+            'role_changed',
+            AuditLog::ENTITY_MEMBER,
+            $member->id,
+            [
+                'name' => $member->name,
+                'email' => $member->email,
+                'from' => $previousRole,
+                'to' => $member->pivot->role,
+            ],
+        );
+
+        return WorkspaceMemberResource::make($member);
     }
 
     public function destroy(
@@ -59,6 +91,17 @@ class WorkspaceMemberController extends Controller
             'workspace' => $workspace,
             'user' => $user,
         ])->handle();
+
+        AuditLog::record(
+            $workspace->id,
+            'removed',
+            AuditLog::ENTITY_MEMBER,
+            $user->id,
+            [
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+        );
 
         return response()->json([
             'message' => 'Member removed successfully.',
