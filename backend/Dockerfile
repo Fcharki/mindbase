@@ -6,9 +6,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     libpq-dev \
+    libzip-dev \
     nginx \
     supervisor \
-    && docker-php-ext-install pdo_pgsql \
+    && docker-php-ext-install pdo_pgsql zip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Composer

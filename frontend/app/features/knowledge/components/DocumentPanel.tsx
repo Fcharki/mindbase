@@ -10,6 +10,17 @@ import {
   uploadDocument,
 } from "@/lib/documents";
 
+const EXTRACTION_LABELS: Record<
+  KnowledgeDocument["extraction_status"],
+  string
+> = {
+  pending: "Extracting text…",
+  ready: "Text searchable",
+  empty: "No text found",
+  unsupported: "Format not searchable",
+  failed: "Text could not be read",
+};
+
 interface DocumentPanelProps {
   workspaceId: string;
   entryId: string;
@@ -190,6 +201,18 @@ export function DocumentPanel({
                         ? ` · ${document.uploader.name}`
                         : ""}
                     </p>
+
+                    {document.extraction_status && (
+                      <p
+                        className={`mt-0.5 text-xs ${
+                          document.extraction_status === "ready"
+                            ? "text-[#3B9C6B]"
+                            : "text-[#9897A1]"
+                        }`}
+                      >
+                        {EXTRACTION_LABELS[document.extraction_status]}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">

@@ -22,6 +22,15 @@ class EntryChunk extends Model
 
     public const SOURCE_CONTENT = 'content';
 
+    /**
+     * Chunks from one attachment share a source, namespaced by its id so two
+     * documents on the same entry cannot collide on position.
+     */
+    public static function sourceForDocument(int $documentId): string
+    {
+        return 'document:'.$documentId;
+    }
+
     protected $fillable = [
         'knowledge_entry_id',
         'source',

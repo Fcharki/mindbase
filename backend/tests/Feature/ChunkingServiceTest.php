@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Document;
+use App\Models\EntryChunk;
 use App\Models\KnowledgeEntry;
 use App\Models\Summary;
 use App\Models\User;
@@ -183,5 +185,61 @@ class ChunkingServiceTest extends TestCase
 
         $this->assertGreaterThan(ChunkingService::MAX_CHUNKS, count($chunks));
         $this->assertCount(ChunkingService::MAX_CHUNKS, $capped);
+    }
+
+    public function test_extracted_attachment_text_is_indexed_as_its_own_source(): void
+    {
+        $entry = $this->entry('<p>Body only.</p>');
+        $document = $this->document($entry, Document::EXTRACTION_READY, 'A fact that lives only in the attachment.');
+
+        $chunks = app(ChunkingService::class)->chunksFor($entry);
+
+        $sources = array_column($chunks, 'source');
+        $bodies = array_column($chunks, 'body');
+
+        $this->assertContains(EntryChunk::sourceForDocument($document->id), $sources);
+        $this->assertContains('A fact that lives only in the attachment.', $bodies);
+    }
+
+    public function test_an_attachment_without_extracted_text_is_not_indexed(): void
+    {
+        $entry = $this->entry('<p>Body only.</p>');
+        $this->document($entry, Document::EXTRACTION_PENDING, null);
+
+        $chunks = app(ChunkingService::class)->chunksFor($entry);
+
+        $this->assertSame(['content'], array_column($chunks, 'source'));
+    }
+
+    public function test_each_attachment_numbers_its_own_positions(): void
+    {
+        $entry = $this->entry('<p>Body only.</p>');
+
+        $first = $this->document($entry, Document::EXTRACTION_READY, str_repeat('Attachment one sentence. ', 300));
+        $second = $this->document($entry, Document::EXTRACTION_READY, str_repeat('Attachment two sentence. ', 300));
+
+        $chunks = app(ChunkingService::class)->chunksFor($entry);
+
+        foreach ([$first, $second] as $document) {
+            $positions = array_column(array_filter(
+                $chunks,
+                fn ($chunk) => $chunk['source'] === EntryChunk::sourceForDocument($document->id)
+            ), 'position');
+
+            $this->assertNotEmpty($positions);
+            $this->assertSame(range(0, count($positions) - 1), $positions);
+        }
+    }
+
+    private function document(KnowledgeEntry $entry, string $status, ?string $text): Document
+    {
+        return Document::create([
+            'knowledge_entry_id' => $entry->id,
+            'disk' => 'documents',
+            'path' => 'workspaces/1/entries/1/'.uniqid().'.txt',
+            'original_name' => 'notes.txt',
+            'extraction_status' => $status,
+            'extracted_text' => $text,
+        ]);
     }
 }

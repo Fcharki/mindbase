@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\Storage;
 
 class Document extends Model
 {
+    public const EXTRACTION_PENDING = 'pending';
+
+    public const EXTRACTION_READY = 'ready';
+
+    public const EXTRACTION_EMPTY = 'empty';
+
+    public const EXTRACTION_UNSUPPORTED = 'unsupported';
+
+    public const EXTRACTION_FAILED = 'failed';
+
     protected $fillable = [
         'knowledge_entry_id',
         'uploaded_by',
@@ -18,10 +28,15 @@ class Document extends Model
         'mime_type',
         'size',
         'checksum',
+        'extracted_text',
+        'extraction_status',
+        'extraction_error',
+        'extracted_at',
     ];
 
     protected $casts = [
         'size' => 'integer',
+        'extracted_at' => 'datetime',
     ];
 
     /**
@@ -70,6 +85,23 @@ class Document extends Model
         $power = min($power, count($units) - 1);
 
         return round($bytes / (1024 ** $power), $power === 0 ? 0 : 1).' '.$units[$power];
+    }
+
+    /**
+     * Lower-case extension of the name the uploader gave the file.
+     */
+    public function extension(): string
+    {
+        return strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * Whether extraction produced text worth indexing.
+     */
+    public function hasExtractedText(): bool
+    {
+        return $this->extraction_status === self::EXTRACTION_READY
+            && trim((string) $this->extracted_text) !== '';
     }
 
     /**

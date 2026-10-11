@@ -5,6 +5,13 @@ export interface DocumentUploader {
   name: string;
 }
 
+export type DocumentExtractionStatus =
+  | "pending"
+  | "ready"
+  | "empty"
+  | "unsupported"
+  | "failed";
+
 export interface KnowledgeDocument {
   id: number;
   knowledge_entry_id: number;
@@ -16,6 +23,8 @@ export interface KnowledgeDocument {
   created_at: string;
   updated_at: string;
   human_size: string;
+  // Set by the backend once an attachment's text has been read for search.
+  extraction_status: DocumentExtractionStatus;
   uploader?: DocumentUploader;
 }
 

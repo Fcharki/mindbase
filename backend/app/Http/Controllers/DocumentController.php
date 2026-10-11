@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Document\StoreDocumentRequest;
 use App\Http\Resources\DocumentResource;
+use App\Jobs\ExtractDocumentText;
+use App\Jobs\IndexEntryChunks;
 use App\Models\Document;
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
 use App\Services\DocumentStorageService;
+use App\Services\EntrySummaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
@@ -51,6 +54,10 @@ class DocumentController extends Controller
 
         $document->load('uploader:id,name');
 
+        // Extraction is queued; the response goes out with the metadata the
+        // browser needs and the text arrives once the file has been read.
+        ExtractDocumentText::dispatch($document->id);
+
         return DocumentResource::make($document)
             ->response()
             ->setStatusCode(201);
@@ -85,7 +92,8 @@ class DocumentController extends Controller
     public function destroy(
         Workspace $workspace,
         KnowledgeEntry $entry,
-        Document $document
+        Document $document,
+        EntrySummaryService $summaries
     ): JsonResponse {
         $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
@@ -97,6 +105,10 @@ class DocumentController extends Controller
         Gate::authorize('delete', [$document, $entry]);
 
         $document->delete();
+
+        // Drop the removed document's chunks. The entry content is unchanged,
+        // so the reindex replaces every chunk rather than being discarded.
+        IndexEntryChunks::dispatch($entry->id, $summaries->hashFor($entry->content));
 
         return response()->json([
             'message' => 'Document deleted successfully.',

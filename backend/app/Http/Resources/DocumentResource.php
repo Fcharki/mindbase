@@ -31,6 +31,7 @@ class DocumentResource extends JsonResource
             'mime_type' => $this->mime_type,
             'size' => $this->size,
             'human_size' => $this->human_size,
+            'extraction_status' => $this->extraction_status,
             'uploader' => UserSummaryResource::make($this->whenLoaded('uploader')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

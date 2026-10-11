@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Document;
+use App\Models\EntryChunk;
 use App\Models\KnowledgeEntry;
 use App\Models\Summary;
 use Illuminate\Support\Facades\Log;
@@ -12,8 +14,10 @@ use Illuminate\Support\Facades\Log;
  * 'summary' is the compressed overview: cheap to embed and reads like the
  * document, so it matches broad questions. 'content' is the entry text split
  * into paragraphs, because a summary has dropped the specific terms a question
- * may be about. One vector per entry would average every topic together, so a
- * question about any one of them lands in the same blur.
+ * may be about. 'document:<id>' is the text extracted from an attachment, so a
+ * PDF's contents are as searchable as the entry's own prose. One vector per
+ * entry would average every topic together, so a question about any one of them
+ * lands in the same blur.
  */
 class ChunkingService
 {
@@ -86,7 +90,48 @@ class ChunkingService
             }
         }
 
+        foreach ($this->documentChunks($entry) as $chunk) {
+            $chunks[] = $chunk;
+        }
+
         return $this->cap($chunks);
+    }
+
+    /**
+     * Chunks for every attachment whose text was extracted successfully.
+     *
+     * @return list<array{source: string, position: int, body: string}>
+     */
+    private function documentChunks(KnowledgeEntry $entry): array
+    {
+        $documents = $entry->documents()
+            ->where('extraction_status', Document::EXTRACTION_READY)
+            ->whereNotNull('extracted_text')
+            ->orderBy('id')
+            ->get();
+
+        $chunks = [];
+
+        foreach ($documents as $document) {
+            $body = $this->flatten((string) $document->extracted_text);
+
+            if ($body === '') {
+                continue;
+            }
+
+            $position = 0;
+            $source = EntryChunk::sourceForDocument($document->id);
+
+            foreach ($this->split($body) as $piece) {
+                $chunks[] = [
+                    'source' => $source,
+                    'position' => $position++,
+                    'body' => $piece,
+                ];
+            }
+        }
+
+        return $chunks;
     }
 
     /**

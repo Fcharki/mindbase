@@ -9,6 +9,7 @@ use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -21,6 +22,7 @@ class DocumentUploadTest extends TestCase
         parent::setUp();
 
         Storage::fake('documents');
+        Queue::fake();
     }
 
     private function workspace(): Workspace
