@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\AuditLog;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 use App\Traits\LogsAppActions;
 
 class WorkspaceObserver
@@ -17,6 +18,7 @@ class WorkspaceObserver
             'entity_id' => $workspace->id,
         ]);
         $this->log($workspace, 'created');
+        $this->forgetIndex();
     }
 
     public function updated(Workspace $workspace): void
@@ -29,6 +31,7 @@ class WorkspaceObserver
             'entity_id' => $workspace->id,
         ]);
         $this->log($workspace, 'updated', $changes);
+        $this->forgetIndex();
     }
 
     public function deleted(Workspace $workspace): void
@@ -38,6 +41,12 @@ class WorkspaceObserver
             'entity_id' => $workspace->id,
         ]);
         $this->log($workspace, 'deleted');
+        $this->forgetIndex();
+    }
+
+    private function forgetIndex(): void
+    {
+        app(WorkspaceIndexCache::class)->flush();
     }
 
     private function log(Workspace $workspace, string $action, array $metadata = []): void

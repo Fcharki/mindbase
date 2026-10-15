@@ -102,4 +102,23 @@ return [
 
     'embedding_dimension' => (int) env('AI_EMBEDDING_DIMENSION', 1024),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Embedding Cache TTL
+    |--------------------------------------------------------------------------
+    |
+    | How long a search question's vector is kept, in seconds. The model is the
+    | slowest part of a search -- about a second warm, minutes cold -- and a
+    | debounced search box re-embeds the same question on almost every keystroke
+    | that survives the pause, so the vector is cached by its text.
+    |
+    | An embedding is deterministic for a given model, so this only bounds how
+    | large the cache table may grow, not correctness. The dimension is part of
+    | the cache key, so changing the model width invalidates by construction;
+    | clear the cache if the model changes at the same width.
+    |
+    */
+
+    'embedding_cache_ttl' => (int) env('AI_EMBEDDING_CACHE_TTL', 60 * 60 * 24 * 30),
+
 ];

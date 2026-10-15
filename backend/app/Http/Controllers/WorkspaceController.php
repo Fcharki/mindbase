@@ -10,6 +10,7 @@ use App\Http\Requests\Workspace\WorkspaceRequest;
 use App\Http\Resources\JoinableWorkspaceResource;
 use App\Http\Resources\WorkspaceResource;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -73,17 +74,20 @@ class WorkspaceController extends Controller
 
         $user = $request->user();
 
-        $workspaces = Workspace::query()
-            ->leftJoin('workspace_members as current_user_membership', function (JoinClause $join) use ($user) {
-                $join->on('current_user_membership.workspace_id', '=', 'workspaces.id')
-                    ->where('current_user_membership.user_id', '=', $user->id);
-            })
-            ->addSelect('workspaces.*')
-            ->addSelect('current_user_membership.role as current_user_role')
-            ->with('owner:id,name,email')
-            ->withCount(['knowledgeEntries as entries_count'])
-            ->orderBy('workspaces.name')
-            ->get();
+        $workspaces = app(WorkspaceIndexCache::class)->remember(
+            $user->id,
+            fn () => Workspace::query()
+                ->leftJoin('workspace_members as current_user_membership', function (JoinClause $join) use ($user) {
+                    $join->on('current_user_membership.workspace_id', '=', 'workspaces.id')
+                        ->where('current_user_membership.user_id', '=', $user->id);
+                })
+                ->addSelect('workspaces.*')
+                ->addSelect('current_user_membership.role as current_user_role')
+                ->with('owner:id,name,email')
+                ->withCount(['knowledgeEntries as entries_count'])
+                ->orderBy('workspaces.name')
+                ->get()
+        );
 
         return WorkspaceResource::collection($workspaces);
     }

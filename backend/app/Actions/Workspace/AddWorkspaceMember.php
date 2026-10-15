@@ -7,6 +7,7 @@ use App\Exceptions\ActionFailedException;
 use App\Models\MembershipRequest;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 
 class AddWorkspaceMember implements Action
 {
@@ -51,6 +52,8 @@ class AddWorkspaceMember implements Action
             ->where('user_id', $user->id)
             ->where('status', MembershipRequest::STATUS_PENDING)
             ->update(['status' => MembershipRequest::STATUS_APPROVED]);
+
+        app(WorkspaceIndexCache::class)->flush();
 
         return $this->workspace->members()
             ->where('users.id', $user->id)

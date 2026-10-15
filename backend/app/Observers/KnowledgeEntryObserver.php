@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\AuditLog;
 use App\Models\KnowledgeEntry;
+use App\Services\WorkspaceIndexCache;
 use App\Traits\LogsAppActions;
 
 class KnowledgeEntryObserver
@@ -17,6 +18,9 @@ class KnowledgeEntryObserver
             'entity_id' => $entry->id,
         ]);
         $this->logAudit($entry, 'created');
+        // The entry count on the workspace index moved, so the cached list is
+        // stale. Only create and delete change that count, not an update.
+        app(WorkspaceIndexCache::class)->flush();
     }
 
     public function updated(KnowledgeEntry $entry): void
@@ -38,6 +42,7 @@ class KnowledgeEntryObserver
             'entity_id' => $entry->id,
         ]);
         $this->logAudit($entry, 'deleted');
+        app(WorkspaceIndexCache::class)->flush();
     }
 
     private function logAudit(KnowledgeEntry $entry, string $action, array $metadata = []): void

@@ -7,6 +7,7 @@ use App\Exceptions\ActionFailedException;
 use App\Models\MembershipRequest;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 use Illuminate\Support\Facades\DB;
 
 class JoinWorkspace implements Action
@@ -48,6 +49,8 @@ class JoinWorkspace implements Action
             }
 
             $this->resolvePendingRequests();
+
+            app(WorkspaceIndexCache::class)->flush();
 
             return $membership === null;
         });

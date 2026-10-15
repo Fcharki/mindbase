@@ -6,6 +6,7 @@ use App\Actions\Action;
 use App\Exceptions\ActionFailedException;
 use App\Models\MembershipRequest;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 use Illuminate\Support\Facades\DB;
 
 class ApproveMembershipRequest implements Action
@@ -42,6 +43,8 @@ class ApproveMembershipRequest implements Action
                 'status' => MembershipRequest::STATUS_APPROVED,
             ]);
         });
+
+        app(WorkspaceIndexCache::class)->flush();
 
         return $this->membershipRequest;
     }

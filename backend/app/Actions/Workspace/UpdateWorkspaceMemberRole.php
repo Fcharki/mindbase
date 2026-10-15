@@ -6,6 +6,7 @@ use App\Actions\Action;
 use App\Exceptions\ActionFailedException;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 
 class UpdateWorkspaceMemberRole implements Action
 {
@@ -39,6 +40,8 @@ class UpdateWorkspaceMemberRole implements Action
                 404
             );
         }
+
+        app(WorkspaceIndexCache::class)->flush();
 
         return $this->workspace->members()
             ->where('users.id', $this->user->id)

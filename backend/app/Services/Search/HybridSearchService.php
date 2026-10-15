@@ -5,7 +5,6 @@ namespace App\Services\Search;
 use App\Casts\AsVector;
 use App\Models\EntryChunk;
 use App\Models\Workspace;
-use App\Services\AI\EmbeddingService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -61,7 +60,7 @@ class HybridSearchService
      */
     private const MAX_SEMANTIC_DISTANCE = 0.7;
 
-    public function __construct(private readonly EmbeddingService $embeddings) {}
+    public function __construct(private readonly QueryEmbeddingCache $queryEmbeddings) {}
 
     /**
      * The chunks most likely to answer a question, best first.
@@ -147,7 +146,7 @@ class HybridSearchService
         }
 
         try {
-            $vector = $this->embeddings->embed($question);
+            $vector = $this->queryEmbeddings->vectorFor($question);
         } catch (\Throwable $e) {
             // A model that is down should not take keyword search with it. The
             // user still gets results, just not the semantic half.

@@ -2,9 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Actions\KnowledgeEntry\ScheduleEntrySummary;
 use App\Models\KnowledgeEntry;
-use App\Models\Workspace;
 use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Database\Seeder;
 
 class DemoKnowledgeEntriesSeeder extends Seeder
@@ -64,7 +65,7 @@ class DemoKnowledgeEntriesSeeder extends Seeder
         ];
 
         foreach ($entries as $entry) {
-            KnowledgeEntry::updateOrCreate(
+            $knowledgeEntry = KnowledgeEntry::updateOrCreate(
                 [
                     'workspace_id' => $workspace->id,
                     'title' => $entry['title'],
@@ -74,10 +75,21 @@ class DemoKnowledgeEntriesSeeder extends Seeder
                     'created_by' => $author->id,
                 ]
             );
+
+            // Written through the model, the seeder skips the controller path
+            // that queues a summary and the chunk index. Without this the
+            // entries exist but answer nothing: retrieval reads entry_chunks,
+            // and there would be none.
+            app(ScheduleEntrySummary::class, ['entry' => $knowledgeEntry])->handle();
         }
 
         $this->command->info(
-            'Created ' . count($entries) . ' knowledge entries in workspace "' . $workspace->name . '".'
+            'Created '.count($entries).' knowledge entries in workspace "'.$workspace->name.'".'
+        );
+        $this->command->info(
+            'Summary and chunk indexing jobs are queued for them; a running '
+                .'queue worker is what turns those into searchable entries. Use '
+                .'"php artisan entries:reindex" to recover entries seeded before this.'
         );
     }
 }

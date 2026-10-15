@@ -6,6 +6,7 @@ use App\Actions\Action;
 use App\Exceptions\ActionFailedException;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 
 class RemoveWorkspaceMember implements Action
 {
@@ -28,5 +29,7 @@ class RemoveWorkspaceMember implements Action
                 404
             );
         }
+
+        app(WorkspaceIndexCache::class)->flush();
     }
 }
