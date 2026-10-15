@@ -81,7 +81,7 @@ Attachments are part of that index too: the text extracted from a PDF, Office
 document (`.docx`, `.xlsx`, `.pptx`) or text file (`.txt`, `.md`, `.csv`) is
 chunked alongside the entry body, so the paragraph that answers a question can
 live in a file rather than in the note. See
-[`documents_extraction.md`](documents_extraction.md).
+[`doc/documents_extraction.md`](doc/documents_extraction.md).
 
 ### Asking a workspace
 
@@ -111,12 +111,38 @@ Two layers of logs sit behind the API:
   traced across a request and into its queued jobs. Application actions and AI
   calls (`rag`, `summarize`) log their latency and outcome the same way.
 
+## Database
+
+PostgreSQL 18 with pgvector, driven by Eloquent on Laravel 12. 20 migrations,
+20 tables — 10 for the app, 10 that Laravel and Sanctum bring along. The app
+tables fall into four areas:
+
+| Area           | Tables                                                          |
+| -------------- | -------------------------------------------------------------- |
+| Accounts       | `users`, `passkeys`, `personal_access_tokens`                   |
+| Workspaces     | `workspaces`, `workspace_members`, `membership_requests`        |
+| Content        | `knowledge_entries`, `tags`, `knowledge_entry_tag`, `documents`, `summaries` |
+| Retrieval      | `entry_chunks` (pgvector, HNSW + GIN), `assistant_messages`     |
+
+Two things shape the schema more than anything else. Content is indexed by
+**chunks**: on save an entry is split, flattened and embedded into `entry_chunks`
+(bge-m3, 1024 dimensions), each row carrying both the vector for similarity
+search and the text for keyword search. And every derived row — summary, chunk —
+carries a `content_hash` fingerprint of the content it was built from, so a slow
+queued job can detect that the entry changed underneath it and refuse to write
+stale text.
+
+See [`doc/database-structure.md`](doc/database-structure.md) for the full picture: every
+column, the indexes and why they exist, how hybrid search and multi-tenancy work,
+the cascade behaviour on deletes, and the schema issues worth fixing.
+
 ## Layout
 
 ```
 backend/       Laravel API, queue worker, migrations, tests
 frontend/      Next.js app and typed API clients
 ai-service/    FastAPI wrapper around the local models
+doc/           design notes: database, extraction, AI service
 docker/        nginx config
 docker-compose.yml
 ```
@@ -184,5 +210,5 @@ load, which otherwise killed the first request of a session as a bare 504.
 ## Configuration
 
 `backend/.env.example` documents the backend. The AI service reads its own
-settings in `ai-service`; see [`AI_SERVICE.md`](AI_SERVICE.md) for the model
+settings in `ai-service`; see [`doc/AI_SERVICE.md`](doc/AI_SERVICE.md) for the model
 details and `docker-compose.yml` for the values passed into the containers.
