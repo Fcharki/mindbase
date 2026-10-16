@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Tag extends Model
 {
     protected $fillable = ['workspace_id', 'name'];
-    
+
     public function workspace()
     {
         return $this->belongsTo(Workspace::class);

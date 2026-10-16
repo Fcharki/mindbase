@@ -12,13 +12,14 @@ class RequestContext
         if ($request && $request->hasHeader('X-Request-ID')) {
             return $request->header('X-Request-ID');
         }
+
         return null;
     }
 
     public static function getWorkspaceId(): ?int
     {
         $request = request();
-        if (!$request) {
+        if (! $request) {
             return null;
         }
         if (method_exists($request, 'route') && $request->route()) {
@@ -27,6 +28,7 @@ class RequestContext
                 return $workspace->getKey();
             }
         }
+
         return null;
     }
 
@@ -36,6 +38,7 @@ class RequestContext
         if ($request && $request->user()) {
             return $request->user()->id;
         }
+
         return Auth::id();
     }
 }

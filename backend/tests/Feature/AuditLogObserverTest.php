@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
-use App\Models\KnowledgeEntry;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;

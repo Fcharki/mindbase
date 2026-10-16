@@ -62,6 +62,7 @@ class LoggingAiRequestTest extends TestCase
                         && array_key_exists('tokens', $context)
                         && array_key_exists('success', $context);
                 }
+
                 return true;
             });
     }

@@ -1,15 +1,18 @@
-<?php 
-namespace App\Http\Requests\Auth; 
+<?php
 
-use Illuminate\Foundation\Http\FormRequest; 
+namespace App\Http\Requests\Auth;
 
-class ForgotPasswordRequest extends FormRequest { 
+use Illuminate\Foundation\Http\FormRequest;
 
-    public function authorize(): bool { 
-        return true; 
-    } 
-    
-    public function rules(): array { 
-        return [ 'email' => [ 'required', 'email', ], ]; 
-    } 
+class ForgotPasswordRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return ['email' => ['required', 'email']];
+    }
 }

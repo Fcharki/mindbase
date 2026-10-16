@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DocumentController;
@@ -364,12 +365,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('workspaces/{workspace}/audit-logs', [
-        \App\Http\Controllers\AuditLogController::class,
+        AuditLogController::class,
         'index',
     ]);
 
     Route::get('workspaces/{workspace}/audit-logs/{auditLog}', [
-        \App\Http\Controllers\AuditLogController::class,
+        AuditLogController::class,
         'show',
     ]);
 });

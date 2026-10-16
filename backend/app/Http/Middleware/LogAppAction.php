@@ -11,15 +11,15 @@ class LogAppAction
 {
     use LogsAppActions;
 
-    public function handle(Request $request, Closure $next, string $operation = null): Response
+    public function handle(Request $request, Closure $next, ?string $operation = null): Response
     {
         $startTime = microtime(true);
         $response = $next($request);
-        
-        $op = $operation ?? $request->method() . ' ' . $request->path();
+
+        $op = $operation ?? $request->method().' '.$request->path();
         $status = $response->getStatusCode() < 400 ? 'success' : 'failure';
         $this->logAppAction($op, $status, ['status_code' => $response->getStatusCode()], $startTime);
-        
+
         return $response;
     }
 }

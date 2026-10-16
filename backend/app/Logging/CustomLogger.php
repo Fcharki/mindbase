@@ -2,6 +2,7 @@
 
 namespace App\Logging;
 
+use App\Helpers\RequestContext;
 use Illuminate\Support\Facades\Log;
 
 class CustomLogger
@@ -11,9 +12,9 @@ class CustomLogger
         $base = array_merge([
             'operation' => $operation,
             'status' => $status,
-            'request_id' => \App\Helpers\RequestContext::getRequestId(),
-            'user_id' => \App\Helpers\RequestContext::getUserId(),
-            'workspace_id' => \App\Helpers\RequestContext::getWorkspaceId(),
+            'request_id' => RequestContext::getRequestId(),
+            'user_id' => RequestContext::getUserId(),
+            'workspace_id' => RequestContext::getWorkspaceId(),
             'duration_ms' => null,
         ], $context);
 

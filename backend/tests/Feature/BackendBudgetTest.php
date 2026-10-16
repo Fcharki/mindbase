@@ -10,6 +10,8 @@ use App\Models\Workspace;
 use App\Services\AI\BackendBudget;
 use App\Services\AI\SummarizationService;
 use App\Services\EntrySummaryService;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Psr7\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -162,9 +164,9 @@ class BackendBudgetTest extends TestCase
                 ?string $backend = null,
                 ?int $timeout = null
             ): array {
-                throw new \GuzzleHttp\Exception\ConnectException(
+                throw new ConnectException(
                     'cURL error 28: Operation timed out',
-                    new \GuzzleHttp\Psr7\Request('POST', '/summarize'),
+                    new Request('POST', '/summarize'),
                 );
             }
         };

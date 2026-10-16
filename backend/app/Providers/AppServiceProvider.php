@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
+use App\Logging\RequestContextProcessor;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use App\Logging\RequestContextProcessor;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
                 if (method_exists($logger, 'getHandlers')) {
                     foreach ($logger->getHandlers() as $handler) {
                         if (method_exists($handler, 'pushProcessor')) {
-                            $handler->pushProcessor(new RequestContextProcessor());
+                            $handler->pushProcessor(new RequestContextProcessor);
                         }
                     }
                 }
