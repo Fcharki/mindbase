@@ -251,7 +251,7 @@ class KnowledgeEntryController extends Controller
     }
 
     /**
-     * Download one entry as Markdown, HTML or JSON.
+     * Download one entry as Markdown, HTML, JSON or PDF.
      */
     public function export(
         Request $request,
@@ -278,7 +278,11 @@ class KnowledgeEntryController extends Controller
                 'Content-Disposition' => 'attachment; filename="'.$slug.'.html"',
             ]),
             'json' => response()->json(['data' => $service->toArray($entry)]),
-            default => abort(422, 'Unsupported export format. Use md, html or json.'),
+            'pdf' => response($service->toPdf($entry), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$slug.'.pdf"',
+            ]),
+            default => abort(422, 'Unsupported export format. Use md, html, json or pdf.'),
         };
     }
 

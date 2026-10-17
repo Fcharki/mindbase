@@ -14,6 +14,7 @@ import { EntryForm } from "@/app/features/knowledge/components/EntryForm";
 import {
   deleteEntry,
   exportEntry,
+  ExportFormat,
   getEntry,
   KnowledgeEntry,
   pinEntry,
@@ -59,6 +60,7 @@ export function EntryDetailPageView({
   const [pinSaving, setPinSaving] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggesting, setSuggesting] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
   useEffect(() => {
     if (authLoading) {
@@ -220,13 +222,13 @@ export function EntryDetailPageView({
     }
   }
 
-  async function handleExport() {
+  async function handleExport(format: ExportFormat = "md") {
     if (!entry) {
       return;
     }
 
     try {
-      await exportEntry(workspaceId, entry, "md");
+      await exportEntry(workspaceId, entry, format);
       toast.success("Entry exported.");
     } catch {
       toast.error("Could not export this entry.");
@@ -356,12 +358,46 @@ export function EntryDetailPageView({
                   </button>
 
                   {permissions.isMember && (
-                    <button
-                      onClick={handleExport}
-                      className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
-                    >
-                      Export
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => setExportMenuOpen((open) => !open)}
+                        className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
+                      >
+                        Export
+                      </button>
+                      {exportMenuOpen && (
+                        <div className="absolute right-0 z-20 mt-2 w-36 rounded-lg border border-[#DDDCE3] bg-white shadow-lg dark:border-[#2a2a2a] dark:bg-[#141414]">
+                          <button
+                            type="button"
+                            onClick={() => handleExport("md")}
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                          >
+                            Markdown
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleExport("html")}
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                          >
+                            HTML
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleExport("json")}
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                          >
+                            JSON
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleExport("pdf")}
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                          >
+                            PDF
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   <button

@@ -81,10 +81,22 @@ jobs:
       - name: Migrate database
         run: php artisan migrate --force
 
-      - name: Run tests (sqlite in-memory unit/feature + Postgres suite)
+      # Unit and Feature tests use sqlite in-memory, so the connection is pinned
+      # here: the job-level DB_CONNECTION is pgsql (needed for migrate and the
+      # Postgres suite) and phpunit.xml's <env> is not forced, so it would not
+      # override the job environment on its own.
+      - name: Run unit and feature tests (sqlite in-memory)
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
         run: |
           php artisan config:clear --ansi
-          vendor/bin/phpunit --testsuite Unit --testsuite Feature --testsuite Postgres
+          vendor/bin/phpunit --testsuite Unit,Feature
+
+      - name: Run Postgres + pgvector tests
+        run: |
+          php artisan config:clear --ansi
+          vendor/bin/phpunit --testsuite Postgres
 
       - name: Check code style
         run: ./vendor/bin/pint --test

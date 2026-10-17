@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\KnowledgeEntry;
+use Dompdf\Dompdf;
 
 /**
  * Renders an entry as a portable document.
@@ -51,6 +52,60 @@ class EntryExportService
             .'border-radius:999px;padding:.15rem .6rem;font-size:.8rem;margin-right:.35rem}'
             .'</style></head><body>'
             .'<h1>'.e($entry->title).'</h1>'
+            .($tagChips !== '' ? '<p>'.$tagChips.'</p>' : '')
+            .'<hr>'
+            .(string) $entry->content
+            .'</body></html>';
+    }
+
+    /**
+     * Render the entry as a PDF.
+     *
+     * The screen HTML optimises for a browser (max-width, system fonts); a
+     * print sheet wants page-sized rules and a font Dompdf can embed, so the
+     * document is built separately rather than reusing toHtml().
+     */
+    public function toPdf(KnowledgeEntry $entry): string
+    {
+        $dompdf = new Dompdf([
+            'isRemoteEnabled' => false,
+            'isHtml5ParserEnabled' => true,
+        ]);
+
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->loadHtml($this->pdfDocument($entry), 'UTF-8');
+        $dompdf->render();
+
+        return (string) $dompdf->output();
+    }
+
+    private function pdfDocument(KnowledgeEntry $entry): string
+    {
+        $tags = ($entry->tags ?? [])->pluck('name')->filter()->values();
+
+        $tagChips = $tags
+            ->map(fn (string $tag) => '<span class="tag">'.e($tag).'</span>')
+            ->implode('');
+
+        return '<!doctype html>'."\n"
+            .'<html lang="en"><head><meta charset="utf-8">'
+            .'<title>'.e($entry->title).'</title>'
+            .'<style>'
+            .'@page{margin:2.5cm 2cm}'
+            .'body{font-family:"DejaVu Sans",sans-serif;line-height:1.65;color:#20202a;font-size:11pt}'
+            .'h1{font-size:20pt;margin:0 0 .3rem;letter-spacing:-.02em}'
+            .'.meta{color:#686873;font-size:9pt;margin:0 0 .8rem}'
+            .'.tag{background:#eeedff;color:#4338ca;border-radius:999px;'
+            .'padding:1pt 6pt;font-size:8pt;margin-right:4pt}'
+            .'hr{border:none;border-top:1px solid #dddce3;margin:1rem 0}'
+            .'blockquote{border-left:3px solid #dddce3;margin:1rem 0;padding:.1rem 0 .1rem 1rem;color:#4b4b57}'
+            .'pre{background:#f4f3f8;padding:.7rem;border-radius:6px;font-size:9pt;'
+            .'white-space:pre-wrap;word-wrap:break-word}'
+            .'code{font-family:"DejaVu Sans Mono",monospace;font-size:9.5pt}'
+            .'a{color:#4338ca;text-decoration:none}'
+            .'</style></head><body>'
+            .'<h1>'.e($entry->title).'</h1>'
+            .'<p class="meta">Exported from Mindbase on '.e(now()->toDateString()).'</p>'
             .($tagChips !== '' ? '<p>'.$tagChips.'</p>' : '')
             .'<hr>'
             .(string) $entry->content

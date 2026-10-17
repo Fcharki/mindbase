@@ -87,8 +87,28 @@ class EntryExportTest extends TestCase
         $entry = $this->entry($workspace);
 
         $this->actingAs($workspace->owner)
-            ->getJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/export?format=pdf")
+            ->getJson("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/export?format=xml")
             ->assertStatus(422);
+    }
+
+    public function test_pdf_export_returns_a_pdf_document(): void
+    {
+        $workspace = $this->workspace();
+        $entry = $this->entry($workspace);
+        $tag = $workspace->tags()->create(['name' => 'planning']);
+        $entry->tags()->attach($tag->id);
+
+        $response = $this->actingAs($workspace->owner)
+            ->get("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/export?format=pdf");
+
+        $response->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $body = $response->getContent();
+
+        $this->assertStringStartsWith('%PDF-', $body);
+        $this->assertStringContainsString('attachment; filename=', $response->headers->get('content-disposition'));
+        $this->assertStringEndsWith('.pdf"', $response->headers->get('content-disposition'));
     }
 
     public function test_an_entry_from_another_workspace_is_not_found(): void

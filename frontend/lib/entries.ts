@@ -172,12 +172,13 @@ export async function suggestEntryTags(
   return data.data.suggestions;
 }
 
-export type ExportFormat = "md" | "html" | "json";
+export type ExportFormat = "md" | "html" | "json" | "pdf";
 
 const EXPORT_EXTENSIONS: Record<ExportFormat, string> = {
   md: "md",
   html: "html",
   json: "json",
+  pdf: "pdf",
 };
 
 /**

@@ -90,4 +90,16 @@ class EntryExportServiceTest extends TestCase
         $this->assertSame('Body', $array['content_markdown']);
         $this->assertSame([], $array['tags']);
     }
+
+    public function test_the_pdf_form_is_a_pdf_document(): void
+    {
+        $entry = new KnowledgeEntry;
+        $entry->title = 'Plan';
+        $entry->content = '<h1>Body</h1><p>Hello there.</p>';
+
+        $pdf = $this->service->toPdf($entry);
+
+        $this->assertStringStartsWith('%PDF-', $pdf);
+        $this->assertStringContainsString('%%EOF', $pdf);
+    }
 }
