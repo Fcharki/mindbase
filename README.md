@@ -1,4 +1,4 @@
-# Knowledge Manager
+# Mindbase - AI powered Knowledge Manager
 
 A multi-tenant knowledge base where every workspace keeps its own entries, and an
 assistant answers questions **from those entries** rather than from a general
@@ -7,12 +7,12 @@ locally in Docker, so no request leaves the machine.
 
 ## Stack
 
-| Layer          | Built with                                                               |
-| -------------- | ------------------------------------------------------------------------ |
-| Frontend       | Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, TipTap editor |
-| Backend        | Laravel 12, Sanctum, Socialite, PostgreSQL 18 + pgvector                 |
-| AI service     | Python 3.11, FastAPI, local HuggingFace models (T5-small, bge-m3, Qwen3) |
-| Infrastructure | Docker Compose, nginx + PHP-FPM, supervised queue worker, Mailpit        |
+| Layer          | Built with                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| Frontend       | Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, TipTap editor                          |
+| Backend        | Laravel 12, Sanctum, Socialite, Dompdf, PostgreSQL 18 + pgvector                                  |
+| AI service     | Python 3.11, FastAPI, local HuggingFace models (T5-small, bge-m3, Qwen3, optional reranker)       |
+| Infrastructure | Docker Compose, nginx + PHP-FPM, supervised queue worker, Redis (optional), Ollama (optional), Mailpit |
 
 ## Features
 
@@ -40,6 +40,12 @@ locally in Docker, so no request leaves the machine.
   Attached PDFs, Office documents (`.docx`, `.xlsx`, `.pptx`) and text files
   (`.txt`, `.md`, `.csv`) are read and their text indexed, so attachments are as
   searchable as the entry itself.
+- Pin entries to the top of a workspace list, and apply one action — delete, tag,
+  untag or pin — to a whole selection at once.
+- Export an entry as Markdown, HTML, JSON or PDF, so a note is not trapped in the
+  app.
+- Workspace-scoped tags that can nest (a tag may have a parent), with tag names
+  suggested from the workspace's own vocabulary.
 
 ### Discussions and notifications
 
@@ -56,7 +62,14 @@ locally in Docker, so no request leaves the machine.
 
 - Ask a question and get an answer grounded in the workspace's own passages,
   with citations back to the entries the model read.
-- Retrieval runs inline and generation is queued; the client polls for the answer.
+- Retrieval runs inline and generation is queued; the client either polls for the
+  answer or streams it as server-sent events as the job writes it.
+- Regenerate an answer (re-retrieving passages first) and rate an answer with a
+  thumbs up or down.
+
+### Interface
+
+- Light and dark themes, following the system preference by default.
 
 ### Audit logs and observability
 
@@ -86,8 +99,11 @@ live in a file rather than in the note. See
 ### Asking a workspace
 
 `POST /workspaces/{id}/ask` retrieves passages and returns `202` with a pending
-message. A queued job generates the answer from exactly those passages and the
-client polls `GET /workspaces/{id}/ask/{message}` until the status flips.
+message. A queued job generates the answer from exactly those passages; the
+client then either polls `GET /workspaces/{id}/ask/{message}` until the status
+flips, or reads the same answer as server-sent events from
+`GET /workspaces/{id}/ask/{message}/stream`. Regenerating re-retrieves passages
+before queueing a new answer.
 
 Generation is queued because the instruction-tuned model needs minutes on CPU,
 which is longer than a request may hold a worker. Retrieval stays inline so a
@@ -113,9 +129,9 @@ Two layers of logs sit behind the API:
 
 ## Database
 
-PostgreSQL 18 with pgvector, driven by Eloquent on Laravel 12. 20 migrations,
-20 tables — 10 for the app, 10 that Laravel and Sanctum bring along. The app
-tables fall into four areas:
+PostgreSQL 18 with pgvector, driven by Eloquent on Laravel 12. 29 migrations,
+24 tables — 17 for the app, 7 that Laravel brings along. The app tables fall into
+six areas:
 
 | Area           | Tables                                                          |
 | -------------- | -------------------------------------------------------------- |
@@ -123,6 +139,8 @@ tables fall into four areas:
 | Workspaces     | `workspaces`, `workspace_members`, `membership_requests`        |
 | Content        | `knowledge_entries`, `tags`, `knowledge_entry_tag`, `documents`, `summaries` |
 | Retrieval      | `entry_chunks` (pgvector, HNSW + GIN), `assistant_messages`     |
+| Discussion     | `comments`, `replies`, `notifications`                          |
+| Governance     | `audit_logs`                                                    |
 
 Two things shape the schema more than anything else. Content is indexed by
 **chunks**: on save an entry is split, flattened and embedded into `entry_chunks`
@@ -164,6 +182,11 @@ docker compose exec backend php artisan migrate
 | AI service | http://localhost:8002   |
 | Mailpit    | http://localhost:8025   |
 
+Redis (http://localhost:6379) and Ollama (http://localhost:11434) are optional
+and off by default; Redis backs the cache and queue, and Ollama can answer `/rag`
+in place of the bundled Qwen checkpoint. Start Ollama with
+`docker compose --profile ollama up -d`.
+
 The backend container runs nginx, PHP-FPM and a queue worker under supervisord,
 since summaries and assistant answers are produced by queued jobs.
 
@@ -172,14 +195,15 @@ First start pulls roughly 3 GB of model weights and takes a few minutes.
 ## Tests
 
 ```bash
-cd backend    && php artisan test      # 269 tests
-cd ai-service && python -m pytest -q   # 85 tests
+cd backend    && php artisan test      # 353 tests (5 need Postgres)
+cd ai-service && python -m pytest -q   # 96 tests
 cd frontend   && npx tsc --noEmit && npm run lint
 ```
 
 Backend tests run on in-memory SQLite. Vector search only exists on Postgres, so
 retrieval falls back to a keyword match there and the tests exercise that path
-rather than pretending otherwise.
+rather than pretending otherwise; the five Postgres-only tests skip unless
+`DB_CONNECTION=pgsql`.
 
 ## Performance notes
 
