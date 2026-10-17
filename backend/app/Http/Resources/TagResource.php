@@ -20,6 +20,7 @@ class TagResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'workspace_id' => $this->workspace_id,
+            'parent_id' => $this->parent_id,
             'entries_count' => $this->whenCounted('entries'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

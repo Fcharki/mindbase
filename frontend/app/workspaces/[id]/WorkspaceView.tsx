@@ -32,7 +32,7 @@ type Status = "loading" | "ready" | "missing";
 
 function WorkspaceMark() {
   return (
-    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF]">
+    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d]">
       <svg
         width="22"
         height="22"
@@ -339,8 +339,8 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
   if (status === "loading") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
+        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
           Loading workspace…
         </div>
@@ -350,12 +350,12 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
   if (status === "missing" || !workspace) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+      <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
         <WorkspaceNav />
 
         <main className="flex flex-1 items-center justify-center px-6 py-20">
-          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] bg-white p-8 text-center shadow-sm sm:p-10">
-            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] text-[#E85D75]">
+          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-8 text-center shadow-sm sm:p-10">
+            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] dark:bg-[#3a1c24] text-[#E85D75] dark:text-[#f08098]">
               <svg
                 width="22"
                 height="22"
@@ -388,7 +388,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
               Workspace not available
             </h1>
 
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873]">
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
               This workspace may have been deleted, or you don&rsquo;t have
               access to it.
             </p>
@@ -406,12 +406,12 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
       <WorkspaceNav />
 
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
         {/* Workspace header */}
-        <section className="rounded-2xl border border-[#DDDCE3] bg-white p-7 shadow-sm sm:p-8">
+        <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-7 shadow-sm sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 items-start gap-4">
               <WorkspaceMark />
@@ -425,7 +425,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                   {workspace.role && <RoleBadge role={workspace.role} />}
                 </div>
 
-                <p className="mt-2 text-sm leading-relaxed text-[#686873]">
+                <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                   Owned by {workspace.owner.name} · created{" "}
                   {new Date(workspace.created_at).toLocaleDateString()}
                 </p>
@@ -449,8 +449,8 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
         <AssistantPanel workspaceId={workspace.id} />
 
-        <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+        <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+          <div className="flex items-center justify-between border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                 Knowledge
@@ -473,7 +473,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
           {entries.length === 0 ? (
             <div className="flex min-h-[260px] flex-col items-center justify-center px-7 py-12 text-center sm:px-8">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] text-[#159A9C]">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] dark:bg-[#10262a] text-[#159A9C] dark:text-[#3ac6c8]">
                 <svg
                   width="23"
                   height="23"
@@ -503,7 +503,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                   : "Your knowledge lives here"}
               </h3>
 
-              <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873]">
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                 {workspace.role === "viewer"
                   ? "There are no knowledge entries to browse in this workspace yet."
                   : "Capture your first thought, note, or idea — it’ll show up here alongside all of your entries."}
@@ -526,7 +526,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
               />
 
               {entries.length > 5 && (
-                <div className="border-t border-[#EEEDEF] px-7 py-4 sm:px-8">
+                <div className="border-t border-[#EEEDEF] dark:border-[#1f1f1f] px-7 py-4 sm:px-8">
                   <Link
                     href={`/workspaces/${workspace.id}/entries`}
                     className="text-sm font-medium text-[#5146E5] transition hover:text-[#4338CA]"
@@ -540,8 +540,8 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
         </section>
 
         {/* Members */}
-        <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-          <div className="border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+        <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+          <div className="border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
             <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
               People
             </p>
@@ -554,10 +554,10 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
           {isOwner && (
             <>
               {joinRequests.length > 0 && (
-                <div className="border-b border-[#EEEDEF] px-7 py-6 sm:px-8">
+                <div className="border-b border-[#EEEDEF] dark:border-[#1f1f1f] px-7 py-6 sm:px-8">
                   <h3 className="text-sm font-semibold tracking-tight">
                     Pending requests{" "}
-                    <span className="text-[#9897A1]">
+                    <span className="text-[#9897A1] dark:text-[#737373]">
                       ({joinRequests.length})
                     </span>
                   </h3>
@@ -565,29 +565,29 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                   {requestsError && (
                     <p
                       role="alert"
-                      className="mt-3 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                      className="mt-3 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
                     >
                       {requestsError}
                     </p>
                   )}
 
-                  <ul className="mt-3 divide-y divide-[#EEEDEF]">
+                  <ul className="mt-3 divide-y divide-[#EEEDEF] dark:divide-[#1f1f1f]">
                     {joinRequests.map((request) => (
                       <li
                         key={request.id}
                         className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] text-sm font-semibold text-[#5146E5]">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] dark:bg-[#211f3d] text-sm font-semibold text-[#5146E5]">
                             {request.user?.name.charAt(0).toUpperCase()}
                           </div>
 
                           <div className="flex min-w-0 flex-col">
-                            <span className="truncate text-sm font-medium text-[#20202A]">
+                            <span className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
                               {request.user?.name}
                             </span>
 
-                            <span className="truncate text-sm text-[#9897A1]">
+                            <span className="truncate text-sm text-[#9897A1] dark:text-[#737373]">
                               {request.user?.email} · requested{" "}
                               {request.requested_role}
                             </span>
@@ -603,7 +603,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                                 event.target.value as WorkspaceRole,
                               )
                             }
-                            className="w-fit rounded-lg border border-[#DDDCE3] bg-white px-3 py-2 text-sm text-[#20202A] outline-none focus:border-[#5146E5]"
+                            className="w-fit rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 py-2 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5]"
                           >
                             <option value="member">member</option>
                             <option value="viewer">viewer</option>
@@ -611,7 +611,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
                           <button
                             onClick={() => handleRejectRequest(request.id)}
-                            className="rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-3 py-2 text-sm font-medium text-[#B13D55] transition hover:bg-[#F9DEE3]"
+                            className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-3 py-2 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#F9DEE3] dark:hover:bg-[#4a2630]"
                           >
                             Reject
                           </button>
@@ -622,7 +622,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                 </div>
               )}
 
-              <div className="border-b border-[#EEEDEF] px-7 py-6 sm:px-8">
+              <div className="border-b border-[#EEEDEF] dark:border-[#1f1f1f] px-7 py-6 sm:px-8">
                 <h3 className="text-sm font-semibold tracking-tight">
                   Invite by email
                 </h3>
@@ -630,7 +630,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                 {memberError && (
                   <p
                     role="alert"
-                    className="mt-3 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                    className="mt-3 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
                   >
                     {memberError}
                   </p>
@@ -646,7 +646,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                     placeholder="colleague@example.com"
                     value={memberEmail}
                     onChange={(event) => setMemberEmail(event.target.value)}
-                    className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                    className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
                   />
 
                   <select
@@ -654,7 +654,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                     onChange={(event) =>
                       setMemberRole(event.target.value as WorkspaceRole)
                     }
-                    className="rounded-lg border border-[#DDDCE3] bg-white px-3 py-2.5 text-sm text-[#20202A] outline-none focus:border-[#5146E5]"
+                    className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 py-2.5 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5]"
                   >
                     <option value="member">member</option>
                     <option value="viewer">viewer</option>
@@ -670,19 +670,19 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                 </form>
 
                 <div className="mt-5 flex flex-col gap-2">
-                  <span className="text-sm font-medium text-[#20202A]">
+                  <span className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
                     Share link
                   </span>
 
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <code className="truncate rounded-lg border border-[#DDDCE3] bg-[#F7F6F2] px-3 py-2.5 text-sm text-[#686873]">
+                    <code className="truncate rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-[#F7F6F2] dark:bg-[#0f0f0f] px-3 py-2.5 text-sm text-[#686873] dark:text-[#a3a3a3]">
                       /join/{workspace?.invite_code ?? "…"}
                     </code>
 
                     <button
                       type="button"
                       onClick={handleCopyInviteLink}
-                      className="w-fit rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#5146E5] hover:text-[#5146E5]"
+                      className="w-fit rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#5146E5] hover:text-[#5146E5]"
                     >
                       {copied ? "Copied" : "Copy"}
                     </button>
@@ -692,7 +692,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
             </>
           )}
 
-          <ul className="divide-y divide-[#EEEDEF] px-7 sm:px-8">
+          <ul className="divide-y divide-[#EEEDEF] dark:divide-[#1f1f1f] px-7 sm:px-8">
             {(workspace.members ?? []).map((member) => {
               const isSelf = workspace?.owner_id === member.id;
 
@@ -702,16 +702,16 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                   className="flex items-center justify-between gap-4 py-4"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] text-sm font-semibold text-[#5146E5]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] dark:bg-[#211f3d] text-sm font-semibold text-[#5146E5]">
                       {member.name.charAt(0).toUpperCase()}
                     </div>
 
                     <div className="flex min-w-0 flex-col">
-                      <span className="truncate text-sm font-medium text-[#20202A]">
+                      <span className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
                         {member.name}
                       </span>
 
-                      <span className="truncate text-sm text-[#9897A1]">
+                      <span className="truncate text-sm text-[#9897A1] dark:text-[#737373]">
                         {member.email}
                       </span>
                     </div>
@@ -723,7 +723,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                     {isOwner && !isSelf && (
                       <>
                         <select
-                          className="rounded-lg border border-[#DDDCE3] bg-white px-2 py-1.5 text-sm text-[#20202A] outline-none focus:border-[#5146E5]"
+                          className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-2 py-1.5 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5]"
                           value={member.pivot.role}
                           onChange={(event) =>
                             handleRoleChange(
@@ -738,7 +738,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
                         <button
                           onClick={() => handleRemoveMember(member.id)}
-                          className="rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-3 py-1.5 text-sm font-medium text-[#B13D55] transition hover:bg-[#F9DEE3]"
+                          className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-3 py-1.5 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#F9DEE3] dark:hover:bg-[#4a2630]"
                         >
                           Remove
                         </button>
@@ -753,8 +753,8 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
         {/* Settings */}
         {canRename && (
-          <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+          <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                   Workspace
@@ -765,12 +765,21 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                 </h2>
               </div>
 
-              <Link
-                href={`/workspaces/${workspace.id}/logs`}
-                className="rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2]"
-              >
-                View activity logs
-              </Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/workspaces/${workspace.id}/tags`}
+                  className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c]"
+                >
+                  Manage tags
+                </Link>
+
+                <Link
+                  href={`/workspaces/${workspace.id}/logs`}
+                  className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c]"
+                >
+                  View activity logs
+                </Link>
+              </div>
             </div>
 
             <div className="px-7 py-7 sm:px-8">
@@ -781,7 +790,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                 <div className="flex flex-col gap-2">
                   <label
                     htmlFor="workspace-name"
-                    className="text-sm font-medium text-[#20202A]"
+                    className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]"
                   >
                     Workspace name
                   </label>
@@ -793,14 +802,14 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                     maxLength={255}
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-3 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                    className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
                   />
                 </div>
 
                 {error && (
                   <p
                     role="alert"
-                    className="rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                    className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
                   >
                     {error}
                   </p>
@@ -820,24 +829,24 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
         {/* Danger zone */}
         {canDelete && (
-          <section className="rounded-2xl border border-[#F2C9D1] bg-[#FFF8F9] shadow-sm">
-            <div className="border-b border-[#F2C9D1] px-7 py-5 sm:px-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#E85D75]">
+          <section className="rounded-2xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FFF8F9] dark:bg-[#1a1416] shadow-sm">
+            <div className="border-b border-[#F2C9D1] dark:border-[#4a2630] px-7 py-5 sm:px-8">
+              <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#E85D75] dark:text-[#f08098]">
                 Advanced
               </p>
 
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#B13D55]">
+              <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#B13D55] dark:text-[#f0a0b0]">
                 Danger zone
               </h2>
             </div>
 
             <div className="flex flex-col gap-4 px-7 py-7 sm:px-8">
               <div>
-                <p className="text-sm font-medium text-[#20202A]">
+                <p className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
                   Delete this workspace
                 </p>
 
-                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#686873]">
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                   Deleting a workspace removes it and all of its content. This
                   action cannot be undone.
                 </p>
@@ -846,7 +855,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
               {error && (
                 <p
                   role="alert"
-                  className="rounded-lg border border-[#F2C9D1] bg-white px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                  className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-white dark:bg-[#141414] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
                 >
                   {error}
                 </p>
@@ -855,7 +864,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="w-fit rounded-lg border border-[#E85D75] px-5 py-3 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-fit rounded-lg border border-[#E85D75] dark:border-[#f08098] px-5 py-3 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleting ? "Deleting…" : "Delete workspace"}
               </button>

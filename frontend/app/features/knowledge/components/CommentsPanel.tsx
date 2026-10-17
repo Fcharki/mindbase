@@ -80,9 +80,9 @@ function Post({
   return (
     <div className="min-w-0">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-medium text-[#20202A]">{author}</p>
+        <p className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">{author}</p>
 
-        <p className="text-xs text-[#9897A1]">
+        <p className="text-xs text-[#9897A1] dark:text-[#737373]">
           {new Date(createdAt).toLocaleString("en-US", {
             month: "short",
             day: "numeric",
@@ -100,7 +100,7 @@ function Post({
             onChange={(event) => onEditBodyChange(event.target.value)}
             rows={3}
             maxLength={MAX_BODY}
-            className="w-full resize-y rounded-lg border border-[#DDDCE3] bg-white px-3 py-2 text-sm leading-relaxed text-[#20202A] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+            className="w-full resize-y rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 py-2 text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
           />
 
           <div className="flex items-center gap-2">
@@ -116,14 +116,14 @@ function Post({
             <button
               type="button"
               onClick={onCancelEdit}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A]"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
             >
               Cancel
             </button>
           </div>
         </div>
       ) : (
-        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#20202A]">
+        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5]">
           {body}
         </p>
       )}
@@ -134,7 +134,7 @@ function Post({
             <button
               type="button"
               onClick={onStartEdit}
-              className="text-xs font-medium text-[#686873] transition hover:text-[#20202A]"
+              className="text-xs font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
             >
               Edit
             </button>
@@ -145,7 +145,7 @@ function Post({
               type="button"
               onClick={onDelete}
               disabled={busy}
-              className="text-xs font-medium text-[#B13D55] transition hover:text-[#E85D75] disabled:cursor-not-allowed disabled:opacity-50"
+              className="text-xs font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:text-[#E85D75] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Delete
             </button>
@@ -494,8 +494,8 @@ export function CommentsPanel({
   const count = comments?.length ?? 0;
 
   return (
-    <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+    <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
             Conversation
@@ -507,7 +507,7 @@ export function CommentsPanel({
         </div>
 
         {comments !== null && count > 0 && (
-          <span className="text-sm text-[#9897A1]">
+          <span className="text-sm text-[#9897A1] dark:text-[#737373]">
             {count} {count === 1 ? "comment" : "comments"}
           </span>
         )}
@@ -522,11 +522,11 @@ export function CommentsPanel({
               rows={3}
               maxLength={MAX_BODY}
               placeholder="Add a comment for your team…"
-              className="w-full resize-y rounded-lg border border-[#DDDCE3] bg-white px-4 py-3 text-sm leading-relaxed text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+              className="w-full resize-y rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-3 text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
             />
 
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-[#9897A1]">
+              <span className="text-xs text-[#9897A1] dark:text-[#737373]">
                 {draft.length > MAX_BODY - 200
                   ? `${MAX_BODY - draft.length} characters left`
                   : ""}
@@ -544,11 +544,11 @@ export function CommentsPanel({
         )}
 
         {comments === null && (
-          <span className="text-sm text-[#9897A1]">Loading discussion…</span>
+          <span className="text-sm text-[#9897A1] dark:text-[#737373]">Loading discussion…</span>
         )}
 
         {comments !== null && comments.length === 0 && (
-          <span className="text-sm text-[#9897A1]">
+          <span className="text-sm text-[#9897A1] dark:text-[#737373]">
             No comments yet.
           </span>
         )}
@@ -569,9 +569,9 @@ export function CommentsPanel({
                       highlightRef.current = node;
                     }
                   }}
-                  className={`border-b border-[#F0EFF3] pb-6 last:border-b-0 last:pb-0 ${
+                  className={`border-b border-[#F0EFF3] dark:border-[#242424] pb-6 last:border-b-0 last:pb-0 ${
                     commentHighlighted
-                      ? "-mx-3 rounded-xl bg-[#F7F6FF] px-3 ring-2 ring-[#5146E5]"
+                      ? "-mx-3 rounded-xl bg-[#F7F6FF] dark:bg-[#141414] px-3 ring-2 ring-[#5146E5]"
                       : ""
                   }`}
                 >
@@ -591,7 +591,7 @@ export function CommentsPanel({
                     onDelete={() => handleDeleteComment(comment)}
                   >
                     {replies.length > 0 && (
-                      <ul className="mt-4 flex flex-col gap-4 border-l-2 border-[#EEEDFF] pl-4">
+                      <ul className="mt-4 flex flex-col gap-4 border-l-2 border-[#EEEDFF] dark:border-[#2a2a3a] pl-4">
                         {replies.map((reply) => {
                           const replyHighlighted =
                             highlightedKey === `reply-${reply.id}`;
@@ -606,7 +606,7 @@ export function CommentsPanel({
                             }}
                             className={
                               replyHighlighted
-                                ? "rounded-lg bg-[#F7F6FF] p-2 ring-2 ring-[#5146E5]"
+                                ? "rounded-lg bg-[#F7F6FF] dark:bg-[#141414] p-2 ring-2 ring-[#5146E5]"
                                 : ""
                             }
                           >
@@ -655,7 +655,7 @@ export function CommentsPanel({
                               maxLength={MAX_BODY}
                               autoFocus
                               placeholder="Write a reply…"
-                              className="w-full resize-y rounded-lg border border-[#DDDCE3] bg-white px-3 py-2 text-sm leading-relaxed text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                              className="w-full resize-y rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 py-2 text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
                             />
 
                             <div className="flex items-center gap-2">
@@ -678,7 +678,7 @@ export function CommentsPanel({
                                   setReplyingTo(null);
                                   setReplyBody("");
                                 }}
-                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A]"
+                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
                               >
                                 Cancel
                               </button>
@@ -708,7 +708,7 @@ export function CommentsPanel({
         {error && (
           <p
             role="alert"
-            className="mt-4 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+            className="mt-4 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
           >
             {error}
           </p>

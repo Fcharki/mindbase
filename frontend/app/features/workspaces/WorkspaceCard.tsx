@@ -13,7 +13,7 @@ import {
 
 function WorkspaceMark() {
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEEDFF]">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d]">
       <svg
         width="20"
         height="20"
@@ -132,7 +132,7 @@ export function WorkspaceCard({
   }
 
   return (
-    <article className="flex flex-col rounded-2xl border border-[#DDDCE3] bg-white p-6 shadow-sm transition hover:shadow-md">
+    <article className="flex flex-col rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-6 shadow-sm transition hover:shadow-md">
       <div className="flex items-start justify-between gap-4">
         <WorkspaceMark />
         <RoleBadge role={workspace.role} />
@@ -161,7 +161,7 @@ export function WorkspaceCard({
                 setRenaming(false);
               }
             }}
-            className="w-full rounded-lg border border-[#DDDCE3] bg-white px-3 py-2 text-lg font-semibold tracking-tight text-[#20202A] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+            className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 py-2 text-lg font-semibold tracking-tight text-[#20202A] dark:text-[#e5e5e5] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
           />
           <div className="mt-3 flex items-center gap-2">
             <button
@@ -179,7 +179,7 @@ export function WorkspaceCard({
                 setError(null);
               }}
               disabled={saving}
-              className="rounded-lg border border-[#DDDCE3] bg-white px-3.5 py-2 text-sm font-medium text-[#20202A] transition hover:bg-[#F7F6F2] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3.5 py-2 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -188,17 +188,17 @@ export function WorkspaceCard({
       ) : (
         <Link
           href={`/workspaces/${workspace.id}`}
-          className="mt-5 text-xl font-semibold tracking-tight text-[#20202A] transition hover:text-[#5146E5]"
+          className="mt-5 text-xl font-semibold tracking-tight text-[#20202A] dark:text-[#e5e5e5] transition hover:text-[#5146E5]"
         >
           {workspace.name}
         </Link>
       )}
 
-      <p className="mt-1 text-sm text-[#686873]">
+      <p className="mt-1 text-sm text-[#686873] dark:text-[#a3a3a3]">
         {isOwner ? "You own this workspace" : `Owned by ${workspace.owner.name}`}
       </p>
 
-      <p className="mt-3 text-sm text-[#9897A1]">
+      <p className="mt-3 text-sm text-[#9897A1] dark:text-[#737373]">
         {[
           `${workspace.entries_count ?? 0} ${
             workspace.entries_count === 1 ? "entry" : "entries"
@@ -216,7 +216,7 @@ export function WorkspaceCard({
       {error && (
         <p
           role="alert"
-          className="mt-4 rounded-xl border border-[#F2C9D1] bg-[#FCECEF] px-3.5 py-2.5 text-sm text-[#B13D55]"
+          className="mt-4 rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-3.5 py-2.5 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
         >
           {error}
         </p>
@@ -234,14 +234,14 @@ export function WorkspaceCard({
           <>
             <Link
               href={`/workspaces/${workspace.id}`}
-              className="rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2]"
+              className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c]"
             >
               Manage
             </Link>
 
             <Link
               href={`/workspaces/${workspace.id}/logs`}
-              className="rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2]"
+              className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c]"
             >
               Logs
             </Link>
@@ -253,7 +253,7 @@ export function WorkspaceCard({
                 setError(null);
               }}
               disabled={renaming || deleting}
-              className="rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Rename
             </button>
@@ -262,7 +262,7 @@ export function WorkspaceCard({
               <button
                 type="button"
                 onClick={handleCopyInviteLink}
-                className="rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2]"
+                className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c]"
               >
                 {copied ? "Link copied" : "Copy invite link"}
               </button>
@@ -272,7 +272,7 @@ export function WorkspaceCard({
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="rounded-lg border border-[#F2C9D1] bg-white px-4 py-2.5 text-sm font-medium text-[#B13D55] transition hover:bg-[#FCECEF] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#FCECEF] dark:hover:bg-[#4a2630] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {deleting ? "Deleting…" : "Delete"}
             </button>

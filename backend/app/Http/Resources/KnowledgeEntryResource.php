@@ -22,6 +22,7 @@ class KnowledgeEntryResource extends JsonResource
             'content' => $this->content,
             'created_by' => $this->created_by,
             'workspace_id' => $this->workspace_id,
+            'is_pinned' => (bool) $this->is_pinned,
             'creator' => UserSummaryResource::make($this->whenLoaded('creator')),
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'tags_count' => $this->whenCounted('tags'),

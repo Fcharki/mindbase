@@ -94,6 +94,26 @@ export async function deleteDocument(
 }
 
 /**
+ * Fetch the document's bytes and hand back an object URL for inline display.
+ *
+ * Preferred over pointing an <iframe> at the preview endpoint directly, because
+ * that link would not carry the Sanctum cookie when frontend and backend are on
+ * different origins. The caller owns the URL and must revoke it when done.
+ */
+export async function fetchDocumentPreviewUrl(
+  workspaceId: number | string,
+  entryId: number | string,
+  document: KnowledgeDocument,
+): Promise<string> {
+  const response = await api.get(
+    `${documentsPath(workspaceId, entryId)}/${document.id}/preview`,
+    { responseType: "blob" },
+  );
+
+  return URL.createObjectURL(response.data as Blob);
+}
+
+/**
  * Download through axios rather than a plain link so the Sanctum session
  * cookie is always sent, including when the frontend and backend sit on
  * different domains (where a SameSite=Lax navigation would drop it).

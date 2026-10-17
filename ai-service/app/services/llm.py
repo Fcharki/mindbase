@@ -1,5 +1,10 @@
+import json
 import os
+import threading
+import urllib.error
+import urllib.request
 from pathlib import Path
+from typing import Iterator
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -10,6 +15,18 @@ MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
 MODEL_PATH = MODELS_DIR / "qwen3-0.6B"
 
 MAX_NEW_TOKENS = int(os.getenv("LLM_MAX_NEW_TOKENS", "200"))
+
+# Which engine answers /rag. 'hf' loads the bundled Qwen3 checkpoint locally,
+# which is self-contained but slow on CPU. 'ollama' calls a separate Ollama
+# server instead, which lets an operator run any model -- a larger one, or one
+# already pulled -- without this image carrying its weights.
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "hf").strip().lower()
+
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
+# How long to wait for Ollama to emit the first byte before giving up. Generation
+# itself is streamed, so this only bounds the initial connect and load.
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "600"))
 
 # bfloat16 is smaller and, on a CPU with AVX512-BF16, more accurate than
 # float32 for this model. That speed and accuracy gain is hardware-conditional
@@ -81,6 +98,10 @@ class LLMService:
     def is_loaded(self) -> bool:
         return self._model is not None
 
+    def provider(self) -> str:
+        """Which engine serves requests. Reported by /health."""
+        return LLM_PROVIDER
+
     def _apply_template(self, messages: list[dict], thinking: bool) -> str:
         kwargs = dict(
             tokenize=False,
@@ -96,6 +117,16 @@ class LLMService:
             # lose the request entirely on an older pin.
             return self._tokenizer.apply_chat_template(messages, **kwargs)
 
+    def _messages(self, prompt: str, system: str | None) -> list[dict]:
+        messages = []
+
+        if system:
+            messages.append({"role": "system", "content": system})
+
+        messages.append({"role": "user", "content": prompt})
+
+        return messages
+
     def generate(
         self,
         prompt: str,
@@ -104,17 +135,24 @@ class LLMService:
         thinking: bool | None = None,
         sanitize: bool = True,
     ) -> str:
+        if LLM_PROVIDER == "ollama":
+            return self._generate_ollama(prompt, system, max_new_tokens)
+
+        return self._generate_hf(prompt, system, max_new_tokens, thinking, sanitize)
+
+    def _generate_hf(
+        self,
+        prompt: str,
+        system: str | None,
+        max_new_tokens: int | None,
+        thinking: bool | None,
+        sanitize: bool,
+    ) -> str:
         self._load()
 
-        messages = []
-
-        if system:
-            messages.append({"role": "system", "content": system})
-
-        messages.append({"role": "user", "content": prompt})
-
         text = self._apply_template(
-            messages, THINKING if thinking is None else thinking
+            self._messages(prompt, system),
+            THINKING if thinking is None else thinking,
         )
 
         inputs = self._tokenizer([text], return_tensors="pt")
@@ -142,6 +180,139 @@ class LLMService:
             return ""
 
         return answer
+
+    def _generate_ollama(
+        self,
+        prompt: str,
+        system: str | None,
+        max_new_tokens: int | None,
+    ) -> str:
+        payload = {
+            "model": OLLAMA_MODEL,
+            "messages": self._messages(prompt, system),
+            "stream": False,
+            "options": {"num_predict": max_new_tokens or MAX_NEW_TOKENS},
+        }
+
+        body = self._ollama_request(payload)
+
+        return str(body.get("message", {}).get("content", "")).strip()
+
+    def generate_stream(
+        self,
+        prompt: str,
+        system: str | None = None,
+        max_new_tokens: int | None = None,
+    ) -> Iterator[str]:
+        """Yield the answer piece by piece, for /rag/stream.
+
+        The provider is chosen the same way as generate(), so a caller gets
+        streaming whichever engine is configured.
+        """
+        if LLM_PROVIDER == "ollama":
+            yield from self._stream_ollama(prompt, system, max_new_tokens)
+
+            return
+
+        yield from self._stream_hf(prompt, system, max_new_tokens)
+
+    def _stream_hf(
+        self,
+        prompt: str,
+        system: str | None,
+        max_new_tokens: int | None,
+    ) -> Iterator[str]:
+        # Imported here so a service configured for Ollama never pays for the
+        # streaming helper's dependencies at module import time.
+        from transformers import TextIteratorStreamer
+
+        self._load()
+
+        text = self._apply_template(self._messages(prompt, system), THINKING)
+
+        inputs = self._tokenizer([text], return_tensors="pt")
+        inputs = {key: value.to(self._device) for key, value in inputs.items()}
+
+        streamer = TextIteratorStreamer(
+            self._tokenizer, skip_prompt=True, skip_special_tokens=True
+        )
+
+        # generate() is blocking, so it runs on its own thread and this generator
+        # reads what the streamer hands back as each token is decoded.
+        thread = threading.Thread(
+            target=self._model.generate,
+            kwargs=dict(
+                **inputs,
+                max_new_tokens=max_new_tokens or MAX_NEW_TOKENS,
+                eos_token_id=self._tokenizer.convert_tokens_to_ids("<|im_end|>"),
+                repetition_penalty=REPETITION_PENALTY,
+                streamer=streamer,
+            ),
+        )
+        thread.start()
+
+        try:
+            for piece in streamer:
+                if piece:
+                    yield piece
+        finally:
+            thread.join()
+
+    def _stream_ollama(
+        self,
+        prompt: str,
+        system: str | None,
+        max_new_tokens: int | None,
+    ) -> Iterator[str]:
+        payload = {
+            "model": OLLAMA_MODEL,
+            "messages": self._messages(prompt, system),
+            "stream": True,
+            "options": {"num_predict": max_new_tokens or MAX_NEW_TOKENS},
+        }
+
+        request = urllib.request.Request(
+            f"{OLLAMA_BASE_URL}/api/chat",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+
+        with urllib.request.urlopen(request, timeout=OLLAMA_TIMEOUT) as response:
+            for raw in response:
+                line = raw.decode("utf-8").strip()
+
+                if not line:
+                    continue
+
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                if event.get("done"):
+                    break
+
+                piece = event.get("message", {}).get("content", "")
+
+                if piece:
+                    yield piece
+
+    def _ollama_request(self, payload: dict) -> dict:
+        request = urllib.request.Request(
+            f"{OLLAMA_BASE_URL}/api/chat",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(request, timeout=OLLAMA_TIMEOUT) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.URLError as error:
+            raise RuntimeError(
+                f"Could not reach Ollama at {OLLAMA_BASE_URL}: {error}"
+            ) from error
 
     def summarize(self, text: str, max_new_tokens: int | None = None) -> str:
         """Summarise entry markup, flattening it to prose first."""

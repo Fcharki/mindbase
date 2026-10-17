@@ -4,6 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
@@ -12,12 +13,16 @@ import { DocumentPanel } from "@/app/features/knowledge/components/DocumentPanel
 import { EntryForm } from "@/app/features/knowledge/components/EntryForm";
 import {
   deleteEntry,
+  exportEntry,
   getEntry,
   KnowledgeEntry,
+  pinEntry,
+  suggestEntryTags,
   summarizeEntry,
   tagEntry,
   updateEntry,
 } from "@/lib/entries";
+import { addRecentViewed } from "@/lib/recent";
 import { getWorkspace, Workspace } from "@/lib/workspaces";
 import { permissionsFor } from "@/lib/permissions";
 
@@ -51,6 +56,9 @@ export function EntryDetailPageView({
   const [summary, setSummary] = useState<string | null>(null);
   const [summarizing, setSummarizing] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [pinSaving, setPinSaving] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggesting, setSuggesting] = useState(false);
 
   useEffect(() => {
     if (authLoading) {
@@ -95,6 +103,14 @@ export function EntryDetailPageView({
       cancelled = true;
     };
   }, [workspaceId, entryId, user, authLoading, router]);
+
+  // Recorded once the entry is known to be readable, so a 404 does not leave a
+  // dead id in the recent list.
+  useEffect(() => {
+    if (entry) {
+      addRecentViewed(entry.id);
+    }
+  }, [entry]);
 
   async function handleSave(title: string, content: string) {
     const updated = await updateEntry(workspaceId, entryId, title, content);
@@ -186,14 +202,82 @@ export function EntryDetailPageView({
     }
   }
 
+  async function handleTogglePin() {
+    if (!entry || pinSaving) {
+      return;
+    }
+
+    setPinSaving(true);
+
+    try {
+      const updated = await pinEntry(workspaceId, entry.id, !entry.is_pinned);
+      setEntry(updated);
+      toast.success(updated.is_pinned ? "Entry pinned." : "Entry unpinned.");
+    } catch {
+      toast.error("Could not update the pin.");
+    } finally {
+      setPinSaving(false);
+    }
+  }
+
+  async function handleExport() {
+    if (!entry) {
+      return;
+    }
+
+    try {
+      await exportEntry(workspaceId, entry, "md");
+      toast.success("Entry exported.");
+    } catch {
+      toast.error("Could not export this entry.");
+    }
+  }
+
+  async function handleSuggestTags() {
+    if (!entry || suggesting) {
+      return;
+    }
+
+    setSuggesting(true);
+
+    try {
+      const names = await suggestEntryTags(workspaceId, entry.id);
+      const current = new Set((entry.tags ?? []).map((tag) => tag.name));
+
+      const fresh = names.filter((name) => !current.has(name));
+
+      setSuggestions(fresh);
+
+      if (fresh.length === 0) {
+        toast.message("No new tag suggestions for this entry.");
+      }
+    } catch {
+      toast.error("Could not fetch tag suggestions.");
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  async function handleAcceptSuggestions() {
+    if (suggestions.length === 0) {
+      return;
+    }
+
+    const currentTags = (entry?.tags ?? []).map((tag) => tag.name);
+
+    await syncTags([...currentTags, ...suggestions]);
+    setSuggestions([]);
+    toast.success("Tags added.");
+  }
+
   if (status === "missing") {
     notFound();
   }
 
   if (status === "loading" || !workspace || !entry) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
+        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
           Loading entry…
         </div>
@@ -206,13 +290,13 @@ export function EntryDetailPageView({
   const permissions = permissionsFor(workspace.role, workspace.is_member);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
       <WorkspaceNav />
 
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
         <Link
           href={`/workspaces/${workspace.id}/entries`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A]"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
         >
           <svg
             className="h-4 w-4"
@@ -245,7 +329,7 @@ export function EntryDetailPageView({
                   {entry.title}
                 </h1>
 
-                <p className="mt-2 text-sm leading-relaxed text-[#686873]">
+                <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                   Written by {author}
                   {entry.updated_at
                     ? ` · Updated ${updatedAt.toLocaleDateString("en-US", {
@@ -260,11 +344,32 @@ export function EntryDetailPageView({
               {permissions.canContribute && (
                 <div className="flex shrink-0 items-center gap-3">
                   <button
+                    onClick={handleTogglePin}
+                    disabled={pinSaving}
+                    className={`rounded-lg border px-5 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                      entry.is_pinned
+                        ? "border-[#5146E5] bg-[#EEEDFF] text-[#4338CA] dark:bg-[#242450] dark:text-[#a5b4fc]"
+                        : "border-[#DDDCE3] bg-white text-[#686873] hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
+                    }`}
+                  >
+                    {entry.is_pinned ? "Pinned" : "Pin"}
+                  </button>
+
+                  {permissions.isMember && (
+                    <button
+                      onClick={handleExport}
+                      className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
+                    >
+                      Export
+                    </button>
+                  )}
+
+                  <button
                     onClick={() => {
                       setError(null);
                       setEditing(true);
                     }}
-                    className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A]"
+                    className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
                   >
                     Edit
                   </button>
@@ -272,7 +377,7 @@ export function EntryDetailPageView({
                   <button
                     onClick={handleDelete}
                     disabled={deleting}
-                    className="rounded-lg border border-[#E85D75] px-5 py-3 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-[#E85D75] dark:border-[#f08098] px-5 py-3 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {deleting ? "Deleting…" : "Delete"}
                   </button>
@@ -280,8 +385,8 @@ export function EntryDetailPageView({
               )}
             </div>
 
-            <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-              <div className="flex items-start justify-between gap-4 border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+            <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+              <div className="flex items-start justify-between gap-4 border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                     {workspace.name}
@@ -295,7 +400,7 @@ export function EntryDetailPageView({
                 <button
                   onClick={handleSummarize}
                   disabled={summarizing || !entry.content}
-                  className="shrink-0 rounded-lg border border-[#5146E5] px-4 py-2 text-sm font-medium text-[#5146E5] transition hover:bg-[#EEEDFF] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="shrink-0 rounded-lg border border-[#5146E5] px-4 py-2 text-sm font-medium text-[#5146E5] transition hover:bg-[#EEEDFF] dark:hover:bg-[#2a2748] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {summarizing ? "Summarizing…" : "Summarize"}
                 </button>
@@ -307,18 +412,18 @@ export function EntryDetailPageView({
                   dangerouslySetInnerHTML={{ __html: entry.content }}
                 />
               ) : (
-                <p className="px-7 py-7 text-sm leading-relaxed text-[#9897A1] sm:px-8">
+                <p className="px-7 py-7 text-sm leading-relaxed text-[#9897A1] dark:text-[#737373] sm:px-8">
                   This entry has no content yet.
                 </p>
               )}
 
               {summary && (
-                <div className="border-t border-[#DDDCE3] px-7 py-6 sm:px-8">
+                <div className="border-t border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-6 sm:px-8">
                   <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                     AI Summary
                   </p>
 
-                  <p className="mt-2 text-sm leading-relaxed text-[#20202A]">
+                  <p className="mt-2 text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5]">
                     {summary}
                   </p>
                 </div>
@@ -327,15 +432,15 @@ export function EntryDetailPageView({
               {summaryError && (
                 <p
                   role="alert"
-                  className="mx-7 mb-6 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55] sm:mx-8"
+                  className="mx-7 mb-6 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0] sm:mx-8"
                 >
                   {summaryError}
                 </p>
               )}
             </section>
 
-            <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-              <div className="border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+            <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+              <div className="border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
                 <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                   Organize
                 </p>
@@ -350,7 +455,7 @@ export function EntryDetailPageView({
                   {(entry.tags ?? []).map((tag) => (
                     <span
                       key={tag.id}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#EEEDFF] px-3 py-1 text-sm font-medium text-[#4338CA]"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#EEEDFF] dark:bg-[#211f3d] px-3 py-1 text-sm font-medium text-[#4338CA]"
                     >
                       {tag.name}
 
@@ -369,7 +474,7 @@ export function EntryDetailPageView({
                   ))}
 
                   {(entry.tags ?? []).length === 0 && (
-                    <span className="text-sm text-[#9897A1]">
+                    <span className="text-sm text-[#9897A1] dark:text-[#737373]">
                       No tags yet.
                     </span>
                   )}
@@ -378,7 +483,7 @@ export function EntryDetailPageView({
                 {tagError && (
                   <p
                     role="alert"
-                    className="mt-4 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+                    className="mt-4 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
                   >
                     {tagError}
                   </p>
@@ -395,7 +500,7 @@ export function EntryDetailPageView({
                       value={tagInput}
                       onChange={(event) => setTagInput(event.target.value)}
                       disabled={tagSaving}
-                      className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                      className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#e5e5e5]"
                     />
 
                     <button
@@ -406,6 +511,53 @@ export function EntryDetailPageView({
                       {tagSaving ? "Saving…" : "Add"}
                     </button>
                   </form>
+                )}
+
+                {permissions.canContribute && (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={handleSuggestTags}
+                      disabled={suggesting}
+                      className="text-sm font-medium text-[#5146E5] transition hover:text-[#4338CA] disabled:opacity-50 dark:text-[#a5b4fc]"
+                    >
+                      {suggesting ? "Thinking…" : "Suggest tags"}
+                    </button>
+
+                    {suggestions.length > 0 && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-[#EEEDEF] bg-[#F7F6F2] px-3 py-2 dark:border-[#2a2a2a] dark:bg-[#1c1c1c]">
+                        <span className="text-xs font-medium text-[#686873] dark:text-[#a3a3a3]">
+                          Suggested:
+                        </span>
+
+                        {suggestions.map((name) => (
+                          <span
+                            key={name}
+                            className="rounded-full bg-[#EEEDFF] px-2 py-0.5 text-xs font-medium text-[#4338CA] dark:bg-[#242450] dark:text-[#a5b4fc]"
+                          >
+                            {name}
+                          </span>
+                        ))}
+
+                        <button
+                          type="button"
+                          onClick={handleAcceptSuggestions}
+                          disabled={tagSaving}
+                          className="ml-auto rounded-md bg-[#5146E5] px-3 py-1 text-xs font-medium text-white transition hover:bg-[#4338CA] disabled:opacity-50"
+                        >
+                          Add all
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSuggestions([])}
+                          className="rounded-md px-2 py-1 text-xs font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#a3a3a3]"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </section>
@@ -432,15 +584,15 @@ export function EntryDetailPageView({
                 />
               </>
             ) : (
-              <section className="rounded-2xl border border-[#E8E7EC] bg-white px-6 py-8">
-                <h2 className="text-lg font-semibold tracking-tight text-[#20202A]">
+              <section className="rounded-2xl border border-[#E8E7EC] bg-white dark:bg-[#141414] px-6 py-8">
+                <h2 className="text-lg font-semibold tracking-tight text-[#20202A] dark:text-[#e5e5e5]">
                   Documents and discussion are private
                 </h2>
-                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873]">
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                   You are not a member of this workspace, so its documents and
                   discussions are closed to you. You can still read this entry.
                 </p>
-                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873]">
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                   Ask a member or the owner to add you if you need access.
                 </p>
               </section>

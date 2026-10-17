@@ -41,8 +41,8 @@ export function ForgotPasswordForm() {
 
   if (submitted) {
     return (
-      <div className="rounded-xl border border-[#DDDCE3] bg-[#F7F6F2] p-5">
-        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#EEEDFF] text-[#5146E5]">
+      <div className="rounded-xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-[#F7F6F2] dark:bg-[#0f0f0f] p-5">
+        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]">
           <svg
             width="19"
             height="19"
@@ -60,13 +60,13 @@ export function ForgotPasswordForm() {
           </svg>
         </div>
 
-        <h2 className="text-sm font-semibold text-[#20202A]">
+        <h2 className="text-sm font-semibold text-[#20202A] dark:text-[#e5e5e5]">
           Check your email
         </h2>
 
-        <p className="mt-1 text-sm leading-relaxed text-[#686873]">
+        <p className="mt-1 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
           If an account exists for{" "}
-          <span className="font-medium text-[#20202A]">{email}</span>, we&rsquo;ve
+          <span className="font-medium text-[#20202A] dark:text-[#e5e5e5]">{email}</span>, we&rsquo;ve
           sent instructions to reset your password.
         </p>
 
@@ -81,7 +81,7 @@ export function ForgotPasswordForm() {
 
           <Link
             href="/auth/login"
-            className="text-sm font-medium text-[#686873] transition hover:text-[#20202A]"
+            className="text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
           >
             Back to login
           </Link>
@@ -95,7 +95,7 @@ export function ForgotPasswordForm() {
       <div className="flex flex-col gap-2">
         <label
           htmlFor="email"
-          className="text-sm font-medium text-[#20202A]"
+          className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]"
         >
           Email address
         </label>
@@ -109,14 +109,14 @@ export function ForgotPasswordForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-3 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+          className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
         />
       </div>
 
       {error && (
         <p
           role="alert"
-          className="rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+          className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
         >
           {error}
         </p>

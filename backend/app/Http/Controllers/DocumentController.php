@@ -89,6 +89,41 @@ class DocumentController extends Controller
         );
     }
 
+    /**
+     * Serve one attachment inline, for a preview rather than a save.
+     *
+     * Same bytes and the same permission as a download -- the download
+     * capability, not read access -- so previewing is never a way around who
+     * may see a document. Inline disposition is what lets the browser render a
+     * PDF in an iframe instead of downloading it.
+     */
+    public function preview(
+        Workspace $workspace,
+        KnowledgeEntry $entry,
+        Document $document
+    ): StreamedResponse {
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
+
+        abort_unless(
+            $document->knowledge_entry_id === $entry->id,
+            404
+        );
+
+        Gate::authorize('view', [$document, $entry]);
+
+        abort_unless(
+            Storage::disk($document->disk)->exists($document->path),
+            404,
+            'The stored file is missing.'
+        );
+
+        return Storage::disk($document->disk)->response(
+            $document->path,
+            $document->original_name,
+            ['Content-Disposition' => 'inline; filename="'.addslashes($document->original_name).'"']
+        );
+    }
+
     public function destroy(
         Workspace $workspace,
         KnowledgeEntry $entry,

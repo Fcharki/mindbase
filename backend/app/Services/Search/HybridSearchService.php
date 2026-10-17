@@ -62,6 +62,11 @@ class HybridSearchService
 
     public function __construct(private readonly QueryEmbeddingCache $queryEmbeddings) {}
 
+    public function minScore(): float
+    {
+        return (float) config('ai.retrieval_min_score', 0.008);
+    }
+
     /**
      * The chunks most likely to answer a question, best first.
      *
@@ -83,9 +88,17 @@ class HybridSearchService
         $lexical = $this->lexicalCandidates($workspace, $question, $candidates);
         $semantic = $this->semanticCandidates($workspace, $question, $candidates);
 
-        return $this->fuse($lexical, $semantic)
+        $results = $this->fuse($lexical, $semantic)
             ->take($limit)
             ->values();
+
+        $minScore = $this->minScore();
+
+        if ($minScore > 0.0) {
+            $results = $results->filter(fn (HybridSearchResult $result) => $result->score >= $minScore);
+        }
+
+        return $results;
     }
 
     /**

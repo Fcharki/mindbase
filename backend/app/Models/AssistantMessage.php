@@ -31,6 +31,7 @@ class AssistantMessage extends Model
         'sources',
         'status',
         'error',
+        'feedback',
     ];
 
     /**

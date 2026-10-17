@@ -5,7 +5,7 @@ import type { WorkspaceRole } from "@/lib/workspaces";
 const styles: Record<WorkspaceRole, string> = {
   owner: "bg-[#3B4A6B] text-white",
   member: "bg-[#5C6B4F] text-white",
-  viewer: "bg-[#D8D5C9] text-[#4A4D45]",
+  viewer: "bg-[#D8D5C9] text-[#4A4D45] dark:text-[#b0b3a8]",
 };
 
 export function RoleBadge({ role }: { role: WorkspaceRole }) {

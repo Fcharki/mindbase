@@ -28,8 +28,8 @@ function Logomark() {
 
 function InvalidLinkCard() {
   return (
-    <div className="rounded-xl border border-[#F2C9D1] bg-[#FCECEF] p-5">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#F2C9D1] text-[#B13D55]">
+    <div className="rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] p-5">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#F2C9D1] dark:bg-[#3a1c24] text-[#B13D55] dark:text-[#f0a0b0]">
         <svg
           width="19"
           height="19"
@@ -58,11 +58,11 @@ function InvalidLinkCard() {
         </svg>
       </div>
 
-      <h2 className="text-sm font-semibold text-[#20202A]">
+      <h2 className="text-sm font-semibold text-[#20202A] dark:text-[#e5e5e5]">
         Reset link is invalid or expired
       </h2>
 
-      <p className="mt-1 text-sm leading-relaxed text-[#686873]">
+      <p className="mt-1 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
         This password reset link is no longer valid. Please request a new
         link and try again.
       </p>
@@ -77,7 +77,7 @@ function InvalidLinkCard() {
 
         <Link
           href="/auth/login"
-          className="text-sm font-medium text-[#686873] transition hover:text-[#20202A]"
+          className="text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
         >
           Back to login
         </Link>
@@ -100,11 +100,11 @@ function ResetPasswordPanelContent() {
             Account recovery
           </p>
 
-          <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A]">
+          <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A] dark:text-[#e5e5e5]">
             Unable to reset your password
           </h1>
 
-          <p className="text-sm leading-relaxed text-[#686873]">
+          <p className="text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
             This password reset link is invalid or has expired. Request a
             new one to continue.
           </p>
@@ -112,7 +112,7 @@ function ResetPasswordPanelContent() {
 
         <InvalidLinkCard />
 
-        <p className="text-sm text-[#686873]">
+        <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
           Remember your password?{" "}
           <Link
             href="/auth/login"
@@ -132,11 +132,11 @@ function ResetPasswordPanelContent() {
           Account recovery
         </p>
 
-        <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A]">
+        <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A] dark:text-[#e5e5e5]">
           Create a new password
         </h1>
 
-        <p className="text-sm leading-relaxed text-[#686873]">
+        <p className="text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
           Choose a new password for your Mindbase account. Make sure it&rsquo;s
           something you&rsquo;ll remember.
         </p>
@@ -144,7 +144,7 @@ function ResetPasswordPanelContent() {
 
       <ResetPasswordForm token={token} email={email} />
 
-      <p className="text-sm text-[#686873]">
+      <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
         Remember your password?{" "}
         <Link
           href="/auth/login"
@@ -159,8 +159,8 @@ function ResetPasswordPanelContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F7F6F2] px-5 py-10 font-sans sm:px-8">
-      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm sm:grid-cols-2">
+    <div className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-5 py-10 font-sans sm:px-8">
+      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm sm:grid-cols-2">
         {/* Brand panel */}
         <div className="relative hidden min-h-[600px] overflow-hidden sm:flex sm:flex-col sm:justify-between">
           <Image
@@ -203,7 +203,7 @@ export default function ResetPasswordPage() {
             <div className="sm:hidden">
               <Link
                 href="/"
-                className="flex items-center gap-2 text-[#20202A]"
+                className="flex items-center gap-2 text-[#20202A] dark:text-[#e5e5e5]"
               >
                 <Logomark />
                 <span className="text-lg font-semibold tracking-tight">

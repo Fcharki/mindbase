@@ -76,18 +76,17 @@ class ChunkingService
             }
         }
 
-        $content = $this->flatten((string) $entry->content);
+        $position = 0;
 
-        if ($content !== '') {
-            $position = 0;
-
-            foreach ($this->split($content) as $piece) {
-                $chunks[] = [
-                    'source' => 'content',
-                    'position' => $position++,
-                    'body' => $piece,
-                ];
-            }
+        // Content keeps its block structure: splitting on the paragraph and
+        // heading boundaries the editor already produces lands a chunk on one
+        // idea far more often than cutting a stream of characters does.
+        foreach ($this->splitHtml((string) $entry->content) as $piece) {
+            $chunks[] = [
+                'source' => 'content',
+                'position' => $position++,
+                'body' => $piece,
+            ];
         }
 
         foreach ($this->documentChunks($entry) as $chunk) {
@@ -157,6 +156,179 @@ class ChunkingService
     }
 
     /**
+     * Split entry markup on the block boundaries the editor writes.
+     *
+     * A heading begins a new section, so a chunk rarely spans two topics, and
+     * within a section blocks are packed to the target size. Blocks are still
+     * sentence-split internally when one is too long on its own, so a wall of
+     * text without paragraph breaks is handled like any other prose.
+     *
+     * @return list<string>
+     */
+    public function splitHtml(string $html): array
+    {
+        $blocks = $this->blocks($html);
+
+        // No recognisable structure (plain text pasted in, an unknown wrapper):
+        // fall back to sentence packing so nothing is dropped.
+        if ($blocks === []) {
+            return $this->split($this->flatten($html));
+        }
+
+        return $this->packBlocks($blocks);
+    }
+
+    /**
+     * The block elements of the entry, in document order, as plain text.
+     *
+     * Nested blocks are skipped: a paragraph inside a blockquote is reported
+     * once, as the blockquote, rather than twice.
+     *
+     * @return list<array{text: string, heading: bool}>
+     */
+    private function blocks(string $html): array
+    {
+        if (trim($html) === '') {
+            return [];
+        }
+
+        $previous = libxml_use_internal_errors(true);
+
+        $document = new \DOMDocument;
+        $document->loadHTML(
+            '<?xml encoding="UTF-8"><div id="chunk-root">'.$html.'</div>',
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+        );
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $root = $document->getElementById('chunk-root');
+
+        if ($root === null) {
+            return [];
+        }
+
+        $xpath = new \DOMXPath($document);
+        $nodes = $xpath->query(
+            '//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6'
+            .' or self::p or self::li or self::pre or self::blockquote or self::td or self::th]',
+            $root
+        );
+
+        if ($nodes === false) {
+            return [];
+        }
+
+        $matched = new \SplObjectStorage;
+
+        foreach ($nodes as $node) {
+            $matched->attach($node);
+        }
+
+        $blocks = [];
+
+        foreach ($nodes as $node) {
+            // Skip a block nested in another block, so its text is not counted
+            // in both a list and the list item.
+            $ancestor = $node->parentNode;
+            $nested = false;
+
+            while ($ancestor !== null) {
+                if ($matched->contains($ancestor)) {
+                    $nested = true;
+
+                    break;
+                }
+
+                $ancestor = $ancestor->parentNode;
+            }
+
+            if ($nested) {
+                continue;
+            }
+
+            $text = $this->flatten(
+                $document->saveHTML($node) ?: ''
+            );
+
+            if ($text === '') {
+                continue;
+            }
+
+            $name = strtolower($node->nodeName);
+
+            $blocks[] = [
+                'text' => $text,
+                'heading' => (bool) preg_match('/^h[1-6]$/', $name),
+            ];
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * Pack blocks into chunks up to the target size, starting a fresh chunk at
+     * each heading so a chunk rarely spans two sections.
+     *
+     * @param  list<array{text: string, heading: bool}>  $blocks
+     * @return list<string>
+     */
+    private function packBlocks(array $blocks): array
+    {
+        $target = $this->targetChars();
+        $chunks = [];
+        $current = '';
+
+        foreach ($blocks as $block) {
+            // A heading that would not fit, or one that lands after content,
+            // begins the next chunk rather than being buried mid-paragraph.
+            if ($block['heading'] && $current !== '' && strlen($current) > $target / 2) {
+                $chunks[] = $current;
+                $current = '';
+            }
+
+            // A block on its own can exceed the target; cut it on sentences so
+            // it is not one oversized chunk nor two halves of a thought.
+            if (strlen($block['text']) > $target) {
+                if ($current !== '') {
+                    $chunks[] = $current;
+                    $current = '';
+                }
+
+                foreach ($this->split($block['text']) as $piece) {
+                    $chunks[] = $piece;
+                }
+
+                continue;
+            }
+
+            if ($current !== '' && strlen($current) + strlen($block['text']) + 1 > $target) {
+                $chunks[] = $current;
+                $current = $this->overlap($current);
+            }
+
+            $current .= $current === '' ? $block['text'] : ' '.$block['text'];
+        }
+
+        if ($current !== '') {
+            $chunks[] = $current;
+        }
+
+        return array_values(array_filter($chunks, fn (string $chunk) => $chunk !== ''));
+    }
+
+    private function targetChars(): int
+    {
+        return (int) config('ai.chunk_target_chars', self::TARGET_CHARS);
+    }
+
+    private function overlapChars(): int
+    {
+        return (int) config('ai.chunk_overlap_chars', self::OVERLAP_CHARS);
+    }
+
+    /**
      * Split text into overlapping pieces on sentence boundaries.
      *
      * @return list<string>
@@ -167,6 +339,8 @@ class ChunkingService
             return [];
         }
 
+        $target = $this->targetChars();
+
         // A string with no terminator at all still has to be cut somewhere.
         $sentences = $this->sentences($text);
 
@@ -176,20 +350,20 @@ class ChunkingService
         foreach ($sentences as $sentence) {
             // A single sentence longer than the target is emitted on its own
             // rather than being held back waiting for room that never comes.
-            if (strlen($sentence) > self::TARGET_CHARS) {
+            if (strlen($sentence) > $target) {
                 if ($current !== '') {
                     $chunks[] = $current;
                     $current = '';
                 }
 
-                foreach (str_split($sentence, self::TARGET_CHARS) as $piece) {
+                foreach (str_split($sentence, $target) as $piece) {
                     $chunks[] = $piece;
                 }
 
                 continue;
             }
 
-            if ($current !== '' && strlen($current) + strlen($sentence) > self::TARGET_CHARS) {
+            if ($current !== '' && strlen($current) + strlen($sentence) > $target) {
                 $chunks[] = $current;
                 $current = $this->overlap($current);
             }
@@ -225,11 +399,13 @@ class ChunkingService
      */
     private function overlap(string $chunk): string
     {
-        if (strlen($chunk) <= self::OVERLAP_CHARS) {
+        $overlap = $this->overlapChars();
+
+        if ($overlap <= 0 || strlen($chunk) <= $overlap) {
             return $chunk;
         }
 
-        $tail = substr($chunk, -self::OVERLAP_CHARS);
+        $tail = substr($chunk, -$overlap);
 
         // Start the overlap at a word boundary so the repeated text is not cut
         // mid-word and does not begin with a fragment.

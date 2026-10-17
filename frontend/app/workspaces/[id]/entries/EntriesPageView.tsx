@@ -3,17 +3,47 @@
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
 import { SearchPanel } from "@/app/features/search/SearchPanel";
-import { listEntries, KnowledgeEntry } from "@/lib/entries";
+import {
+  bulkManageEntries,
+  exportEntry,
+  listEntries,
+  pinEntry,
+  type BulkAction,
+  type KnowledgeEntry,
+} from "@/lib/entries";
 import { permissionsFor } from "@/lib/permissions";
+import {
+  clearRecentViewed,
+  getRecentViewedServerSnapshot,
+  getRecentViewedSnapshot,
+  subscribeRecentViewed,
+} from "@/lib/recent";
 import { getWorkspace, Workspace } from "@/lib/workspaces";
 
 type Status = "loading" | "ready" | "missing";
+
+function EntryListSkeleton() {
+  return (
+    <ul className="divide-y divide-[#EEEDEF] dark:divide-[#242424]" aria-hidden="true">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <li key={index} className="flex items-start gap-4 px-7 py-4 sm:px-8">
+          <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-[#EEEDEF] dark:bg-[#242424]" />
+          <div className="min-w-0 flex-1">
+            <div className="h-4 w-1/3 animate-pulse rounded bg-[#EEEDEF] dark:bg-[#242424]" />
+            <div className="mt-2 h-3 w-2/3 animate-pulse rounded bg-[#F0EFF2] dark:bg-[#1f1f1f]" />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
@@ -22,6 +52,16 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [status, setStatus] = useState<Status>("loading");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkPending, setBulkPending] = useState(false);
+
+  // Read through an external store rather than an effect, so the recency list
+  // is a pure read during render and cannot cause a cascading update.
+  const recentIds = useSyncExternalStore(
+    subscribeRecentViewed,
+    getRecentViewedSnapshot,
+    getRecentViewedServerSnapshot,
+  );
 
   useEffect(() => {
     if (authLoading) {
@@ -74,25 +114,155 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
     };
   }, [workspaceId, user, authLoading, router]);
 
+  const reloadEntries = useCallback(async () => {
+    try {
+      const result = await listEntries(workspaceId);
+      setEntries(result ?? []);
+    } catch {
+      toast.error("Could not refresh the entry list.");
+    }
+  }, [workspaceId]);
+
+  const recentEntries = useMemo(
+    () =>
+      recentIds
+        .map((id) => entries.find((entry) => entry.id === id))
+        .filter((entry): entry is KnowledgeEntry => Boolean(entry))
+        .slice(0, 5),
+    [entries, recentIds],
+  );
+
+  async function handleTogglePin(entry: KnowledgeEntry) {
+    try {
+      await pinEntry(workspaceId, entry.id, !entry.is_pinned);
+      await reloadEntries();
+      toast.success(entry.is_pinned ? "Entry unpinned." : "Entry pinned.");
+    } catch {
+      toast.error("Could not update the pin.");
+    }
+  }
+
+  async function handleExport(entry: KnowledgeEntry) {
+    try {
+      await exportEntry(workspaceId, entry, "md");
+      toast.success("Entry exported.");
+    } catch {
+      toast.error("Could not export this entry.");
+    }
+  }
+
+  function toggleSelect(id: number) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function handleBulk(action: BulkAction) {
+    if (selected.size === 0 || bulkPending) {
+      return;
+    }
+
+    let tags: string[] = [];
+
+    if (action === "tag" || action === "untag") {
+      const answer = window.prompt(
+        action === "tag"
+          ? "Tags to add, comma separated:"
+          : "Tags to remove, comma separated:",
+      );
+
+      if (answer === null) {
+        return;
+      }
+
+      tags = answer
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag !== "");
+
+      if (tags.length === 0) {
+        return;
+      }
+    }
+
+    if (action === "delete") {
+      const confirmed = window.confirm(
+        `Delete ${selected.size} ${selected.size === 1 ? "entry" : "entries"}? This cannot be undone.`,
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setBulkPending(true);
+
+    try {
+      const result = await bulkManageEntries(
+        workspaceId,
+        Array.from(selected),
+        action,
+        tags,
+      );
+
+      setSelected(new Set());
+      await reloadEntries();
+
+      const verb: Record<BulkAction, string> = {
+        delete: "Deleted",
+        tag: "Tagged",
+        untag: "Untagged",
+        pin: "Pinned",
+        unpin: "Unpinned",
+      };
+
+      toast.success(
+        `${verb[action]} ${result.affected} ${result.affected === 1 ? "entry" : "entries"}.`,
+      );
+
+      if (result.missing.length > 0) {
+        toast.message(`${result.missing.length} entries were skipped.`);
+      }
+    } catch {
+      toast.error("Could not apply that change.");
+    } finally {
+      setBulkPending(false);
+    }
+  }
+
   if (status === "loading") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873]">
-          <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
-          Loading entries…
-        </div>
-      </main>
+      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0e0e0e] dark:text-[#e5e5e5]">
+        <WorkspaceNav />
+
+        <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
+          <div>
+            <div className="h-4 w-24 animate-pulse rounded bg-[#EEEDEF] dark:bg-[#242424]" />
+            <div className="mt-3 h-8 w-40 animate-pulse rounded bg-[#EEEDEF] dark:bg-[#242424]" />
+          </div>
+
+          <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414]">
+            <EntryListSkeleton />
+          </section>
+        </main>
+      </div>
     );
   }
 
   if (status === "missing" || !workspace) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0e0e0e] dark:text-[#e5e5e5]">
         <WorkspaceNav />
 
         <main className="flex flex-1 items-center justify-center px-6 py-20">
-          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] bg-white p-8 text-center shadow-sm sm:p-10">
-            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] text-[#E85D75]">
+          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] bg-white p-8 text-center shadow-sm sm:p-10 dark:border-[#2a2a2a] dark:bg-[#141414]">
+            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] dark:bg-[#3a1c24] text-[#E85D75] dark:text-[#f08098]">
               <svg
                 width="22"
                 height="22"
@@ -120,7 +290,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
               Workspace not available
             </h1>
 
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873]">
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
               This workspace may have been deleted, or you don&rsquo;t have
               access to it.
             </p>
@@ -140,7 +310,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
   const canWrite = permissionsFor(workspace.role, workspace.is_member).canContribute;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0e0e0e] dark:text-[#e5e5e5]">
       <WorkspaceNav />
 
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
@@ -148,7 +318,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
           <div>
             <Link
               href={`/workspaces/${workspace.id}`}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A]"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#a3a3a3] dark:hover:text-[#e5e5e5]"
             >
               <svg
                 className="h-4 w-4"
@@ -173,7 +343,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
               Entries
             </h1>
 
-            <p className="mt-2 text-sm leading-relaxed text-[#686873]">
+            <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
               {entries.length === 0
                 ? "Nothing here yet."
                 : `${entries.length} ${entries.length === 1 ? "entry" : "entries"} in this workspace.`}
@@ -195,10 +365,94 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
           basePath={`/workspaces/${workspace.id}/entries`}
         />
 
-        <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
+        {recentEntries.length > 0 && (
+          <section className="rounded-2xl border border-[#DDDCE3] bg-white px-7 py-5 shadow-sm sm:px-8 dark:border-[#2a2a2a] dark:bg-[#141414]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-[#686873] dark:text-[#a3a3a3]">
+                Recently viewed
+              </h2>
+
+              <button
+                type="button"
+                onClick={() => clearRecentViewed()}
+                className="text-xs font-medium text-[#5146E5] transition hover:text-[#4338CA] dark:text-[#a5b4fc]"
+              >
+                Clear
+              </button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {recentEntries.map((entry) => (
+                <Link
+                  key={entry.id}
+                  href={`/workspaces/${workspace.id}/entries/${entry.id}`}
+                  className="max-w-[240px] truncate rounded-full border border-[#DDDCE3] px-3 py-1 text-xs font-medium text-[#20202A] transition hover:border-[#5146E5] hover:text-[#5146E5] dark:border-[#2a2a2a] dark:text-[#e5e5e5]"
+                >
+                  {entry.title}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {canWrite && selected.size > 0 && (
+          <div className="sticky top-4 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-[#5146E5] bg-white px-4 py-3 shadow-md dark:bg-[#141414]">
+            <span className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+              {selected.size} selected
+            </span>
+
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleBulk("pin")}
+                disabled={bulkPending}
+                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] disabled:opacity-50 dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+              >
+                Pin
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleBulk("unpin")}
+                disabled={bulkPending}
+                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] disabled:opacity-50 dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+              >
+                Unpin
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleBulk("tag")}
+                disabled={bulkPending}
+                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] disabled:opacity-50 dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+              >
+                Tag
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleBulk("delete")}
+                disabled={bulkPending}
+                className="rounded-lg border border-[#E85D75] dark:border-[#f08098] px-3 py-1.5 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:opacity-50 dark:text-[#f3a7b6]"
+              >
+                Delete
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#a3a3a3]"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+
+        <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414]">
           {entries.length === 0 ? (
             <div className="flex min-h-[260px] flex-col items-center justify-center px-7 py-12 text-center sm:px-8">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] text-[#159A9C]">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] dark:bg-[#10262a] text-[#159A9C] dark:text-[#3ac6c8]">
                 <svg
                   width="23"
                   height="23"
@@ -226,7 +480,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
                 No entries yet
               </h3>
 
-              <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873]">
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                 {canWrite
                   ? "Capture your first thought, note, or idea in this workspace."
                   : "There are no knowledge entries to browse in this workspace yet."}
@@ -245,6 +499,12 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
             <EntryList
               entries={entries}
               basePath={`/workspaces/${workspace.id}/entries`}
+              selectable={canWrite}
+              selectedIds={selected}
+              onToggleSelect={toggleSelect}
+              onTogglePin={handleTogglePin}
+              onExport={handleExport}
+              canContribute={canWrite}
             />
           )}
         </section>

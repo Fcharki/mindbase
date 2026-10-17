@@ -15,7 +15,18 @@ class KnowledgeEntry extends Model
         'created_by',
         'title',
         'content',
+        'is_pinned',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_pinned' => 'boolean',
+        ];
+    }
 
     /**
      * Delete attached documents (and their binaries) with the entry.

@@ -170,3 +170,29 @@ class TestSummarize:
     ):
         assert service.summarize("<pre><code>rm -rf /</code></pre>") == ""
         assert service._model.calls == []
+
+
+class TestProviderDispatch:
+    """Which engine serves a call, and what the streaming path hands back."""
+
+    def test_hf_is_the_default_engine(self, service):
+        assert service.provider() == "hf"
+        assert service.generate("the document") == "A summary."
+
+    def test_ollama_is_used_when_configured(self, service, monkeypatch):
+        monkeypatch.setattr(llm, "LLM_PROVIDER", "ollama")
+
+        service._ollama_request = lambda _payload: {
+            "message": {"content": "  From Ollama.  "}
+        }
+
+        assert service.generate("the document") == "From Ollama."
+        # The local model was never touched on this path.
+        assert service._model.calls == []
+
+    def test_streaming_follows_the_configured_provider(self, service, monkeypatch):
+        monkeypatch.setattr(llm, "LLM_PROVIDER", "ollama")
+        service._stream_ollama = lambda *_args, **_kwargs: iter(["A", "B"])
+
+        assert list(service.generate_stream("the document")) == ["A", "B"]
+

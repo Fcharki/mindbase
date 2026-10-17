@@ -25,15 +25,15 @@ function EmailVerifiedContent() {
       : "This verification link is no longer valid. Please request a new verification email and try again.";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] px-5 py-10 font-sans sm:px-8">
+    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-5 py-10 font-sans sm:px-8">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-[#DDDCE3] bg-white p-7 shadow-sm sm:p-10">
+        <div className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-7 shadow-sm sm:p-10">
           {/* Status icon */}
           <div
             className={`mb-7 flex h-12 w-12 items-center justify-center rounded-xl ${
               isVerified
-                ? "bg-[#EEEDFF] text-[#5146E5]"
-                : "bg-[#FCECEF] text-[#E85D75]"
+                ? "bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]"
+                : "bg-[#FCECEF] dark:bg-[#3a1c24] text-[#E85D75] dark:text-[#f08098]"
             }`}
           >
             {isVerified ? (
@@ -88,11 +88,11 @@ function EmailVerifiedContent() {
               {isVerified ? "Email confirmed" : "Verification issue"}
             </p>
 
-            <h1 className="text-3xl font-semibold leading-tight tracking-[-0.025em] text-[#20202A] sm:text-4xl">
+            <h1 className="text-3xl font-semibold leading-tight tracking-[-0.025em] text-[#20202A] dark:text-[#e5e5e5] sm:text-4xl">
               {title}
             </h1>
 
-            <p className="text-sm leading-6 text-[#686873] sm:text-base">
+            <p className="text-sm leading-6 text-[#686873] dark:text-[#a3a3a3] sm:text-base">
               {description}
             </p>
           </div>
@@ -112,7 +112,7 @@ function EmailVerifiedContent() {
         <div className="mt-6 flex justify-center">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-[#20202A]"
+            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-[#20202A] dark:text-[#e5e5e5]"
           >
             <svg
               width="20"

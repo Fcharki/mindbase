@@ -26,8 +26,8 @@ function Logomark() {
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F7F6F2] px-5 py-10 font-sans sm:px-8">
-      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm sm:grid-cols-2">
+    <div className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-5 py-10 font-sans sm:px-8">
+      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm sm:grid-cols-2">
         {/* Brand panel */}
         <div className="relative hidden min-h-[600px] overflow-hidden sm:flex sm:flex-col sm:justify-between">
           <Image
@@ -72,7 +72,7 @@ export default function RegisterPage() {
           <div className="sm:hidden">
             <Link
               href="/"
-              className="flex items-center gap-2 text-[#20202A]"
+              className="flex items-center gap-2 text-[#20202A] dark:text-[#e5e5e5]"
             >
               <Logomark />
               <span className="text-lg font-semibold tracking-tight">
@@ -86,18 +86,18 @@ export default function RegisterPage() {
               Get started
             </p>
 
-            <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A]">
+            <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A] dark:text-[#e5e5e5]">
               Create your account
             </h1>
 
-            <p className="text-sm leading-relaxed text-[#686873]">
+            <p className="text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
               A few details and you&rsquo;re ready to start capturing.
             </p>
           </div>
 
           <RegisterForm />
 
-          <p className="text-sm text-[#686873]">
+          <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
             Already have an account?{" "}
             <Link
               href="/auth/login"

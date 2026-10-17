@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\KnowledgeEntry\BulkManageEntries;
 use App\Actions\KnowledgeEntry\ScheduleEntrySummary;
 use App\Actions\KnowledgeEntry\SummarizeEntry;
 use App\Actions\KnowledgeEntry\SyncEntryTags;
 use App\Exceptions\ActionFailedException;
+use App\Http\Requests\KnowledgeEntry\BulkEntriesRequest;
 use App\Http\Requests\KnowledgeEntry\KnowledgeEntryRequest;
 use App\Http\Requests\KnowledgeEntry\RegenerateSummaryRequest;
 use App\Http\Requests\KnowledgeEntry\SyncTagsRequest;
@@ -14,10 +16,14 @@ use App\Http\Resources\TagResource;
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
 use App\Services\AI\BackendBudget;
+use App\Services\EntryExportService;
+use App\Services\EntryTagSuggestionService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class KnowledgeEntryController extends Controller
 {
@@ -27,9 +33,11 @@ class KnowledgeEntryController extends Controller
 
         $entries = $workspace
             ->knowledgeEntries()
-            ->with('creator:id,name', 'tags:id,name,workspace_id')
+            // Pinned entries lead the list; within each group the newest first.
+            ->with('creator:id,name', 'tags:id,name,workspace_id,parent_id')
             ->withCount('tags')
-            ->orderBy('created_at', 'desc')
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at')
             ->get();
 
         return KnowledgeEntryResource::collection($entries);
@@ -51,7 +59,7 @@ class KnowledgeEntryController extends Controller
 
         app(ScheduleEntrySummary::class, ['entry' => $knowledgeEntry])->handle();
 
-        $knowledgeEntry->load('creator:id,name', 'tags:id,name,workspace_id');
+        $knowledgeEntry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
         $knowledgeEntry->loadCount('tags');
 
         return KnowledgeEntryResource::make($knowledgeEntry)
@@ -67,7 +75,7 @@ class KnowledgeEntryController extends Controller
 
         $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
-        $entry->load('creator:id,name', 'tags:id,name,workspace_id');
+        $entry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
         $entry->loadCount('tags');
 
         return KnowledgeEntryResource::make($entry);
@@ -97,7 +105,7 @@ class KnowledgeEntryController extends Controller
             app(ScheduleEntrySummary::class, ['entry' => $entry])->handle();
         }
 
-        $entry->load('creator:id,name', 'tags:id,name,workspace_id');
+        $entry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
         $entry->loadCount('tags');
 
         return KnowledgeEntryResource::make($entry);
@@ -190,6 +198,115 @@ class KnowledgeEntryController extends Controller
                 'status' => 'queued',
             ],
         ], 202);
+    }
+
+    /**
+     * Pin or unpin an entry so it holds the top of the workspace list.
+     *
+     * A body of {"is_pinned": true|false} sets the value explicitly; without a
+     * body the current state is toggled, which is what a single button wants.
+     */
+    public function pin(
+        Request $request,
+        Workspace $workspace,
+        KnowledgeEntry $entry
+    ): JsonResource {
+        Gate::authorize('update', $entry);
+
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
+
+        $validated = $request->validate([
+            'is_pinned' => ['sometimes', 'boolean'],
+        ]);
+
+        $entry->update([
+            'is_pinned' => $validated['is_pinned'] ?? ! $entry->is_pinned,
+        ]);
+
+        $this->loadRelations($entry);
+
+        return KnowledgeEntryResource::make($entry);
+    }
+
+    /**
+     * Apply one action to a selection of entries.
+     *
+     * Per-entry authorization happens inside the action, so a partial selection
+     * cannot be used to reach entries the caller could not touch one at a time.
+     */
+    public function bulk(
+        BulkEntriesRequest $request,
+        Workspace $workspace
+    ): JsonResponse {
+        Gate::authorize('view', $workspace);
+
+        return response()->json([
+            'data' => app(BulkManageEntries::class, [
+                'workspace' => $workspace,
+                'entryIds' => $request->entryIds(),
+                'action' => $request->action(),
+                'tags' => $request->tags(),
+            ])->handle(),
+        ]);
+    }
+
+    /**
+     * Download one entry as Markdown, HTML or JSON.
+     */
+    public function export(
+        Request $request,
+        Workspace $workspace,
+        KnowledgeEntry $entry
+    ) {
+        Gate::authorize('view', $entry);
+
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
+
+        $entry->load('tags:id,name,workspace_id,parent_id');
+
+        $service = app(EntryExportService::class);
+        $format = strtolower((string) $request->query('format', 'md'));
+        $slug = Str::slug($entry->title) ?: 'entry';
+
+        return match ($format) {
+            'md', 'markdown' => response($service->toMarkdown($entry), 200, [
+                'Content-Type' => 'text/markdown; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="'.$slug.'.md"',
+            ]),
+            'html' => response($service->toHtml($entry), 200, [
+                'Content-Type' => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="'.$slug.'.html"',
+            ]),
+            'json' => response()->json(['data' => $service->toArray($entry)]),
+            default => abort(422, 'Unsupported export format. Use md, html or json.'),
+        };
+    }
+
+    /**
+     * Tag names that look like they belong on this entry, drawn from the
+     * workspace's existing vocabulary where possible.
+     */
+    public function suggestTags(
+        Workspace $workspace,
+        KnowledgeEntry $entry
+    ): JsonResponse {
+        Gate::authorize('view', $entry);
+
+        $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
+
+        $entry->load('tags:id,name,workspace_id,parent_id');
+
+        return response()->json([
+            'data' => [
+                'suggestions' => app(EntryTagSuggestionService::class)->suggest($entry),
+            ],
+        ]);
+    }
+
+    private function loadRelations(KnowledgeEntry $entry): void
+    {
+        $entry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
+        $entry->loadCount('tags');
     }
 
     private function abortUnlessEntryBelongsToWorkspace(

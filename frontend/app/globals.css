@@ -11,11 +11,13 @@
   --font-sans: var(--font-figtree);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* next-themes toggles a class on <html>, so the palette follows that class
+   rather than the OS preference. A media query here would keep a user who
+   picked light on a dark desktop on a dark page background with light-mode
+   cards on top, because it cannot be overridden by the class. */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
@@ -175,4 +177,39 @@ body {
 .prose-content strong,
 .tiptap-editor .ProseMirror strong {
   font-weight: 600;
+}
+/* Dark-mode overrides for rendered content and the editor surface. The
+   component-level `dark:` utilities do not reach inside these injected nodes,
+   so the palette is restated here against the `dark` class. */
+.dark .prose-content,
+.dark .tiptap-editor .ProseMirror {
+  color: #e5e5e5;
+}
+
+.dark .prose-content blockquote,
+.dark .tiptap-editor .ProseMirror blockquote {
+  border-left-color: #3a3a3a;
+  color: #a3a3a3;
+}
+
+.dark .prose-content code,
+.dark .tiptap-editor .ProseMirror code {
+  background: #242450;
+  color: #a5b4fc;
+}
+
+.dark .prose-content pre,
+.dark .tiptap-editor .ProseMirror pre {
+  background: #0f0f0f;
+  color: #ededed;
+}
+
+.dark .prose-content a,
+.dark .tiptap-editor .ProseMirror a {
+  color: #a5b4fc;
+}
+
+.dark .prose-content hr,
+.dark .tiptap-editor .ProseMirror hr {
+  border-top-color: #2a2a2a;
 }

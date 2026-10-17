@@ -32,7 +32,7 @@ export function CreateWorkspaceForm({
       <div className="flex flex-col gap-2">
         <label
           htmlFor="workspace-name"
-          className="text-sm font-medium text-[#20202A]"
+          className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]"
         >
           Workspace name
         </label>
@@ -45,12 +45,12 @@ export function CreateWorkspaceForm({
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="e.g. Research, Personal, Team"
-          className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+          className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
         />
       </div>
 
       {error && (
-        <p role="alert" className="text-sm leading-relaxed text-[#B13D55]">
+        <p role="alert" className="text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]">
           {error}
         </p>
       )}

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { NotificationBell } from "@/app/features/notifications/NotificationBell";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { listWorkspaces, Workspace } from "@/lib/workspaces";
 
 function Logomark() {
@@ -64,13 +65,13 @@ export function WorkspaceNav({
   }
 
   return (
-    <header className="border-b border-[#DDDCE3] bg-white">
+    <header className="border-b border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414]">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-3.5 sm:px-10">
         {/* Brand + navigation */}
         <div className="flex min-w-0 items-center gap-8">
           <Link
             href="/"
-            className="flex shrink-0 items-center gap-2 text-[#20202A]"
+            className="flex shrink-0 items-center gap-2 text-[#20202A] dark:text-[#e5e5e5]"
           >
             <Logomark />
 
@@ -84,8 +85,8 @@ export function WorkspaceNav({
               href="/workspaces"
               className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
                 pathname === "/workspaces"
-                  ? "bg-[#EEEDFF] text-[#5146E5]"
-                  : "text-[#686873] hover:bg-[#F7F6F2] hover:text-[#20202A]"
+                  ? "bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]"
+                  : "text-[#686873] dark:text-[#a3a3a3] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A]"
               }`}
             >
               Workspaces
@@ -94,8 +95,8 @@ export function WorkspaceNav({
               href="/dashboard"
               className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
                 pathname === "/dashboard"
-                  ? "bg-[#EEEDFF] text-[#5146E5]"
-                  : "text-[#686873] hover:bg-[#F7F6F2] hover:text-[#20202A]"
+                  ? "bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]"
+                  : "text-[#686873] dark:text-[#a3a3a3] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A]"
               }`}
             >
               Directory
@@ -115,7 +116,7 @@ export function WorkspaceNav({
                     router.push(`/workspaces/${event.target.value}`);
                   }
                 }}
-                className="h-9 max-w-[220px] appearance-none rounded-lg border border-[#DDDCE3] bg-[#F7F6F2] py-0 pl-3 pr-9 text-sm font-medium text-[#20202A] outline-none transition hover:border-[#C9C7D0] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                className="h-9 max-w-[220px] appearance-none rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-[#F7F6F2] dark:bg-[#0f0f0f] py-0 pl-3 pr-9 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] outline-none transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
               >
                 {!current && (
                   <option value="">Switch workspace…</option>
@@ -129,7 +130,7 @@ export function WorkspaceNav({
               </select>
 
               <svg
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#686873]"
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#686873] dark:text-[#a3a3a3]"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -149,24 +150,27 @@ export function WorkspaceNav({
 
           <NotificationBell />
 
-          <div className="hidden h-6 w-px bg-[#DDDCE3] sm:block" />
+          <div className="hidden h-6 w-px bg-[#DDDCE3] dark:bg-[#333] sm:block" />
 
-          <div className="hidden max-w-[160px] truncate text-sm font-medium text-[#686873] sm:block">
+          <div className="hidden max-w-[160px] truncate text-sm font-medium text-[#686873] dark:text-[#a3a3a3] sm:block">
             {user?.name}
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-lg border border-[#DDDCE3] bg-white px-3.5 py-2 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A] focus:outline-none focus:ring-2 focus:ring-[#EEEDFF]"
-          >
-            Log out
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={handleLogout}
+              className="rounded-lg border border-[#DDDCE3] bg-white px-3.5 py-2 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] hover:text-[#20202A] focus:outline-none focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a] dark:border-[#333] dark:bg-[#1a1a1a] dark:text-[#e5e5e5] dark:hover:bg-[#242424]"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Mobile workspace switcher */}
       {effectiveWorkspaces.length > 0 && (
-        <div className="flex items-center gap-2 border-t border-[#EEEDEF] px-6 py-3 sm:hidden">
+        <div className="flex items-center gap-2 border-t border-[#EEEDEF] dark:border-[#1f1f1f] px-6 py-3 sm:hidden">
           <div className="relative min-w-0 flex-1">
             <select
               aria-label="Switch workspace"
@@ -176,7 +180,7 @@ export function WorkspaceNav({
                   router.push(`/workspaces/${event.target.value}`);
                 }
               }}
-              className="h-10 w-full appearance-none rounded-lg border border-[#DDDCE3] bg-[#F7F6F2] px-3 pr-9 text-sm font-medium text-[#20202A] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+              className="h-10 w-full appearance-none rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-[#F7F6F2] dark:bg-[#0f0f0f] px-3 pr-9 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
             >
               {!current && (
                 <option value="">Switch workspace…</option>
@@ -190,7 +194,7 @@ export function WorkspaceNav({
             </select>
 
             <svg
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#686873]"
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#686873] dark:text-[#a3a3a3]"
               width="14"
               height="14"
               viewBox="0 0 24 24"

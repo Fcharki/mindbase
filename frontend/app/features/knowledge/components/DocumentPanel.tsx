@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { toast } from "sonner";
 
 import {
   deleteDocument,
   downloadDocument,
+  fetchDocumentPreviewUrl,
   KnowledgeDocument,
   listDocuments,
   uploadDocument,
@@ -20,6 +22,31 @@ const EXTRACTION_LABELS: Record<
   unsupported: "Format not searchable",
   failed: "Text could not be read",
 };
+
+// Only formats a browser can render inline are offered a preview button. The
+// backend serves any stored file, but an <iframe> pointed at a .docx shows a
+// download prompt, which is what the Download button already does.
+function previewKind(
+  mimeType: string | null,
+): "image" | "pdf" | "text" | null {
+  if (!mimeType) {
+    return null;
+  }
+
+  if (mimeType.startsWith("image/")) {
+    return "image";
+  }
+
+  if (mimeType === "application/pdf") {
+    return "pdf";
+  }
+
+  if (mimeType.startsWith("text/")) {
+    return "text";
+  }
+
+  return null;
+}
 
 interface DocumentPanelProps {
   workspaceId: string;
@@ -45,6 +72,14 @@ export function DocumentPanel({
   const [progress, setProgress] = useState(0);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{
+    document: KnowledgeDocument;
+    url: string;
+    kind: "image" | "pdf" | "text";
+  } | null>(null);
+
+  // Mirrors preview.url for the unmount cleanup, which must not read state.
+  const previewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,9 +168,50 @@ export function DocumentPanel({
     }
   }
 
+  async function handlePreview(document: KnowledgeDocument) {
+    const kind = previewKind(document.mime_type);
+
+    if (!kind) {
+      return;
+    }
+
+    setBusyId(document.id);
+    setError(null);
+
+    try {
+      const url = await fetchDocumentPreviewUrl(workspaceId, entryId, document);
+      previewUrlRef.current = url;
+      setPreview({ document, url, kind });
+    } catch {
+      toast.error(`Could not preview "${document.original_name}".`);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function closePreview() {
+    if (previewUrlRef.current) {
+      // The object URL owns the fetched bytes; without this the blob stays
+      // alive for the life of the document.
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
+    setPreview(null);
+  }
+
+  // A preview left open when the panel unmounts would leak its object URL.
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+    <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
             Attachments
@@ -161,7 +237,7 @@ export function DocumentPanel({
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={uploading}
-              className="shrink-0 rounded-lg border border-[#5146E5] px-4 py-2 text-sm font-medium text-[#5146E5] transition hover:bg-[#EEEDFF] disabled:cursor-not-allowed disabled:opacity-50"
+              className="shrink-0 rounded-lg border border-[#5146E5] px-4 py-2 text-sm font-medium text-[#5146E5] transition hover:bg-[#EEEDFF] dark:hover:bg-[#2a2748] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {uploading ? `Uploading ${progress}%` : "Upload file"}
             </button>
@@ -171,11 +247,11 @@ export function DocumentPanel({
 
       <div className="px-7 py-7 sm:px-8">
         {documents === null && (
-          <span className="text-sm text-[#9897A1]">Loading documents…</span>
+          <span className="text-sm text-[#9897A1] dark:text-[#737373]">Loading documents…</span>
         )}
 
         {documents !== null && documents.length === 0 && (
-          <span className="text-sm text-[#9897A1]">
+          <span className="text-sm text-[#9897A1] dark:text-[#737373]">
             No documents attached yet.
           </span>
         )}
@@ -191,11 +267,11 @@ export function DocumentPanel({
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E8E7EC] px-4 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[#20202A]">
+                    <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
                       {document.original_name}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-[#9897A1]">
+                    <p className="mt-0.5 text-xs text-[#9897A1] dark:text-[#737373]">
                       {document.human_size}
                       {document.uploader
                         ? ` · ${document.uploader.name}`
@@ -207,7 +283,7 @@ export function DocumentPanel({
                         className={`mt-0.5 text-xs ${
                           document.extraction_status === "ready"
                             ? "text-[#3B9C6B]"
-                            : "text-[#9897A1]"
+                            : "text-[#9897A1] dark:text-[#737373]"
                         }`}
                       >
                         {EXTRACTION_LABELS[document.extraction_status]}
@@ -216,17 +292,28 @@ export function DocumentPanel({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
+                    {canDownload && previewKind(document.mime_type) && (
+                      <button
+                        type="button"
+                        onClick={() => handlePreview(document)}
+                        disabled={busy}
+                        className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Preview
+                      </button>
+                    )}
+
                     {canDownload ? (
                       <button
                         type="button"
                         onClick={() => handleDownload(document)}
                         disabled={busy}
-                        className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {busy ? "Working…" : "Download"}
                       </button>
                     ) : (
-                      <span className="text-xs text-[#9897A1]">
+                      <span className="text-xs text-[#9897A1] dark:text-[#737373]">
                         Download not available
                       </span>
                     )}
@@ -236,7 +323,7 @@ export function DocumentPanel({
                         type="button"
                         onClick={() => handleDelete(document)}
                         disabled={busy}
-                        className="rounded-lg border border-[#E85D75] px-3 py-1.5 text-sm font-medium text-[#B13D55] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-lg border border-[#E85D75] dark:border-[#f08098] px-3 py-1.5 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#E85D75] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Delete
                       </button>
@@ -251,12 +338,58 @@ export function DocumentPanel({
         {error && (
           <p
             role="alert"
-            className="mt-4 rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+            className="mt-4 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
           >
             {error}
           </p>
         )}
       </div>
+
+      {preview && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview of ${preview.document.original_name}`}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={closePreview}
+        >
+          <div
+            className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-[#141414]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-[#DDDCE3] px-5 py-3 dark:border-[#2a2a2a]">
+              <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+                {preview.document.original_name}
+              </p>
+
+              <button
+                type="button"
+                onClick={closePreview}
+                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] hover:text-[#20202A] dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-auto bg-[#F7F6F2] dark:bg-[#0e0e0e]">
+              {preview.kind === "image" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={preview.url}
+                  alt={preview.document.original_name}
+                  className="mx-auto max-h-[80vh] object-contain"
+                />
+              ) : (
+                <iframe
+                  src={preview.url}
+                  title={preview.document.original_name}
+                  className="h-[80vh] w-full"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

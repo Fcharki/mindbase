@@ -56,15 +56,15 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ACTION_STYLES: Record<string, string> = {
-  created: "bg-[#EAF7F6] text-[#0F7B7D]",
-  added: "bg-[#EAF7F6] text-[#0F7B7D]",
-  approved: "bg-[#EAF7F6] text-[#0F7B7D]",
-  requested: "bg-[#EEEDFF] text-[#5146E5]",
-  updated: "bg-[#FDF3E7] text-[#9A6212]",
-  role_changed: "bg-[#FDF3E7] text-[#9A6212]",
-  deleted: "bg-[#FCECEF] text-[#B13D55]",
-  removed: "bg-[#FCECEF] text-[#B13D55]",
-  rejected: "bg-[#FCECEF] text-[#B13D55]",
+  created: "bg-[#EAF7F6] dark:bg-[#10262a] text-[#0F7B7D] dark:text-[#5ad0d2]",
+  added: "bg-[#EAF7F6] dark:bg-[#10262a] text-[#0F7B7D] dark:text-[#5ad0d2]",
+  approved: "bg-[#EAF7F6] dark:bg-[#10262a] text-[#0F7B7D] dark:text-[#5ad0d2]",
+  requested: "bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]",
+  updated: "bg-[#FDF3E7] dark:bg-[#2a2114] text-[#9A6212] dark:text-[#e0b060]",
+  role_changed: "bg-[#FDF3E7] dark:bg-[#2a2114] text-[#9A6212] dark:text-[#e0b060]",
+  deleted: "bg-[#FCECEF] dark:bg-[#3a1c24] text-[#B13D55] dark:text-[#f0a0b0]",
+  removed: "bg-[#FCECEF] dark:bg-[#3a1c24] text-[#B13D55] dark:text-[#f0a0b0]",
+  rejected: "bg-[#FCECEF] dark:bg-[#3a1c24] text-[#B13D55] dark:text-[#f0a0b0]",
 };
 
 function entityLabel(type: string): string {
@@ -251,8 +251,8 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
 
   if (authLoading || !user || (status === "loading" && !result)) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
+        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
           Loading audit logs…
         </div>
@@ -262,12 +262,12 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
 
   if (status === "forbidden" || status === "missing") {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+      <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
         <WorkspaceNav />
 
         <main className="flex flex-1 items-center justify-center px-6 py-20">
-          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] bg-white p-8 text-center shadow-sm sm:p-10">
-            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] text-[#E85D75]">
+          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-8 text-center shadow-sm sm:p-10">
+            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] dark:bg-[#3a1c24] text-[#E85D75] dark:text-[#f08098]">
               <svg
                 width="22"
                 height="22"
@@ -299,7 +299,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 : "Workspace not available"}
             </h1>
 
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873]">
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
               {status === "forbidden"
                 ? "Only the workspace owner can review its activity history."
                 : "This workspace may have been deleted, or you don’t have access to it."}
@@ -321,7 +321,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
   const meta = result?.meta;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A]">
+    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
       <WorkspaceNav />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
@@ -335,7 +335,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
               {workspace?.name ?? "Workspace activity"}
             </h1>
 
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3] sm:text-base">
               Every change made in this workspace, newest first. Filter by
               action, entity, person or date to narrow the timeline.
             </p>
@@ -343,17 +343,17 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
 
           <Link
             href={`/workspaces/${workspaceId}`}
-            className="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0]"
+            className="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-5 py-3 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a]"
           >
             Back to workspace
           </Link>
         </header>
 
         {/* Filters */}
-        <section className="rounded-2xl border border-[#DDDCE3] bg-white p-5 shadow-sm sm:p-6">
+        <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-5 shadow-sm sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1]">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1] dark:text-[#737373]">
                 Action
               </span>
               <select
@@ -361,7 +361,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 onChange={(event) =>
                   updateFilter("action", event.target.value)
                 }
-                className="h-10 rounded-lg border border-[#DDDCE3] bg-white px-3 text-sm text-[#20202A] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                className="h-10 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
               >
                 <option value="">All actions</option>
                 {filterOptions.actions.map((action) => (
@@ -373,7 +373,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1]">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1] dark:text-[#737373]">
                 Entity
               </span>
               <select
@@ -381,7 +381,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 onChange={(event) =>
                   updateFilter("entity", event.target.value)
                 }
-                className="h-10 rounded-lg border border-[#DDDCE3] bg-white px-3 text-sm text-[#20202A] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                className="h-10 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
               >
                 <option value="">All entities</option>
                 {filterOptions.entities.map((entity) => (
@@ -393,7 +393,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1]">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1] dark:text-[#737373]">
                 Person
               </span>
               <select
@@ -401,7 +401,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 onChange={(event) =>
                   updateFilter("userId", event.target.value)
                 }
-                className="h-10 rounded-lg border border-[#DDDCE3] bg-white px-3 text-sm text-[#20202A] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                className="h-10 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
               >
                 <option value="">Anyone</option>
                 {filterOptions.users.map((person) => (
@@ -413,7 +413,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1]">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1] dark:text-[#737373]">
                 From
               </span>
               <input
@@ -421,12 +421,12 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 value={filters.from}
                 max={filters.to || undefined}
                 onChange={(event) => updateFilter("from", event.target.value)}
-                className="h-10 rounded-lg border border-[#DDDCE3] bg-white px-3 text-sm text-[#20202A] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                className="h-10 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
               />
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1]">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9897A1] dark:text-[#737373]">
                 To
               </span>
               <input
@@ -434,7 +434,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 value={filters.to}
                 min={filters.from || undefined}
                 onChange={(event) => updateFilter("to", event.target.value)}
-                className="h-10 rounded-lg border border-[#DDDCE3] bg-white px-3 text-sm text-[#20202A] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                className="h-10 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
               />
             </label>
           </div>
@@ -451,10 +451,10 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
         </section>
 
         {/* Results */}
-        <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
           {status === "error" ? (
             <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-              <p className="text-sm text-[#686873]">
+              <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
                 Could not load the audit logs. Please try again.
               </p>
               <button
@@ -467,7 +467,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
             </div>
           ) : logs.length === 0 ? (
             <div className="flex min-h-64 flex-col items-center justify-center px-6 py-16 text-center">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EEEDFF] text-[#5146E5]">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]">
                 <svg
                   width="22"
                   height="22"
@@ -498,7 +498,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                   : "No logs yet"}
               </h2>
 
-              <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873]">
+              <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
                 {hasActiveFilters
                   ? "Try widening the date range or clearing a filter."
                   : "Nothing has been recorded in this workspace yet. As soon as someone makes a change, it will show up here."}
@@ -508,7 +508,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="mt-5 rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2]"
+                  className="mt-5 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c]"
                 >
                   Clear filters
                 </button>
@@ -518,7 +518,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-[#DDDCE3] bg-[#F7F6F2] text-xs font-semibold uppercase tracking-[0.06em] text-[#9897A1]">
+                  <tr className="border-b border-[#DDDCE3] dark:border-[#2a2a2a] bg-[#F7F6F2] dark:bg-[#0f0f0f] text-xs font-semibold uppercase tracking-[0.06em] text-[#9897A1] dark:text-[#737373]">
                     <th className="px-6 py-3 font-semibold">When</th>
                     <th className="px-6 py-3 font-semibold">Who</th>
                     <th className="px-6 py-3 font-semibold">Action</th>
@@ -527,17 +527,17 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-[#EEEDEF]">
+                <tbody className="divide-y divide-[#EEEDEF] dark:divide-[#1f1f1f]">
                   {logs.map((log) => {
                     const { date, time } = formatTimestamp(log.occurred_at);
                     const details = describe(log);
 
                     return (
                       <tr key={log.id} className="align-top">
-                        <td className="whitespace-nowrap px-6 py-4 text-[#20202A]">
+                        <td className="whitespace-nowrap px-6 py-4 text-[#20202A] dark:text-[#e5e5e5]">
                           <span className="font-medium">{date}</span>
                           {time && (
-                            <span className="block text-xs text-[#9897A1]">
+                            <span className="block text-xs text-[#9897A1] dark:text-[#737373]">
                               {time}
                             </span>
                           )}
@@ -546,15 +546,15 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                         <td className="px-6 py-4">
                           {log.user ? (
                             <>
-                              <span className="font-medium text-[#20202A]">
+                              <span className="font-medium text-[#20202A] dark:text-[#e5e5e5]">
                                 {log.user.name}
                               </span>
-                              <span className="block text-xs text-[#9897A1]">
+                              <span className="block text-xs text-[#9897A1] dark:text-[#737373]">
                                 {log.user.email}
                               </span>
                             </>
                           ) : (
-                            <span className="text-[#9897A1]">System</span>
+                            <span className="text-[#9897A1] dark:text-[#737373]">System</span>
                           )}
                         </td>
 
@@ -562,23 +562,23 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                           <span
                             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
                               ACTION_STYLES[log.action] ??
-                              "bg-[#F0EFF4] text-[#686873]"
+                              "bg-[#F0EFF4] dark:bg-[#1c1c1c] text-[#686873] dark:text-[#a3a3a3]"
                             }`}
                           >
                             {actionLabel(log.action)}
                           </span>
                         </td>
 
-                        <td className="px-6 py-4 text-[#20202A]">
+                        <td className="px-6 py-4 text-[#20202A] dark:text-[#e5e5e5]">
                           {entityLabel(log.entity_type)}
                           {log.entity_id != null && (
-                            <span className="block text-xs text-[#9897A1]">
+                            <span className="block text-xs text-[#9897A1] dark:text-[#737373]">
                               #{log.entity_id}
                             </span>
                           )}
                         </td>
 
-                        <td className="px-6 py-4 text-[#686873]">
+                        <td className="px-6 py-4 text-[#686873] dark:text-[#a3a3a3]">
                           {details ?? "—"}
                         </td>
                       </tr>
@@ -591,15 +591,15 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
 
           {/* Pagination */}
           {meta && meta.total > 0 && (
-            <div className="flex flex-col gap-4 border-t border-[#DDDCE3] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-[#686873]">
+            <div className="flex flex-col gap-4 border-t border-[#DDDCE3] dark:border-[#2a2a2a] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
                 Showing <span className="font-medium">{meta.from ?? 0}</span>–
                 <span className="font-medium">{meta.to ?? 0}</span> of{" "}
                 <span className="font-medium">{meta.total}</span>
               </p>
 
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 text-sm text-[#686873]">
+                <label className="flex items-center gap-2 text-sm text-[#686873] dark:text-[#a3a3a3]">
                   <span className="hidden sm:inline">Per page</span>
                   <select
                     value={perPage}
@@ -607,7 +607,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                       setPerPage(Number(event.target.value));
                       setPage(1);
                     }}
-                    className="h-9 rounded-lg border border-[#DDDCE3] bg-white px-2 text-sm text-[#20202A] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+                    className="h-9 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-2 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
                   >
                     {PER_PAGE_OPTIONS.map((option) => (
                       <option key={option} value={option}>
@@ -622,12 +622,12 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                     type="button"
                     onClick={() => setPage((value) => Math.max(1, value - 1))}
                     disabled={meta.current_page <= 1}
-                    className="rounded-lg border border-[#DDDCE3] bg-white px-3.5 py-2 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3.5 py-2 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Previous
                   </button>
 
-                  <span className="text-sm text-[#686873]">
+                  <span className="text-sm text-[#686873] dark:text-[#a3a3a3]">
                     Page{" "}
                     <span className="font-medium">{meta.current_page}</span> of{" "}
                     <span className="font-medium">{meta.last_page}</span>
@@ -637,7 +637,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                     type="button"
                     onClick={() => setPage((value) => value + 1)}
                     disabled={meta.current_page >= meta.last_page}
-                    className="rounded-lg border border-[#DDDCE3] bg-white px-3.5 py-2 text-sm font-medium text-[#20202A] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-3.5 py-2 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Next
                   </button>

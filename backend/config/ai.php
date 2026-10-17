@@ -18,6 +18,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Transient Failure Retries
+    |--------------------------------------------------------------------------
+    |
+    | How many extra times a synchronous AI call is retried when the service is
+    | unreachable or returns 5xx. The models restart and warm under load, so a
+    | single refused connection is common and usually temporary. Retries cover
+    | only transport faults, never a 4xx, and each attempt shares the timeout
+    | above, so the worst case is (retries + 1) * timeout.
+    |
+    */
+
+    'retries' => (int) env('AI_SERVICE_RETRIES', 2),
+
+    /*
+    |--------------------------------------------------------------------------
     | Background Timeout
     |--------------------------------------------------------------------------
     |
@@ -120,5 +135,49 @@ return [
     */
 
     'embedding_cache_ttl' => (int) env('AI_EMBEDDING_CACHE_TTL', 60 * 60 * 24 * 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Retrieval Threshold
+    |--------------------------------------------------------------------------
+    |
+    | Minimum fused score required for a retrieval hit to count as confident.
+    | RRF scores are small by design (top result typically ~0.016-0.032). A
+    | conservative default filters clearly weak matches without breaking the
+    | existing behavior for good matches.
+    |
+    */
+    'retrieval_min_score' => (float) env('AI_RETRIEVAL_MIN_SCORE', 0.008),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cross-Encoder Reranking
+    |--------------------------------------------------------------------------
+    |
+    | When on, the fused retrieval shortlist is reordered by a cross-encoder
+    | before it is cut to the final count. It reads the question and each passage
+    | together, which ranks better than fusion by position but costs a model call.
+    | Off is a valid configuration: retrieval falls straight back to RRF order,
+    | and a reranker failure at runtime does the same rather than losing results.
+    |
+    */
+
+    'rerank_enabled' => (bool) env('AI_RERANK_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Chunking
+    |--------------------------------------------------------------------------
+    |
+    | Target size and overlap for the passages embedded from an entry, in
+    | characters. Tuned for the 1024-dimension embedding model: large enough to
+    | carry a whole idea, small enough that a passage is about one thing. Overlap
+    | keeps a sentence that straddles a boundary whole in at least one chunk.
+    |
+    */
+
+    'chunk_target_chars' => (int) env('AI_CHUNK_TARGET_CHARS', 1800),
+
+    'chunk_overlap_chars' => (int) env('AI_CHUNK_OVERLAP_CHARS', 300),
 
 ];

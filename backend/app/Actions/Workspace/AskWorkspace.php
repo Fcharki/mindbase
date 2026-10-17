@@ -7,13 +7,17 @@ use App\Exceptions\ActionFailedException;
 use App\Jobs\GenerateAssistantAnswer;
 use App\Models\User;
 use App\Models\Workspace;
-use App\Services\Search\HybridSearchService;
+use App\Services\AI\AssistantSources;
+use App\Services\Search\QuestionRetriever;
 
 /**
  * Accepts a question about a workspace and queues the work of answering it.
  *
  * Retrieval runs here, not in the job, so a question with nothing to answer is
- * refused immediately instead of after a multi-minute model call.
+ * refused immediately instead of after a multi-minute model call. It also runs
+ * before the row is written, so the stored sources are exactly the passages
+ * this question retrieved, not whatever happens to be indexed when the job
+ * eventually runs.
  */
 class AskWorkspace implements Action
 {
@@ -26,7 +30,9 @@ class AskWorkspace implements Action
         private readonly Workspace $workspace,
         private readonly User $user,
         private readonly string $question,
-        private readonly HybridSearchService $search,
+        private readonly QuestionRetriever $retriever,
+        private readonly int $topK = self::PASSAGES,
+        private readonly bool $rewriteQuery = false,
     ) {}
 
     /**
@@ -40,26 +46,24 @@ class AskWorkspace implements Action
             throw new ActionFailedException('Ask a question first.', 422);
         }
 
-        $passages = $this->search->search($this->workspace, $question, self::PASSAGES);
+        $passages = $this->retriever->retrieve(
+            $this->workspace,
+            $question,
+            max(1, min(20, $this->topK)),
+            $this->rewriteQuery,
+        );
 
         if ($passages->isEmpty()) {
             throw new ActionFailedException(
-                'No matching entries in this workspace yet. Add some entries, or reword the question.',
+                'I don\'t have enough information in this workspace to answer that confidently. Add more relevant entries or reword the question.',
                 404
             );
         }
 
-        $sources = $passages->map(fn ($passage) => [
-            'entry_id' => $passage->chunk->knowledge_entry_id,
-            'title' => $passage->chunk->entry?->title,
-            'body' => $passage->chunk->body,
-            'found_by' => $passage->foundBy,
-        ])->values()->all();
-
         $message = $this->workspace->assistantMessages()->create([
             'user_id' => $this->user->id,
             'question' => $question,
-            'sources' => $sources,
+            'sources' => AssistantSources::fromPassages($passages),
             'status' => 'pending',
         ]);
 

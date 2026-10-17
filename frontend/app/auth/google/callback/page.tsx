@@ -18,18 +18,18 @@ export default function GoogleCallbackPage() {
   }, [loading, router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] font-sans">
+    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
       <div className="flex flex-col items-center gap-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d]">
           <span className="h-2.5 w-2.5 rounded-full bg-[#5146E5]" />
         </div>
 
         <div className="text-center">
-          <p className="text-sm font-medium text-[#20202A]">
+          <p className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
             {loading ? "Signing you in…" : "Redirecting…"}
           </p>
 
-          <p className="mt-1 text-sm text-[#9897A1]">
+          <p className="mt-1 text-sm text-[#9897A1] dark:text-[#737373]">
             Taking you to your workspace
           </p>
         </div>

@@ -10,6 +10,7 @@ use App\Http\Controllers\MembershipRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
 use Illuminate\Support\Facades\Route;
@@ -201,6 +202,41 @@ Route::middleware('auth:sanctum')->group(function () {
         'syncTags',
     ]);
 
+    // Tag names that look like they belong on an entry, from this workspace's
+    // own vocabulary where possible.
+    Route::post('workspaces/{workspace}/entries/{entry}/suggest-tags', [
+        KnowledgeEntryController::class,
+        'suggestTags',
+    ]);
+
+    // Toggle or set whether an entry leads the workspace list.
+    Route::post('workspaces/{workspace}/entries/{entry}/pin', [
+        KnowledgeEntryController::class,
+        'pin',
+    ]);
+
+    // One change applied to a selection of entries (delete, tag, untag, pin).
+    Route::post('workspaces/{workspace}/entries/bulk', [
+        KnowledgeEntryController::class,
+        'bulk',
+    ]);
+
+    // Download one entry as Markdown, HTML or JSON.
+    Route::get('workspaces/{workspace}/entries/{entry}/export', [
+        KnowledgeEntryController::class,
+        'export',
+    ]);
+
+    /*
+    |----------------------------------------------------------------------
+    | Workspace tag vocabulary and hierarchy
+    |----------------------------------------------------------------------
+    */
+
+    Route::get('workspaces/{workspace}/tags', [TagController::class, 'index']);
+
+    Route::patch('workspaces/{workspace}/tags/{tag}', [TagController::class, 'update']);
+
     Route::post('workspaces/{workspace}/entries/{entry}/summarize', [
         KnowledgeEntryController::class,
         'summarize',
@@ -233,6 +269,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('workspaces/{workspace}/entries/{entry}/documents/{document}/download', [
         DocumentController::class,
         'download',
+    ]);
+
+    // Same bytes as the download, served inline so a PDF can be previewed.
+    Route::get('workspaces/{workspace}/entries/{entry}/documents/{document}/preview', [
+        DocumentController::class,
+        'preview',
     ]);
 
     Route::delete('workspaces/{workspace}/entries/{entry}/documents/{document}', [
@@ -348,12 +390,47 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
     /**
+     * The thread so far: recent questions asked of this workspace. Registered
+     * before the {message} routes so the literal segment is never mistaken for
+     * an id, even if the number constraint below ever loosens.
+     */
+    Route::get('workspaces/{workspace}/ask/messages', [
+        WorkspaceController::class,
+        'messages',
+    ]);
+
+    /**
      * Poll a question asked above, since the answer arrives via the queue
      * rather than in the response.
      */
     Route::get('workspaces/{workspace}/ask/{message}', [
         WorkspaceController::class,
         'answer',
+    ])->whereNumber('message');
+
+    /**
+     * The same answer as server-sent events: deltas as the job writes them,
+     * then done. Same row as the poll above, so a client may do either.
+     */
+    Route::get('workspaces/{workspace}/ask/{message}/stream', [
+        WorkspaceController::class,
+        'stream',
+    ])->whereNumber('message');
+
+    /**
+     * Answer the same question again, re-retrieving passages first.
+     */
+    Route::post('workspaces/{workspace}/ask/{message}/regenerate', [
+        WorkspaceController::class,
+        'regenerate',
+    ])->whereNumber('message');
+
+    /**
+     * Thumbs up or down on one answer, or clear an earlier rating.
+     */
+    Route::post('workspaces/{workspace}/ask/{message}/feedback', [
+        WorkspaceController::class,
+        'feedback',
     ])->whereNumber('message');
 });
 

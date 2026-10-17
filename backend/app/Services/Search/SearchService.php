@@ -96,7 +96,28 @@ class SearchService
         }
 
         if ($tag !== null) {
-            $entries->whereHas('tags', fn (Builder $tags) => $tags->where('tags.name', $tag));
+            // Filtering by a parent tag also matches entries under its children,
+            // so "work" surfaces everything nested under it. The descendants are
+            // resolved to ids here rather than with a recursive query, which is
+            // fine for the shallow nesting the UI supports and keeps this
+            // portable to the sqlite test suite.
+            $names = [$tag];
+
+            $parent = Tag::where('workspace_id', $workspace->id)
+                ->where('name', $tag)
+                ->first();
+
+            if ($parent !== null) {
+                $names = array_merge($names, array_map(
+                    fn (int $id) => (string) Tag::whereKey($id)->value('name'),
+                    $parent->descendantIds()
+                ));
+            }
+
+            $entries->whereHas(
+                'tags',
+                fn (Builder $tags) => $tags->whereIn('tags.name', array_values(array_unique($names)))
+            );
         }
 
         if ($this->isPostgres() && $query !== '') {

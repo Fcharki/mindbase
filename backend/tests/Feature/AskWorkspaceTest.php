@@ -153,7 +153,7 @@ class AskWorkspaceTest extends TestCase
         $this->actingAs($owner)
             ->postJson("/api/v1/workspaces/{$empty->id}/ask", ['question' => 'anything?'])
             ->assertNotFound()
-            ->assertJsonPath('message', 'No matching entries in this workspace yet. Add some entries, or reword the question.');
+            ->assertJsonPath('message', 'I don\'t have enough information in this workspace to answer that confidently. Add more relevant entries or reword the question.');
 
         Queue::assertNothingPushed();
     }
@@ -169,7 +169,7 @@ class AskWorkspaceTest extends TestCase
             ->postJson("/api/v1/workspaces/{$workspace->id}/ask", ['question' => self::QUESTION]);
 
         $this->mock(RagService::class, function (RagService $rag) {
-            $rag->shouldReceive('ask')
+            $rag->shouldReceive('askStreaming')
                 ->andThrow(new ConnectException(
                     'Connection refused',
                     new GuzzleRequest('POST', 'rag'),
@@ -323,8 +323,9 @@ class AskWorkspaceTest extends TestCase
         $this->mock(RagService::class, function (RagService $rag) use ($answer) {
             // Both arguments captured, because the passages arrive separately
             // from the question and RagService is what joins them into the
-            // prompt the model actually receives.
-            $rag->shouldReceive('ask')
+            // prompt the model actually receives. The job streams, so the
+            // assertion is on the streaming entry point.
+            $rag->shouldReceive('askStreaming')
                 ->andReturnUsing(function (string $prompt, string $context) use ($answer) {
                     $this->ragPrompts[] = $prompt;
                     $this->ragContexts[] = $context;

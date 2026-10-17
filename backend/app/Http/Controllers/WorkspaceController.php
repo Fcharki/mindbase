@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Actions\Workspace\AskWorkspace;
 use App\Actions\Workspace\CreateWorkspace;
 use App\Actions\Workspace\JoinWorkspace;
+use App\Actions\Workspace\RegenerateAssistantAnswer;
+use App\Http\Requests\Workspace\AskOptionsRequest;
 use App\Http\Requests\Workspace\AskWorkspaceRequest;
 use App\Http\Requests\Workspace\WorkspaceRequest;
 use App\Http\Resources\JoinableWorkspaceResource;
 use App\Http\Resources\WorkspaceResource;
+use App\Models\AssistantMessage;
 use App\Models\Workspace;
 use App\Services\WorkspaceIndexCache;
 use Illuminate\Database\Query\JoinClause;
@@ -35,6 +38,8 @@ class WorkspaceController extends Controller
                 'workspace' => $workspace,
                 'user' => $request->user(),
                 'question' => $request->question(),
+                'topK' => $request->topK(),
+                'rewriteQuery' => $request->rewrite(),
             ])->handle(),
         ], 202);
     }
@@ -55,6 +60,187 @@ class WorkspaceController extends Controller
         abort_if($found === null, 404, 'Question not found.');
 
         return response()->json(['data' => $found]);
+    }
+
+    /**
+     * The thread so far: recent questions asked of this workspace, newest first.
+     *
+     * Workspace scoped rather than user scoped, matching answer() above, so a
+     * shared workspace reads as one conversation rather than one per person.
+     */
+    public function messages(Request $request, Workspace $workspace): JsonResponse
+    {
+        Gate::authorize('view', $workspace);
+
+        $limit = min(50, max(1, (int) $request->query('limit', 30)));
+
+        $messages = $workspace->assistantMessages()
+            ->with('user:id,name')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        return response()->json(['data' => $messages]);
+    }
+
+    /**
+     * Answer the same question again from freshly retrieved passages.
+     */
+    public function regenerate(
+        AskOptionsRequest $request,
+        Workspace $workspace,
+        int $message
+    ): JsonResponse {
+        Gate::authorize('view', $workspace);
+
+        $found = $workspace->assistantMessages()
+            ->whereKey($message)
+            ->first();
+
+        abort_if($found === null, 404, 'Question not found.');
+
+        abort_if(
+            $found->status === AssistantMessage::STATUS_PENDING,
+            409,
+            'This question is still being answered.'
+        );
+
+        return response()->json([
+            'data' => app(RegenerateAssistantAnswer::class, [
+                'message' => $found,
+                'topK' => $request->topK(),
+                'rewriteQuery' => $request->rewrite(),
+            ])->handle(),
+        ], 202);
+    }
+
+    /**
+     * Record whether the answer was useful, or clear an earlier opinion.
+     */
+    public function feedback(
+        Request $request,
+        Workspace $workspace,
+        int $message
+    ): JsonResponse {
+        Gate::authorize('view', $workspace);
+
+        $found = $workspace->assistantMessages()
+            ->whereKey($message)
+            ->first();
+
+        abort_if($found === null, 404, 'Question not found.');
+
+        $validated = $request->validate([
+            'feedback' => ['nullable', 'string', 'in:up,down'],
+        ]);
+
+        $found->update(['feedback' => $validated['feedback'] ?? null]);
+
+        return response()->json(['data' => $found->fresh()]);
+    }
+
+    /**
+     * Server-sent events for one answer: the text as it is written, then done.
+     *
+     * Generation itself still runs in the job -- a model call this long cannot
+     * hold a request. What streams here is the job's progress: it flushes the
+     * partial answer into the row as tokens arrive, and this endpoint tails that
+     * row. Polling and streaming therefore show the same text; streaming just
+     * shows it sooner and without the client choosing an interval.
+     */
+    public function stream(Workspace $workspace, int $message)
+    {
+        Gate::authorize('view', $workspace);
+
+        $found = $workspace->assistantMessages()
+            ->whereKey($message)
+            ->first();
+
+        abort_if($found === null, 404, 'Question not found.');
+
+        // The job's own answer budget, plus a margin for the job to have been
+        // picked up. Past it, the row is either finished or the worker is gone;
+        // staying open longer only keeps a dead connection alive.
+        $deadline = microtime(true) + (int) config('ai.answer_timeout') + 120;
+
+        return response()->stream(function () use ($found, $deadline) {
+            @set_time_limit(0);
+            ignore_user_abort(true);
+
+            $id = $found->id;
+            $sent = 0;
+
+            while (true) {
+                $fresh = AssistantMessage::find($id);
+
+                if ($fresh === null) {
+                    $this->emitStream(['type' => 'error', 'message' => 'This answer is no longer available.']);
+
+                    break;
+                }
+
+                $answer = (string) ($fresh->answer ?? '');
+                $length = mb_strlen($answer);
+
+                if ($length > $sent) {
+                    $this->emitStream([
+                        'type' => 'delta',
+                        'text' => mb_substr($answer, $sent, $length - $sent),
+                    ]);
+                    $sent = $length;
+                }
+
+                if ($fresh->status === AssistantMessage::STATUS_READY) {
+                    $this->emitStream(['type' => 'done']);
+
+                    break;
+                }
+
+                if ($fresh->status === AssistantMessage::STATUS_FAILED) {
+                    $this->emitStream([
+                        'type' => 'error',
+                        'message' => $fresh->error ?? 'The AI service could not answer that.',
+                    ]);
+
+                    break;
+                }
+
+                if (microtime(true) > $deadline) {
+                    $this->emitStream([
+                        'type' => 'timeout',
+                        'message' => 'This is taking longer than expected. The answer may still arrive; refresh to check.',
+                    ]);
+
+                    break;
+                }
+
+                if (connection_aborted()) {
+                    break;
+                }
+
+                usleep(400_000);
+            }
+
+            flush();
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache, no-store, no-transform',
+            'X-Accel-Buffering' => 'no',
+            'Connection' => 'keep-alive',
+        ]);
+    }
+
+    /**
+     * One SSE frame. Echoed straight through so a client can read the JSON
+     * without this endpoint inventing a second schema for it.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function emitStream(array $payload): void
+    {
+        echo 'data: '.json_encode($payload, JSON_UNESCAPED_UNICODE)."\n\n";
+        @ob_flush();
+        flush();
     }
 
     public function byInviteCode(string $inviteCode): JsonResource

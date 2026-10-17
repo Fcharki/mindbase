@@ -60,8 +60,8 @@ export function EntryForm({
   }
 
   return (
-    <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm">
-      <div className="border-b border-[#DDDCE3] px-7 py-5 sm:px-8">
+    <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
+      <div className="border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
         <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
           {eyebrow}
         </p>
@@ -75,7 +75,7 @@ export function EntryForm({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="entry-title"
-            className="text-sm font-medium text-[#20202A]"
+            className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]"
           >
             {title}
           </label>
@@ -89,16 +89,16 @@ export function EntryForm({
             value={entryTitle}
             onChange={(event) => setEntryTitle(event.target.value)}
             placeholder="Enter a title..."
-            className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-3 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF]"
+            className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-[#20202A]">
+          <label className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
             Content
           </label>
 
-          <div className="tiptap-editor rounded-lg border border-[#DDDCE3] bg-white transition focus-within:border-[#5146E5] focus-within:ring-2 focus-within:ring-[#EEEDFF]">
+          <div className="tiptap-editor rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] transition focus-within:border-[#5146E5] focus-within:ring-2 focus-within:ring-[#EEEDFF]">
             <Tiptap content={content} onChange={setContent} />
           </div>
         </div>
@@ -106,7 +106,7 @@ export function EntryForm({
         {error && (
           <p
             role="alert"
-            className="rounded-lg border border-[#F2C9D1] bg-[#FCECEF] px-4 py-3 text-sm leading-relaxed text-[#B13D55]"
+            className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
           >
             {error}
           </p>
@@ -118,7 +118,7 @@ export function EntryForm({
               type="button"
               onClick={onCancel}
               disabled={submitting}
-              className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-5 py-3 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {cancelLabel}
             </button>

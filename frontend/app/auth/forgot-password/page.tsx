@@ -27,8 +27,8 @@ function Logomark() {
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F7F6F2] px-5 py-10 font-sans sm:px-8">
-      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm sm:grid-cols-2">
+    <div className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-5 py-10 font-sans sm:px-8">
+      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm sm:grid-cols-2">
         {/* Brand panel */}
         <div className="relative hidden min-h-[600px] overflow-hidden sm:flex sm:flex-col sm:justify-between">
           <Image
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
           <div className="sm:hidden">
             <Link
               href="/"
-              className="flex items-center gap-2 text-[#20202A]"
+              className="flex items-center gap-2 text-[#20202A] dark:text-[#e5e5e5]"
             >
               <Logomark />
               <span className="text-lg font-semibold tracking-tight">
@@ -85,11 +85,11 @@ export default function ForgotPasswordPage() {
               Account recovery
             </p>
 
-            <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A]">
+            <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A] dark:text-[#e5e5e5]">
               Forgot your password?
             </h1>
 
-            <p className="text-sm leading-relaxed text-[#686873]">
+            <p className="text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
               Enter the email address linked to your account and we&rsquo;ll
               send you a link to create a new password.
             </p>
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
 
           <ForgotPasswordForm />
 
-          <p className="text-sm text-[#686873]">
+          <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
             Remember your password?{" "}
             <Link
               href="/auth/login"
