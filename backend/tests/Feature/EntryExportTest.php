@@ -53,6 +53,20 @@ class EntryExportTest extends TestCase
         $this->assertStringContainsString('Hello there.', $response->getContent());
     }
 
+    public function test_markdown_export_keeps_inline_images(): void
+    {
+        $workspace = $this->workspace();
+        $entry = $this->entry(
+            $workspace,
+            '<p>Before</p><img src="http://localhost/api/v1/entry-images/abc" alt="diagram"><p>After</p>'
+        );
+
+        $this->actingAs($workspace->owner)
+            ->get("/api/v1/workspaces/{$workspace->id}/entries/{$entry->id}/export")
+            ->assertOk()
+            ->assertSee('![diagram](http://localhost/api/v1/entry-images/abc)', false);
+    }
+
     public function test_html_export_keeps_the_document_self_contained(): void
     {
         $workspace = $this->workspace();

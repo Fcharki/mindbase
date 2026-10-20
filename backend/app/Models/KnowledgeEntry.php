@@ -29,16 +29,17 @@ class KnowledgeEntry extends Model
     }
 
     /**
-     * Delete attached documents (and their binaries) with the entry.
+     * Delete attached documents and inline images (and their binaries) with
+     * the entry.
      *
-     * The database cascades the document rows, but not the files on disk,
-     * so the rows have to be removed through Eloquent to fire the model's
-     * deleting hook.
+     * The database cascades the rows, but not the files on disk, so they have
+     * to be removed through Eloquent to fire the models' deleting hooks.
      */
     protected static function booted(): void
     {
         static::deleting(function (KnowledgeEntry $entry) {
             $entry->documents->each->delete();
+            $entry->entryImages->each->delete();
         });
     }
 
@@ -63,6 +64,14 @@ class KnowledgeEntry extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
+    }
+
+    /**
+     * Images embedded in the content (not attachments stored as documents).
+     */
+    public function entryImages(): HasMany
+    {
+        return $this->hasMany(EntryImage::class);
     }
 
     /**

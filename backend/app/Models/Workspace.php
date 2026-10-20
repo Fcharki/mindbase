@@ -15,6 +15,12 @@ class Workspace extends Model
         static::creating(function (Workspace $workspace) {
             $workspace->invite_code = Str::random(10);
         });
+
+        // Inline images are not reachable through the entry cascade, so their
+        // files have to be removed before the database rows disappear.
+        static::deleting(function (Workspace $workspace) {
+            $workspace->entryImages->each->delete();
+        });
     }
 
     public function owner()
@@ -46,6 +52,11 @@ class Workspace extends Model
     public function tags()
     {
         return $this->hasMany(Tag::class);
+    }
+
+    public function entryImages()
+    {
+        return $this->hasMany(EntryImage::class);
     }
 
     public function membershipRequests(): HasMany

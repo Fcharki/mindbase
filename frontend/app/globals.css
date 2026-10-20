@@ -183,6 +183,21 @@ body {
   border-top: 1px solid #dddce3;
 }
 
+/* Inline images inserted from the editor toolbar, paste or drop. */
+.prose-content img,
+.tiptap-editor .ProseMirror img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25em auto;
+  border-radius: 0.75rem;
+}
+
+.tiptap-editor .ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid #5146e5;
+  outline-offset: 2px;
+}
+
 .prose-content strong,
 .tiptap-editor .ProseMirror strong {
   font-weight: 600;

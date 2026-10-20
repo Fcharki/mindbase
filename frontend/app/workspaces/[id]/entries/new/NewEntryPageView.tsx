@@ -135,6 +135,7 @@ export function NewEntryPageView({ workspaceId }: { workspaceId: string }) {
           title="Title"
           heading="Write your entry"
           eyebrow={workspace.name}
+          workspaceId={workspace.id}
           submitLabel="Create entry"
           submittingLabel="Creating…"
           error={error}

@@ -8,6 +8,9 @@ interface EntryFormProps {
   title: string;
   heading: string;
   eyebrow: string;
+  // Enables the editor's image button; images are uploaded against this
+  // workspace before the entry itself has been saved.
+  workspaceId: number | string;
   initialTitle?: string;
   initialContent?: string;
   submitLabel: string;
@@ -23,6 +26,7 @@ export function EntryForm({
   title,
   heading,
   eyebrow,
+  workspaceId,
   initialTitle = "",
   initialContent = "",
   submitLabel,
@@ -99,7 +103,11 @@ export function EntryForm({
           </label>
 
           <div className="tiptap-editor rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] transition focus-within:border-[#5146E5] focus-within:ring-2 focus-within:ring-[#EEEDFF]">
-            <Tiptap content={content} onChange={setContent} />
+            <Tiptap
+              content={content}
+              workspaceId={workspaceId}
+              onChange={setContent}
+            />
           </div>
         </div>
 

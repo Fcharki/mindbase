@@ -33,6 +33,13 @@ class StoreDocumentRequest extends FormRequest
         'txt',
         'md',
         'csv',
+        // Images are attachments too: the panel can preview them inline and
+        // downloading them works the same as any other document.
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'webp',
     ];
 
     /**

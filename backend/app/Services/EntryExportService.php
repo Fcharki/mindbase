@@ -199,6 +199,7 @@ class EntryExportService
             'pre' => "\n\n```\n".trim($node->textContent)."\n```\n\n",
             'blockquote' => "\n\n".$this->indent($this->renderChildren($node))."\n\n",
             'a' => $this->renderLink($node),
+            'img' => $this->renderImage($node),
             'ul' => "\n\n".$this->renderList($node, false)."\n\n",
             'ol' => "\n\n".$this->renderList($node, true)."\n\n",
             'li' => $this->renderChildren($node),
@@ -216,6 +217,23 @@ class EntryExportService
         }
 
         return '['.$text.']('.$href.')';
+    }
+
+    /**
+     * Images become ordinary Markdown image references. The URL is kept as-is,
+     * so an exported note still points at the image while the entry exists.
+     */
+    private function renderImage(\DOMElement $node): string
+    {
+        $src = trim($node->getAttribute('src'));
+
+        if ($src === '') {
+            return '';
+        }
+
+        $alt = trim($node->getAttribute('alt'));
+
+        return "\n\n![".$alt.']('.$src.")\n\n";
     }
 
     private function renderList(\DOMElement $list, bool $ordered): string

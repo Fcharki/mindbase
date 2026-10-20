@@ -1,12 +1,35 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useEditor, EditorContent, useEditorState } from "@tiptap/react";
+import Image from "@tiptap/extension-image";
 import StarterKit from "@tiptap/starter-kit";
+import { toast } from "sonner";
+
+import { uploadEntryImage } from "@/lib/entryImages";
 
 interface TiptapProps {
   content?: string;
+  // Needed to upload an image before the entry exists. Without it the image
+  // button is disabled rather than failing after the file picker closes.
+  workspaceId?: number | string;
   onChange?: (content: string) => void;
+}
+
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+function firstImageFile(files: FileList | null | undefined): File | null {
+  if (!files) {
+    return null;
+  }
+
+  for (const file of Array.from(files)) {
+    if (file.type.startsWith("image/")) {
+      return file;
+    }
+  }
+
+  return null;
 }
 
 interface ToolbarButtonProps {
@@ -161,6 +184,16 @@ function LinkIcon({ className }: IconProps) {
   );
 }
 
+function ImageIcon({ className }: IconProps) {
+  return (
+    <svg {...iconProps} className={className ?? "h-4 w-4"} aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="m21 15-5-5L5 21" />
+    </svg>
+  );
+}
+
 function MinusIcon({ className }: IconProps) {
   return (
     <svg {...iconProps} className={className ?? "h-4 w-4"} aria-hidden="true">
@@ -213,15 +246,50 @@ const DEFAULT_TOOLBAR_STATE = {
   canRedo: false,
 };
 
-const Tiptap = ({ content = "", onChange }: TiptapProps) => {
+const Tiptap = ({ content = "", workspaceId, onChange }: TiptapProps) => {
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const uploadImageRef = useRef<(file: File) => void>(() => {});
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
       }),
+      Image.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: { class: "entry-image" },
+      }),
     ],
     content,
     immediatelyRender: false,
+    editorProps: {
+      // Dropping or pasting a file should insert it where the cursor is,
+      // rather than letting the browser navigate away from the entry.
+      handlePaste: (_view, event) => {
+        const file = firstImageFile(event.clipboardData?.files);
+
+        if (!file) {
+          return false;
+        }
+
+        event.preventDefault();
+        uploadImageRef.current(file);
+        return true;
+      },
+      handleDrop: (_view, event) => {
+        const file = firstImageFile(event.dataTransfer?.files);
+
+        if (!file) {
+          return false;
+        }
+
+        event.preventDefault();
+        uploadImageRef.current(file);
+        return true;
+      },
+    },
     onUpdate: ({ editor: current }) => {
       onChange?.(current.getHTML());
     },
@@ -289,6 +357,51 @@ const Tiptap = ({ content = "", onChange }: TiptapProps) => {
 
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   }
+
+  async function handleImageFile(file: File) {
+    if (!workspaceId) {
+      toast.error("Images can only be added inside a workspace entry.");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image files can be inserted here.");
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Images must be 10 MB or smaller.");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const image = await uploadEntryImage(workspaceId, file);
+
+      editor
+        ?.chain()
+        .focus()
+        .setImage({
+          src: image.url,
+          alt: image.original_name,
+          title: image.original_name,
+        })
+        .run();
+    } catch {
+      toast.error("Could not upload this image.");
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
+  // The editor is created once, so its paste and drop handlers reach the
+  // current upload callback through this ref instead of a stale closure.
+  useEffect(() => {
+    uploadImageRef.current = (file) => {
+      void handleImageFile(file);
+    };
+  });
 
   return (
     <div className="overflow-hidden rounded-lg">
@@ -368,6 +481,32 @@ const Tiptap = ({ content = "", onChange }: TiptapProps) => {
           onClick={handleLink}
         >
           <LinkIcon />
+        </ToolbarButton>
+
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/gif,image/webp"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+
+            // Let the same file be picked again after a failed upload.
+            event.target.value = "";
+
+            if (file) {
+              void handleImageFile(file);
+            }
+          }}
+        />
+
+        <ToolbarButton
+          label="Insert image"
+          title={uploadingImage ? "Uploading image…" : "Insert image"}
+          disabled={uploadingImage || !workspaceId}
+          onClick={() => imageInputRef.current?.click()}
+        >
+          <ImageIcon />
         </ToolbarButton>
 
         <ToolbarButton label="Horizontal rule" title="Horizontal rule" onClick={() => editor?.chain().focus().setHorizontalRule().run()}>

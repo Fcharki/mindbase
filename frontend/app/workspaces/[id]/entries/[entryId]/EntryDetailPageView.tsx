@@ -688,6 +688,7 @@ export function EntryDetailPageView({
             title="Title"
             heading="Edit entry"
             eyebrow={workspace.name}
+            workspaceId={workspaceId}
             initialTitle={entry.title}
             initialContent={entry.content ?? ""}
             submitLabel="Save changes"

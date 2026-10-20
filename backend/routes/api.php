@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EmailAuthController;
+use App\Http\Controllers\EntryImageController;
 use App\Http\Controllers\KnowledgeEntryController;
 use App\Http\Controllers\MembershipRequestController;
 use App\Http\Controllers\NotificationController;
@@ -140,6 +141,20 @@ Route::get('users/{user}/photo', [
 
 /*
 |--------------------------------------------------------------------------
+| Public Entry Images
+|--------------------------------------------------------------------------
+| Inline images in entry content are loaded by the browser from an <img> tag,
+| which cannot attach a Sanctum session. The UUID route key keeps them
+| unguessable, and only raster formats are accepted at upload time.
+*/
+
+Route::get('entry-images/{entryImage}', [
+    EntryImageController::class,
+    'show',
+])->name('entry-images.show');
+
+/*
+|--------------------------------------------------------------------------
 | Profile API
 |--------------------------------------------------------------------------
 | Sits in the web middleware group like the other session-auth routes, since
@@ -174,6 +189,13 @@ Route::middleware('auth:sanctum')->group(function () {
     | Workspace membership (owner-managed)
     |----------------------------------------------------------------------
     */
+
+    // Upload an image that will be embedded in entry content. Kept at the
+    // workspace level so an image can be added before a new entry exists.
+    Route::post('workspaces/{workspace}/images', [
+        EntryImageController::class,
+        'store',
+    ]);
 
     Route::post('workspaces/{workspace}/join', [
         WorkspaceController::class,

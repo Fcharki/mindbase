@@ -151,7 +151,12 @@ class DocumentUploadTest extends TestCase
         $workspace = $this->workspace();
         $entry = $this->entry($workspace, $workspace->owner);
 
-        foreach (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md', 'csv'] as $extension) {
+        $extensions = [
+            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md', 'csv',
+            'jpg', 'jpeg', 'png', 'gif', 'webp',
+        ];
+
+        foreach ($extensions as $extension) {
             $this->actingAs($workspace->owner)
                 ->postJson($this->url($workspace, $entry), [
                     'file' => UploadedFile::fake()->create("file.{$extension}", 4),
@@ -159,7 +164,7 @@ class DocumentUploadTest extends TestCase
                 ->assertCreated();
         }
 
-        $this->assertSame(10, Document::count());
+        $this->assertSame(count($extensions), Document::count());
     }
 
     public function test_a_member_can_upload_but_a_viewer_cannot(): void

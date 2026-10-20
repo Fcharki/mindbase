@@ -230,7 +230,7 @@ export function DocumentPanel({
               onChange={handleUpload}
               disabled={uploading}
               className="hidden"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.csv"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.csv,.jpg,.jpeg,.png,.gif,.webp"
             />
 
             <button

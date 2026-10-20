@@ -17,6 +17,7 @@ use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
 use App\Services\AI\BackendBudget;
 use App\Services\EntryExportService;
+use App\Services\EntryImageService;
 use App\Services\EntryTagSuggestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,6 +57,10 @@ class KnowledgeEntryController extends Controller
             'content' => $validated['content'] ?? null,
             'created_by' => $request->user()->id,
         ]);
+
+        // Images can be uploaded before the entry exists, so attach the ones
+        // the saved content references now.
+        app(EntryImageService::class)->sync($knowledgeEntry);
 
         app(ScheduleEntrySummary::class, ['entry' => $knowledgeEntry])->handle();
 
@@ -100,6 +105,10 @@ class KnowledgeEntryController extends Controller
             'title' => $validated['title'],
             'content' => $validated['content'] ?? null,
         ]);
+
+        // Keep the image rows (and their files) in step with what the editor
+        // actually saved.
+        app(EntryImageService::class)->sync($entry);
 
         if ($previousContent !== ($validated['content'] ?? null)) {
             app(ScheduleEntrySummary::class, ['entry' => $entry])->handle();
