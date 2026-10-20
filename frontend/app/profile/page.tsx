@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
+import type { User } from "@/lib/auth";
 import {
   deleteAccount,
   removeProfilePhoto,
@@ -51,47 +52,28 @@ function errorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export default function ProfilePage() {
-  const router = useRouter();
-  const { user, loading: authLoading, refreshUser } = useAuth();
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
-  const [location, setLocation] = useState("");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+/**
+ * The editable part of the profile.
+ *
+ * It owns the form state instead of syncing it from `user` in an effect: the
+ * page only renders this once a user is loaded, and `key={user.id}` gives a
+ * fresh form if the account ever changes.
+ */
+function ProfileDetails({
+  user,
+  refreshUser,
+}: {
+  user: User;
+  refreshUser: () => Promise<void>;
+}) {
+  const [name, setName] = useState(user.name);
+  const [email, setEmail] = useState(user.email);
+  const [bio, setBio] = useState(user.bio ?? "");
+  const [location, setLocation] = useState(user.location ?? "");
+  const [photoUrl, setPhotoUrl] = useState(user.photo_url);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [savingPassword, setSavingPassword] = useState(false);
-
-  const [deleteEmail, setDeleteEmail] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    setName(user.name);
-    setEmail(user.email);
-    setBio(user.bio ?? "");
-    setLocation(user.location ?? "");
-    setPhotoUrl(user.photo_url);
-  }, [user]);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/auth/login");
-    }
-  }, [authLoading, user, router]);
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -159,6 +141,168 @@ export default function ProfilePage() {
       setPhotoBusy(false);
     }
   }
+
+  return (
+    <>
+      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-[#E7E6ED] dark:border-[#2a2a31] bg-[#F2F0EA]/60 dark:bg-[#121214]/60 p-4 sm:flex-row sm:items-center">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EEEDFF] dark:bg-[#262449] text-2xl font-semibold text-[#5146E5]">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt={`${user.name}'s profile photo`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            user.name.charAt(0).toUpperCase()
+          )}
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label
+              className={`inline-flex items-center justify-center rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-2 text-sm font-medium text-[#20202A] dark:text-[#ececf1] transition hover:border-[#5146E5] hover:text-[#5146E5] ${
+                photoBusy
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }`}
+            >
+              {photoBusy ? "Uploading…" : "Change photo"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={handlePhotoSelected}
+                disabled={photoBusy}
+              />
+            </label>
+
+            {photoUrl && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                disabled={photoBusy}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#FCECEF] dark:hover:bg-[#43212b] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs leading-relaxed text-[#9897A1] dark:text-[#8b8b94]">
+            PNG, JPG or WebP, up to 2 MB.
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleProfileSubmit} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="name" className={labelClass}>
+            Name
+          </label>
+          <input
+            id="name"
+            type="text"
+            required
+            autoComplete="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className={labelClass}>
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="bio" className={labelClass}>
+            Bio
+          </label>
+          <textarea
+            id="bio"
+            rows={4}
+            maxLength={1000}
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+            placeholder="A short introduction other workspace viewers will see."
+            className={`${inputClass} h-auto min-h-28 resize-y py-3`}
+          />
+          <p className="text-xs text-[#9897A1] dark:text-[#8b8b94]">
+            {bio.length}/1000 characters
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="location" className={labelClass}>
+            Location
+          </label>
+          <input
+            id="location"
+            type="text"
+            maxLength={120}
+            autoComplete="address-level2"
+            value={location}
+            onChange={(event) => setLocation(event.target.value)}
+            placeholder="City or region"
+            className={inputClass}
+          />
+        </div>
+
+        {profileError && (
+          <p
+            role="alert"
+            className="rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
+          >
+            {profileError}
+          </p>
+        )}
+
+        <div>
+          <button
+            type="submit"
+            disabled={savingProfile}
+            className="inline-flex items-center justify-center rounded-lg bg-[#5146E5] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {savingProfile ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </form>
+    </>
+  );
+}
+
+export default function ProfilePage() {
+  const router = useRouter();
+  const { user, loading: authLoading, refreshUser } = useAuth();
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/auth/login");
+    }
+  }, [authLoading, user, router]);
 
   async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -266,141 +410,11 @@ export default function ProfilePage() {
             </p>
           )}
 
-          <div className="mb-6 flex flex-col gap-4 rounded-xl border border-[#E7E6ED] dark:border-[#2a2a31] bg-[#F2F0EA]/60 dark:bg-[#121214]/60 p-4 sm:flex-row sm:items-center">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EEEDFF] dark:bg-[#262449] text-2xl font-semibold text-[#5146E5]">
-              {photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={photoUrl}
-                  alt={`${user.name}'s profile photo`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                user.name.charAt(0).toUpperCase()
-              )}
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <label
-                  className={`inline-flex items-center justify-center rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-2 text-sm font-medium text-[#20202A] dark:text-[#ececf1] transition hover:border-[#5146E5] hover:text-[#5146E5] ${
-                    photoBusy
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }`}
-                >
-                  {photoBusy ? "Uploading…" : "Change photo"}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="sr-only"
-                    onChange={handlePhotoSelected}
-                    disabled={photoBusy}
-                  />
-                </label>
-
-                {photoUrl && (
-                  <button
-                    type="button"
-                    onClick={handleRemovePhoto}
-                    disabled={photoBusy}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#FCECEF] dark:hover:bg-[#43212b] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-
-              <p className="text-xs leading-relaxed text-[#9897A1] dark:text-[#8b8b94]">
-                PNG, JPG or WebP, up to 2 MB.
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleProfileSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="name" className={labelClass}>
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                required
-                autoComplete="name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                className={inputClass}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className={labelClass}>
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className={inputClass}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="bio" className={labelClass}>
-                Bio
-              </label>
-              <textarea
-                id="bio"
-                rows={4}
-                maxLength={1000}
-                value={bio}
-                onChange={(event) => setBio(event.target.value)}
-                placeholder="A short introduction other workspace viewers will see."
-                className={`${inputClass} h-auto min-h-28 resize-y py-3`}
-              />
-              <p className="text-xs text-[#9897A1] dark:text-[#8b8b94]">
-                {bio.length}/1000 characters
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="location" className={labelClass}>
-                Location
-              </label>
-              <input
-                id="location"
-                type="text"
-                maxLength={120}
-                autoComplete="address-level2"
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                placeholder="City or region"
-                className={inputClass}
-              />
-            </div>
-
-            {profileError && (
-              <p
-                role="alert"
-                className="rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
-              >
-                {profileError}
-              </p>
-            )}
-
-            <div>
-              <button
-                type="submit"
-                disabled={savingProfile}
-                className="inline-flex items-center justify-center rounded-lg bg-[#5146E5] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {savingProfile ? "Saving…" : "Save changes"}
-              </button>
-            </div>
-          </form>
+          <ProfileDetails
+            key={user.id}
+            user={user}
+            refreshUser={refreshUser}
+          />
         </section>
 
         <section className={`mt-6 ${cardClass}`}>
