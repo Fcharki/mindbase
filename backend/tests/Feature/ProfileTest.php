@@ -6,8 +6,10 @@ use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -160,5 +162,165 @@ class ProfileTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
+
+    public function test_it_updates_bio_and_location(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->patchJson('/api/v1/profile', [
+                'name' => $user->name,
+                'email' => $user->email,
+                'bio' => 'Backend engineer who likes small tools.',
+                'location' => 'Casablanca, Morocco',
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.bio', 'Backend engineer who likes small tools.')
+            ->assertJsonPath('user.location', 'Casablanca, Morocco');
+
+        $this->assertSame(
+            'Backend engineer who likes small tools.',
+            $user->fresh()->bio
+        );
+    }
+
+    public function test_bio_and_location_can_be_cleared(): void
+    {
+        $user = User::factory()->create([
+            'bio' => 'Old bio',
+            'location' => 'Old location',
+        ]);
+
+        $this->actingAs($user)
+            ->patchJson('/api/v1/profile', [
+                'name' => $user->name,
+                'email' => $user->email,
+                'bio' => null,
+                'location' => null,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.bio', null)
+            ->assertJsonPath('user.location', null);
+    }
+
+    public function test_it_uploads_replaces_and_removes_a_profile_photo(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/api/v1/profile/photo', [
+                'photo' => UploadedFile::fake()->createWithContent(
+                    'avatar.png',
+                    $this->pngBytes()
+                ),
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('message', 'Photo updated.');
+
+        $firstPath = $user->fresh()->photo_path;
+
+        $this->assertNotNull($firstPath);
+        Storage::disk('local')->assertExists($firstPath);
+
+        $this->actingAs($user)
+            ->post('/api/v1/profile/photo', [
+                'photo' => UploadedFile::fake()->createWithContent(
+                    'avatar.png',
+                    $this->pngBytes()
+                ),
+            ], ['Accept' => 'application/json'])
+            ->assertOk();
+
+        $secondPath = $user->fresh()->photo_path;
+
+        $this->assertNotSame($firstPath, $secondPath);
+        Storage::disk('local')->assertMissing($firstPath);
+
+        $this->actingAs($user)
+            ->deleteJson('/api/v1/profile/photo')
+            ->assertOk()
+            ->assertJsonPath('user.photo_url', null);
+
+        $this->assertNull($user->fresh()->photo_path);
+        Storage::disk('local')->assertMissing($secondPath);
+    }
+
+    public function test_a_photo_is_rejected_when_it_is_not_an_image(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/api/v1/profile/photo', [
+                'photo' => UploadedFile::fake()->createWithContent(
+                    'notes.txt',
+                    'not an image'
+                ),
+            ], ['Accept' => 'application/json'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('photo');
+    }
+
+    public function test_a_photo_is_served_without_a_session(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create([
+            'photo_path' => 'profile-photos/1/avatar.png',
+        ]);
+
+        Storage::disk('local')->put($user->photo_path, $this->pngBytes());
+
+        $this->get("/api/v1/users/{$user->id}/photo")
+            ->assertOk()
+            ->assertHeader('content-type', 'image/png');
+    }
+
+    public function test_a_missing_photo_is_not_found(): void
+    {
+        $user = User::factory()->create();
+
+        $this->get("/api/v1/users/{$user->id}/photo")->assertNotFound();
+    }
+
+    public function test_a_viewer_sees_the_owners_public_profile(): void
+    {
+        $owner = User::factory()->create([
+            'bio' => 'Builds things.',
+            'location' => 'Rabat',
+            'photo_path' => 'profile-photos/owner/avatar.png',
+        ]);
+
+        $workspace = Workspace::create([
+            'name' => 'Acme',
+            'owner_id' => $owner->id,
+        ]);
+
+        $workspace->members()->attach($owner->id, ['role' => 'owner']);
+
+        $viewer = User::factory()->create();
+
+        $this->actingAs($viewer)
+            ->getJson("/api/v1/workspaces/{$workspace->id}")
+            ->assertOk()
+            ->assertJsonPath('data.owner.name', $owner->name)
+            ->assertJsonPath('data.owner.bio', 'Builds things.')
+            ->assertJsonPath('data.owner.location', 'Rabat')
+            ->assertJsonPath(
+                'data.owner.photo_url',
+                route('users.photo', ['user' => $owner->id])
+            );
+    }
+
+    private function pngBytes(): string
+    {
+        return base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8'
+            .'/x8AAusB9Wl2n0kAAAAASUVORK5CYII='
+        );
     }
 }

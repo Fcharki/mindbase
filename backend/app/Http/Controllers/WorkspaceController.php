@@ -277,7 +277,7 @@ class WorkspaceController extends Controller
                     ->where('status', MembershipRequest::STATUS_PENDING)
                     ->limit(1),
                 ])
-                ->with('owner:id,name,email')
+                ->with('owner:id,name,email,bio,location,photo_path')
                 ->withCount(['knowledgeEntries as entries_count'])
                 ->orderBy('workspaces.name')
                 ->get()
@@ -331,7 +331,7 @@ class WorkspaceController extends Controller
         ])->handle();
 
         return WorkspaceResource::make(
-            $workspace->load('owner:id,name,email')
+            $workspace->load('owner:id,name,email,bio,location,photo_path')
         )->response()->setStatusCode(201);
     }
 
@@ -339,7 +339,7 @@ class WorkspaceController extends Controller
     {
         Gate::authorize('view', $workspace);
 
-        $workspace->load(['owner:id,name,email', 'members:id,name,email']);
+        $workspace->load(['owner:id,name,email,bio,location,photo_path', 'members:id,name,email']);
 
         return WorkspaceResource::make($workspace);
     }
@@ -352,7 +352,7 @@ class WorkspaceController extends Controller
 
         $workspace->update($request->validated());
 
-        $workspace->load('owner:id,name,email');
+        $workspace->load('owner:id,name,email,bio,location,photo_path');
 
         return WorkspaceResource::make($workspace);
     }

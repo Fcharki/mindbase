@@ -23,6 +23,10 @@ class UserWithEmailResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            // Read-only profile details a viewer sees for a workspace owner.
+            'bio' => $this->bio,
+            'location' => $this->location,
+            'photo_url' => $this->photoUrl(),
         ];
     }
 }

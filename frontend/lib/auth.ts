@@ -6,6 +6,9 @@ export interface User {
   email: string;
   email_verified_at: string | null;
   has_password: boolean;
+  bio: string | null;
+  location: string | null;
+  photo_url: string | null;
 }
 
 export async function login(

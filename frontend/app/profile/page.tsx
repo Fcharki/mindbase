@@ -2,7 +2,12 @@
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import {
   AlertTriangle,
   KeyRound,
@@ -13,7 +18,13 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
-import { deleteAccount, updatePassword, updateProfile } from "@/lib/profile";
+import {
+  deleteAccount,
+  removeProfilePhoto,
+  updatePassword,
+  updateProfile,
+  uploadProfilePhoto,
+} from "@/lib/profile";
 
 const inputClass =
   "h-11 w-full rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-3.5 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]";
@@ -46,6 +57,10 @@ export default function ProfilePage() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -67,6 +82,9 @@ export default function ProfilePage() {
 
     setName(user.name);
     setEmail(user.email);
+    setBio(user.bio ?? "");
+    setLocation(user.location ?? "");
+    setPhotoUrl(user.photo_url);
   }, [user]);
 
   useEffect(() => {
@@ -82,7 +100,12 @@ export default function ProfilePage() {
     setProfileError(null);
 
     try {
-      const result = await updateProfile({ name, email });
+      const result = await updateProfile({
+        name,
+        email,
+        bio: bio.trim() || null,
+        location: location.trim() || null,
+      });
       await refreshUser();
       toast.success(result.message);
     } catch (error) {
@@ -91,6 +114,49 @@ export default function ProfilePage() {
       );
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  async function handlePhotoSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    setPhotoBusy(true);
+    setProfileError(null);
+
+    try {
+      const result = await uploadProfilePhoto(file);
+      setPhotoUrl(result.user.photo_url);
+      await refreshUser();
+      toast.success(result.message);
+    } catch (error) {
+      setProfileError(
+        errorMessage(error, "Could not update your photo."),
+      );
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  async function handleRemovePhoto() {
+    setPhotoBusy(true);
+    setProfileError(null);
+
+    try {
+      const result = await removeProfilePhoto();
+      setPhotoUrl(result.user.photo_url);
+      await refreshUser();
+      toast.success(result.message);
+    } catch (error) {
+      setProfileError(
+        errorMessage(error, "Could not remove your photo."),
+      );
+    } finally {
+      setPhotoBusy(false);
     }
   }
 
@@ -171,8 +237,8 @@ export default function ProfilePage() {
             Your profile
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9] sm:text-base">
-            Manage the name and email on your account, change your password,
-            or delete the account entirely.
+            Manage your photo, name, bio, location and email, change your
+            password, or delete the account entirely.
           </p>
         </header>
 
@@ -199,6 +265,57 @@ export default function ProfilePage() {
               Your email address is not verified yet.
             </p>
           )}
+
+          <div className="mb-6 flex flex-col gap-4 rounded-xl border border-[#E7E6ED] dark:border-[#2a2a31] bg-[#F2F0EA]/60 dark:bg-[#121214]/60 p-4 sm:flex-row sm:items-center">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EEEDFF] dark:bg-[#262449] text-2xl font-semibold text-[#5146E5]">
+              {photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoUrl}
+                  alt={`${user.name}'s profile photo`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                user.name.charAt(0).toUpperCase()
+              )}
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <label
+                  className={`inline-flex items-center justify-center rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-2 text-sm font-medium text-[#20202A] dark:text-[#ececf1] transition hover:border-[#5146E5] hover:text-[#5146E5] ${
+                    photoBusy
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }`}
+                >
+                  {photoBusy ? "Uploading…" : "Change photo"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={handlePhotoSelected}
+                    disabled={photoBusy}
+                  />
+                </label>
+
+                {photoUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    disabled={photoBusy}
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#FCECEF] dark:hover:bg-[#43212b] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              <p className="text-xs leading-relaxed text-[#9897A1] dark:text-[#8b8b94]">
+                PNG, JPG or WebP, up to 2 MB.
+              </p>
+            </div>
+          </div>
 
           <form onSubmit={handleProfileSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
@@ -227,6 +344,40 @@ export default function ProfilePage() {
                 autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                className={inputClass}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="bio" className={labelClass}>
+                Bio
+              </label>
+              <textarea
+                id="bio"
+                rows={4}
+                maxLength={1000}
+                value={bio}
+                onChange={(event) => setBio(event.target.value)}
+                placeholder="A short introduction other workspace viewers will see."
+                className={`${inputClass} h-auto min-h-28 resize-y py-3`}
+              />
+              <p className="text-xs text-[#9897A1] dark:text-[#8b8b94]">
+                {bio.length}/1000 characters
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="location" className={labelClass}>
+                Location
+              </label>
+              <input
+                id="location"
+                type="text"
+                maxLength={120}
+                autoComplete="address-level2"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder="City or region"
                 className={inputClass}
               />
             </div>

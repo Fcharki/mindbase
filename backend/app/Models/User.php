@@ -26,6 +26,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'google_id',
         'email_verified_at',
+        'bio',
+        'location',
     ];
 
     /**
@@ -54,6 +56,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function ownedWorkspaces()
     {
         return $this->hasMany(Workspace::class, 'owner_id');
+    }
+
+    /**
+     * The public URL of the uploaded photo, or null when none was uploaded.
+     */
+    public function photoUrl(): ?string
+    {
+        return $this->photo_path === null
+            ? null
+            : route('users.photo', ['user' => $this->getKey()]);
     }
 
     public function workspaces()

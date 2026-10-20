@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Profile\DeleteProfileRequest;
 use App\Http\Requests\Profile\UpdatePasswordRequest;
+use App\Http\Requests\Profile\UpdatePhotoRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\Auth\EmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProfileController extends Controller
 {
@@ -43,6 +47,14 @@ class ProfileController extends Controller
 
         $user->name = $validated['name'];
 
+        if (array_key_exists('bio', $validated)) {
+            $user->bio = $validated['bio'];
+        }
+
+        if (array_key_exists('location', $validated)) {
+            $user->location = $validated['location'];
+        }
+
         if ($emailChanged) {
             $user->email = $validated['email'];
             $user->email_verified_at = null;
@@ -59,6 +71,77 @@ class ProfileController extends Controller
                 ? 'Profile updated. Check your new email address to verify it.'
                 : 'Profile updated.',
             'user' => UserResource::make($user->fresh()),
+        ]);
+    }
+
+    /**
+     * Store a new profile photo, replacing the previous one.
+     */
+    public function updatePhoto(UpdatePhotoRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $disk = Storage::disk('local');
+        $previousPath = $user->photo_path;
+
+        $path = $request->file('photo')->store(
+            'profile-photos/'.$user->getKey(),
+            'local'
+        );
+
+        if ($path === false) {
+            abort(500, 'The photo could not be stored.');
+        }
+
+        $user->photo_path = $path;
+        $user->save();
+
+        if ($previousPath !== null) {
+            $disk->delete($previousPath);
+        }
+
+        return response()->json([
+            'message' => 'Photo updated.',
+            'user' => UserResource::make($user->fresh()),
+        ]);
+    }
+
+    /**
+     * Remove the profile photo.
+     */
+    public function destroyPhoto(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->photo_path !== null) {
+            Storage::disk('local')->delete($user->photo_path);
+
+            $user->photo_path = null;
+            $user->save();
+        }
+
+        return response()->json([
+            'message' => 'Photo removed.',
+            'user' => UserResource::make($user->fresh()),
+        ]);
+    }
+
+    /**
+     * Serve a user's photo.
+     *
+     * Photos are deliberately public: they are part of the read-only profile a
+     * viewer sees for a workspace owner. Streaming them keeps the private
+     * storage directory out of the web root.
+     */
+    public function photo(User $user): StreamedResponse
+    {
+        abort_if($user->photo_path === null, 404);
+
+        $disk = Storage::disk('local');
+
+        abort_unless($disk->exists($user->photo_path), 404);
+
+        return $disk->response($user->photo_path, headers: [
+            'Cache-Control' => 'public, max-age=86400',
         ]);
     }
 

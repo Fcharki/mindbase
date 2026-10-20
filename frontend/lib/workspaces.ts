@@ -6,6 +6,9 @@ export interface WorkspaceOwner {
   id: number;
   name: string;
   email: string;
+  bio: string | null;
+  location: string | null;
+  photo_url: string | null;
 }
 
 export interface WorkspaceMember {

@@ -8,6 +8,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
+import {
+  OwnerAvatar,
+  OwnerProfileDialog,
+} from "@/app/features/workspaces/OwnerProfileDialog";
 import { EntryList } from "@/app/features/knowledge/components/EntryList";
 import { SearchPanel } from "@/app/features/search/SearchPanel";
 import { AssistantPanel } from "@/app/features/assistant/AssistantPanel";
@@ -70,6 +74,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const [addingMember, setAddingMember] = useState(false);
   const [requestsError, setRequestsError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [ownerProfileOpen, setOwnerProfileOpen] = useState(false);
 
   const permissions = permissionsFor(workspace?.role, workspace?.is_member);
   const isOwner = permissions.isOwner;
@@ -425,10 +430,31 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                   {workspace.role && <RoleBadge role={workspace.role} />}
                 </div>
 
-                <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
-                  Owned by {workspace.owner.name} · created{" "}
-                  {new Date(workspace.created_at).toLocaleDateString()}
-                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
+                  <button
+                    type="button"
+                    onClick={() => setOwnerProfileOpen(true)}
+                    aria-label={`View ${workspace.owner.name}'s profile`}
+                    className="group flex min-w-0 items-center gap-2 rounded-full border border-transparent py-1 pl-1 pr-3 transition hover:border-[#D7D5DE] hover:bg-[#F2F0EA] dark:hover:border-[#34343c] dark:hover:bg-[#24242a]"
+                  >
+                    <OwnerAvatar
+                      owner={workspace.owner}
+                      className="h-7 w-7 text-xs"
+                    />
+                    <span className="truncate">
+                      Owned by{" "}
+                      <span className="font-medium text-[#5146E5] group-hover:underline">
+                        {workspace.owner.name}
+                      </span>
+                    </span>
+                  </button>
+
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    created{" "}
+                    {new Date(workspace.created_at).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -872,6 +898,13 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
           </section>
         )}
       </main>
+
+      {ownerProfileOpen && workspace && (
+        <OwnerProfileDialog
+          owner={workspace.owner}
+          onClose={() => setOwnerProfileOpen(false)}
+        />
+      )}
     </div>
   );
 }

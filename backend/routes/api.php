@@ -126,6 +126,20 @@ Route::get('join/{inviteCode}', [
 
 /*
 |--------------------------------------------------------------------------
+| Public Profile Photo
+|--------------------------------------------------------------------------
+| A viewer sees the workspace owner's photo on the read-only profile, so the
+| image itself must not require a session. The file is streamed from private
+| storage by the controller.
+*/
+
+Route::get('users/{user}/photo', [
+    ProfileController::class,
+    'photo',
+])->name('users.photo');
+
+/*
+|--------------------------------------------------------------------------
 | Profile API
 |--------------------------------------------------------------------------
 | Sits in the web middleware group like the other session-auth routes, since
@@ -136,6 +150,10 @@ Route::middleware(['web', 'auth:sanctum'])->group(function () {
     Route::get('profile', [ProfileController::class, 'show']);
 
     Route::patch('profile', [ProfileController::class, 'update']);
+
+    Route::post('profile/photo', [ProfileController::class, 'updatePhoto']);
+
+    Route::delete('profile/photo', [ProfileController::class, 'destroyPhoto']);
 
     Route::patch('profile/password', [ProfileController::class, 'updatePassword']);
 

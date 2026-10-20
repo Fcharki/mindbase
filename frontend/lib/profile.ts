@@ -10,12 +10,43 @@ export async function getProfile(): Promise<User> {
 export async function updateProfile(input: {
   name: string;
   email: string;
+  bio: string | null;
+  location: string | null;
 }): Promise<{ user: User; message: string }> {
   await fetchCsrfCookie();
 
   const response = await api.patch<{ user: User; message: string }>(
     "/profile",
     input,
+  );
+
+  return response.data;
+}
+
+export async function uploadProfilePhoto(
+  photo: File,
+): Promise<{ user: User; message: string }> {
+  await fetchCsrfCookie();
+
+  const body = new FormData();
+  body.append("photo", photo);
+
+  const response = await api.post<{ user: User; message: string }>(
+    "/profile/photo",
+    body,
+  );
+
+  return response.data;
+}
+
+export async function removeProfilePhoto(): Promise<{
+  user: User;
+  message: string;
+}> {
+  await fetchCsrfCookie();
+
+  const response = await api.delete<{ user: User; message: string }>(
+    "/profile/photo",
   );
 
   return response.data;
