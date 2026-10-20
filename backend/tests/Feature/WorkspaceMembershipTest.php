@@ -200,7 +200,9 @@ class WorkspaceMembershipTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->postJson("/api/v1/workspaces/{$workspace->id}/join")
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join", [
+                'invite_code' => $workspace->invite_code,
+            ])
             ->assertCreated()
             ->assertJsonPath('data.role', 'member');
 
@@ -211,6 +213,38 @@ class WorkspaceMembershipTest extends TestCase
         ]);
     }
 
+    public function test_user_cannot_join_without_the_invite_code(): void
+    {
+        $workspace = $this->workspace();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join")
+            ->assertUnprocessable();
+
+        $this->assertDatabaseMissing('workspace_members', [
+            'workspace_id' => $workspace->id,
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function test_user_cannot_join_with_a_wrong_invite_code(): void
+    {
+        $workspace = $this->workspace();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join", [
+                'invite_code' => 'not-the-real-code',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('workspace_members', [
+            'workspace_id' => $workspace->id,
+            'user_id' => $user->id,
+        ]);
+    }
+
     public function test_joining_promotes_an_existing_viewer_to_member(): void
     {
         $workspace = $this->workspace();
@@ -218,7 +252,9 @@ class WorkspaceMembershipTest extends TestCase
         $workspace->members()->attach($viewer->id, ['role' => 'viewer']);
 
         $this->actingAs($viewer)
-            ->postJson("/api/v1/workspaces/{$workspace->id}/join")
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join", [
+                'invite_code' => $workspace->invite_code,
+            ])
             ->assertOk()
             ->assertJsonPath('data.role', 'member');
 

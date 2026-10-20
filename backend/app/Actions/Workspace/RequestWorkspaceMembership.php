@@ -6,6 +6,7 @@ use App\Actions\Action;
 use App\Models\MembershipRequest;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 
 class RequestWorkspaceMembership implements Action
 {
@@ -25,10 +26,16 @@ class RequestWorkspaceMembership implements Action
      */
     public function handle(): MembershipRequest
     {
-        return $this->workspace->membershipRequests()->create([
+        $membershipRequest = $this->workspace->membershipRequests()->create([
             'user_id' => $this->user->id,
             'status' => MembershipRequest::STATUS_PENDING,
             'requested_role' => $this->role ?? 'member',
         ]);
+
+        // The index exposes the caller's pending request, so the version that
+        // caches their workspace list has to be replaced before they reload.
+        app(WorkspaceIndexCache::class)->flush();
+
+        return $membershipRequest;
     }
 }

@@ -34,6 +34,10 @@ class WorkspaceResource extends JsonResource
             // viewer and a stranger are both reported as "viewer", and the
             // frontend needs to tell those apart to explain a 403.
             'is_member' => $role !== null,
+            // Only the pending state is exposed: it lets the workspace picker
+            // show "Request pending" instead of offering a button that would
+            // just 409, without revealing anything about other callers.
+            'join_request_status' => $this->resource->current_user_join_request_status ?? null,
             'owner' => UserWithEmailResource::make($this->whenLoaded('owner')),
             // Counted under an alias, so it is matched by name rather than
             // through whenCounted(), which derives the attribute from the

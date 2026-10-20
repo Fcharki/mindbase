@@ -12,6 +12,7 @@ use App\Http\Requests\Workspace\WorkspaceRequest;
 use App\Http\Resources\JoinableWorkspaceResource;
 use App\Http\Resources\WorkspaceResource;
 use App\Models\AssistantMessage;
+use App\Models\MembershipRequest;
 use App\Models\Workspace;
 use App\Services\WorkspaceIndexCache;
 use Illuminate\Database\Query\JoinClause;
@@ -269,6 +270,13 @@ class WorkspaceController extends Controller
                 })
                 ->addSelect('workspaces.*')
                 ->addSelect('current_user_membership.role as current_user_role')
+                ->addSelect(['current_user_join_request_status' => MembershipRequest::query()
+                    ->select('status')
+                    ->whereColumn('workspace_id', 'workspaces.id')
+                    ->where('user_id', $user->id)
+                    ->where('status', MembershipRequest::STATUS_PENDING)
+                    ->limit(1),
+                ])
                 ->with('owner:id,name,email')
                 ->withCount(['knowledgeEntries as entries_count'])
                 ->orderBy('workspaces.name')
@@ -280,6 +288,21 @@ class WorkspaceController extends Controller
 
     public function join(Request $request, Workspace $workspace): JsonResponse
     {
+        // The only legitimate direct join is redeeming an invite code. Without
+        // the code this endpoint would let any authenticated user add
+        // themselves to any workspace by id, so it is checked here and not left
+        // to the client.
+        $validated = $request->validate([
+            'invite_code' => ['required', 'string'],
+        ]);
+
+        abort_unless(
+            $workspace->invite_code !== null
+                && hash_equals($workspace->invite_code, $validated['invite_code']),
+            403,
+            'A valid invite code is required to join this workspace.'
+        );
+
         $user = $request->user();
 
         $created = app(JoinWorkspace::class, [

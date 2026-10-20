@@ -10,8 +10,8 @@ import { CreateWorkspaceForm } from "@/app/features/workspaces/CreateWorkspaceFo
 import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import {
-  joinWorkspace,
   listWorkspaces,
+  requestJoin,
   Workspace,
 } from "@/lib/workspaces";
 
@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null);
   const [query, setQuery] = useState("");
   const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [joiningId, setJoiningId] = useState<number | null>(null);
+  const [requestingId, setRequestingId] = useState<number | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,34 +94,48 @@ export default function DashboardPage() {
     );
   }, [query, workspaces]);
 
-  async function handleJoin(workspaceId: number) {
-    setJoiningId(workspaceId);
+  async function handleRequestJoin(workspaceId: number) {
+    setRequestingId(workspaceId);
     setJoinError(null);
 
     try {
-      const result = await joinWorkspace(workspaceId);
+      await requestJoin(workspaceId, "member");
 
-      setWorkspaces((current) => {
-        if (!current) {
-          return current;
-        }
-
-        return current.map((workspace) =>
-          workspace.id === workspaceId
-            ? { ...workspace, role: result.role }
-            : workspace,
-        );
-      });
+      markRequestPending(workspaceId);
     } catch (requestError: unknown) {
+      // A duplicate request is not a failure from the caller's point of view:
+      // the row is still pending, so show the same state as a fresh request.
+      if (
+        axios.isAxiosError(requestError) &&
+        requestError.response?.status === 409
+      ) {
+        markRequestPending(workspaceId);
+        return;
+      }
+
       const message = axios.isAxiosError(requestError)
         ? (requestError.response?.data as { message?: string } | undefined)
             ?.message
         : undefined;
 
-      setJoinError(message ?? "Could not join this workspace.");
+      setJoinError(message ?? "Could not send your join request.");
     } finally {
-      setJoiningId(null);
+      setRequestingId(null);
     }
+  }
+
+  function markRequestPending(workspaceId: number) {
+    setWorkspaces((current) => {
+      if (!current) {
+        return current;
+      }
+
+      return current.map((workspace) =>
+        workspace.id === workspaceId
+          ? { ...workspace, join_request_status: "pending" as const }
+          : workspace,
+      );
+    });
   }
 
   if (authLoading || !user) {
@@ -150,7 +164,7 @@ export default function DashboardPage() {
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9] sm:text-base">
               Browse every workspace as a viewer, read its knowledge entries,
-              and join the ones you want to help build.
+              and request to join the ones you want to help build.
             </p>
           </div>
 
@@ -226,7 +240,7 @@ export default function DashboardPage() {
                   ? `${filteredWorkspaces.length} ${filteredWorkspaces.length === 1 ? "workspace" : "workspaces"}`
                   : "Loading workspaces…"}
               </span>
-              <span>Viewing as viewer until you join</span>
+              <span>Owners approve every join request</span>
             </div>
 
             {joinError && (
@@ -287,16 +301,24 @@ export default function DashboardPage() {
                       >
                         View entries
                       </Link>
-                      {workspace.role === "viewer" && (
-                        <button
-                          type="button"
-                          onClick={() => handleJoin(workspace.id)}
-                          disabled={joiningId === workspace.id}
-                          className="rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#ececf1] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {joiningId === workspace.id ? "Joining…" : "Join"}
-                        </button>
-                      )}
+                      {workspace.role === "viewer" &&
+                        !workspace.is_member &&
+                        (workspace.join_request_status === "pending" ? (
+                          <span className="rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-[#F2F0EA] dark:bg-[#24242a] px-4 py-2.5 text-sm font-medium text-[#686873] dark:text-[#b0b0b9]">
+                            Request pending
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleRequestJoin(workspace.id)}
+                            disabled={requestingId === workspace.id}
+                            className="rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#ececf1] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {requestingId === workspace.id
+                              ? "Sending…"
+                              : "Request to join"}
+                          </button>
+                        ))}
                     </div>
                   </article>
                 ))}

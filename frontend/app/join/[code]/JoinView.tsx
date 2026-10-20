@@ -53,7 +53,7 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
     setError(null);
 
     try {
-      await joinWorkspace(workspace.id);
+      await joinWorkspace(workspace.id, workspace.invite_code);
       router.push(`/workspaces/${workspace.id}/entries`);
       router.refresh();
     } catch (requestError: unknown) {

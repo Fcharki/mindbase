@@ -48,6 +48,10 @@ export interface Workspace {
   // False for a caller who is not a member at all, who the API also reports as
   // role "viewer". Needed to explain a 403 instead of rendering a broken panel.
   is_member: boolean;
+  // Set when the caller has an unanswered join request, so the picker can keep
+  // showing "Request pending" after a reload instead of offering the button
+  // again.
+  join_request_status?: "pending" | null;
   owner: WorkspaceOwner;
   members?: WorkspaceMember[];
 }
@@ -96,6 +100,7 @@ export async function getWorkspaceByInviteCode(
 
 export async function joinWorkspace(
   workspaceId: number | string,
+  inviteCode: string,
 ): Promise<{ workspace_id: number; user_id: number; role: WorkspaceRole }> {
   const { data } = await api.post<
     ResourceResponse<{
@@ -103,7 +108,7 @@ export async function joinWorkspace(
       user_id: number;
       role: WorkspaceRole;
     }>
-  >(`/workspaces/${workspaceId}/join`);
+  >(`/workspaces/${workspaceId}/join`, { invite_code: inviteCode });
 
   return data.data;
 }

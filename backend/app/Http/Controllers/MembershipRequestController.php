@@ -10,6 +10,7 @@ use App\Http\Resources\MembershipRequestResource;
 use App\Models\AuditLog;
 use App\Models\MembershipRequest;
 use App\Models\Workspace;
+use App\Services\WorkspaceIndexCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -117,6 +118,9 @@ class MembershipRequestController extends Controller
         );
 
         $membershipRequest->delete();
+
+        // The requester's cached workspace list still reports this as pending.
+        app(WorkspaceIndexCache::class)->flush();
 
         return response()->json([
             'message' => 'Request rejected.',

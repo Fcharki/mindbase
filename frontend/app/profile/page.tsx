@@ -264,7 +264,7 @@ export default function ProfilePage() {
               <p className="text-sm text-[#686873] dark:text-[#b0b0b9]">
                 {user.has_password
                   ? "Use a password you don't use anywhere else."
-                  : "You signed up with Google — set a password to also log in with email."}
+                  : "You signed up with Google, set a password to also log in with email."}
               </p>
             </div>
           </div>
