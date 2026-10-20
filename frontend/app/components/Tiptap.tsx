@@ -37,8 +37,8 @@ function ToolbarButton({
       className={
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition disabled:cursor-not-allowed disabled:opacity-40 " +
         (active
-          ? "bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]"
-          : "text-[#686873] dark:text-[#a3a3a3] hover:bg-[#F2F1F7] dark:hover:bg-[#242424] hover:text-[#20202A]")
+          ? "bg-[#EEEDFF] dark:bg-[#262449] text-[#5146E5]"
+          : "text-[#686873] dark:text-[#b0b0b9] hover:bg-[#F2F1F7] dark:hover:bg-[#2c2c33] hover:text-[#20202A]")
       }
     >
       {children}
@@ -47,7 +47,7 @@ function ToolbarButton({
 }
 
 function ToolbarSeparator() {
-  return <span aria-hidden="true" className="mx-1 h-5 w-px shrink-0 bg-[#E4E3E9] dark:bg-[#2a2a2a]" />;
+  return <span aria-hidden="true" className="mx-1 h-5 w-px shrink-0 bg-[#E4E3E9] dark:bg-[#34343c]" />;
 }
 
 type IconProps = { className?: string };
@@ -292,7 +292,7 @@ const Tiptap = ({ content = "", onChange }: TiptapProps) => {
 
   return (
     <div className="overflow-hidden rounded-lg">
-      <div className="flex flex-wrap items-center gap-1 border-b border-[#DDDCE3] dark:border-[#2a2a2a] bg-[#FBFAF8] dark:bg-[#141414] px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-1 border-b border-[#D7D5DE] dark:border-[#34343c] bg-[#FBFAF8] dark:bg-[#1b1b1f] px-2 py-1.5">
         <select
           aria-label="Block type"
           value={toolbar.headingLevel === null ? "paragraph" : String(toolbar.headingLevel)}
@@ -313,7 +313,7 @@ const Tiptap = ({ content = "", onChange }: TiptapProps) => {
                 .run();
             }
           }}
-          className="h-8 rounded-md border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-2 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
+          className="h-8 rounded-md border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-2 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
         >
           <option value="paragraph">Paragraph</option>
           <option value="1">Heading 1</option>

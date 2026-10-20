@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 function Logomark() {
   return (
@@ -29,28 +30,28 @@ const features = [
     number: "01",
     title: "Capture without friction",
     body: "Jot a thought the moment it happens. No tags to choose and no folder to pick — just write, and sort it out later or never.",
-    bg: "bg-[#EEEDFF] dark:bg-[#211f3d]",
+    bg: "bg-[#EEEDFF] dark:bg-[#262449]",
     accent: "text-[#5146E5]",
   },
   {
     number: "02",
     title: "Notes that link themselves",
     body: "Mindbase reads what you write and quietly draws connections to related notes, so your thinking forms a web instead of a pile.",
-    bg: "bg-[#FCECEF] dark:bg-[#3a1c24]",
+    bg: "bg-[#FCECEF] dark:bg-[#43212b]",
     accent: "text-[#E85D75] dark:text-[#f08098]",
   },
   {
     number: "03",
     title: "Watch an idea take shape",
     body: "Open any note and see the threads running through it — every related entry, source, and earlier version of the thought.",
-    bg: "bg-[#EAF7F6] dark:bg-[#10262a]",
+    bg: "bg-[#EAF7F6] dark:bg-[#143036]",
     accent: "text-[#159A9C] dark:text-[#3ac6c8]",
   },
   {
     number: "04",
     title: "Old notes find their way back to you",
     body: "Before something slips from memory, Mindbase resurfaces it — a quiet nudge to revisit, not another inbox to manage.",
-    bg: "bg-[#F2F1F7] dark:bg-[#1c1c1c]",
+    bg: "bg-[#F2F1F7] dark:bg-[#24242a]",
     accent: "text-[#5146E5]",
   },
 ];
@@ -61,9 +62,9 @@ export default function Home() {
   const isLoggedIn = Boolean(user) && !loading;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
+    <div className="flex min-h-screen flex-col bg-[#F2F0EA] dark:bg-[#121214] font-sans text-[#20202A] dark:text-[#ececf1]">
       {/* Navbar */}
-      <header className="border-b border-[#DDDCE3] dark:border-[#2a2a2a]">
+      <header className="border-b border-[#D7D5DE] dark:border-[#34343c]">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4 sm:px-10">
           <Link href="/" className="flex items-center gap-2">
             <Logomark />
@@ -75,17 +76,19 @@ export default function Home() {
           <nav className="hidden items-center gap-8 text-sm sm:flex">
             <a
               href="#features"
-              className="text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#5146E5]"
+              className="text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#5146E5]"
             >
               Features
             </a>
 
             <a
               href="#method"
-              className="text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#5146E5]"
+              className="text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#5146E5]"
             >
               Method
             </a>
+
+            <ThemeToggle />
 
             {isLoggedIn ? (
               <Link
@@ -98,7 +101,7 @@ export default function Home() {
               <div className="flex items-center gap-5">
                 <Link
                   href="/auth/login"
-                  className="text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
+                  className="text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#20202A]"
                 >
                   Log in
                 </Link>
@@ -113,22 +116,27 @@ export default function Home() {
             )}
           </nav>
 
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="flex flex-col gap-1.5 sm:hidden"
-            aria-label="Toggle menu"
-          >
-            <span className="h-px w-6 bg-[#20202A]" />
-            <span className="h-px w-6 bg-[#20202A]" />
-          </button>
+          <div className="flex items-center gap-2 sm:hidden">
+            <ThemeToggle />
+
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="flex flex-col gap-1.5 text-[#20202A] dark:text-[#ececf1]"
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+            >
+              <span className="h-px w-6 bg-current" />
+              <span className="h-px w-6 bg-current" />
+            </button>
+          </div>
         </div>
 
         {menuOpen && (
-          <div className="flex flex-col gap-4 border-t border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-6 py-4 text-sm sm:hidden">
+          <div className="flex flex-col gap-4 border-t border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-6 py-4 text-sm sm:hidden">
             <a
               href="#features"
               onClick={() => setMenuOpen(false)}
-              className="text-[#686873] dark:text-[#a3a3a3]"
+              className="text-[#686873] dark:text-[#b0b0b9]"
             >
               Features
             </a>
@@ -136,7 +144,7 @@ export default function Home() {
             <a
               href="#method"
               onClick={() => setMenuOpen(false)}
-              className="text-[#686873] dark:text-[#a3a3a3]"
+              className="text-[#686873] dark:text-[#b0b0b9]"
             >
               Method
             </a>
@@ -154,7 +162,7 @@ export default function Home() {
                 <Link
                   href="/auth/login"
                   onClick={() => setMenuOpen(false)}
-                  className="text-[#686873] dark:text-[#a3a3a3]"
+                  className="text-[#686873] dark:text-[#b0b0b9]"
                 >
                   Log in
                 </Link>
@@ -186,7 +194,7 @@ export default function Home() {
               <span className="text-[#5146E5]">a body of work.</span>
             </h1>
 
-            <p className="mt-7 max-w-2xl text-lg leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+            <p className="mt-7 max-w-2xl text-lg leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               Mindbase is a place to capture what you read, connect what you
               learn, and find it again when you need it — without folders
               you&rsquo;ll forget to check.
@@ -211,7 +219,7 @@ export default function Home() {
 
               <a
                 href="#features"
-                className="font-medium text-[#686873] dark:text-[#a3a3a3] underline decoration-[#C9C7D0] underline-offset-4 transition hover:text-[#20202A]"
+                className="font-medium text-[#686873] dark:text-[#b0b0b9] underline decoration-[#C9C7D0] underline-offset-4 transition hover:text-[#20202A]"
               >
                 See how it works
               </a>
@@ -222,7 +230,7 @@ export default function Home() {
         {/* Features */}
         <section
           id="features"
-          className="border-t border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414]"
+          className="border-t border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f]"
         >
           <div className="mx-auto w-full max-w-5xl px-6 py-24 sm:px-10">
             <div className="mb-14 max-w-xl">
@@ -260,7 +268,7 @@ export default function Home() {
                     {f.title}
                   </h3>
 
-                  <p className="text-[15px] leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+                  <p className="text-[15px] leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                     {f.body}
                   </p>
                 </div>
@@ -272,7 +280,7 @@ export default function Home() {
         {/* Method */}
         <section
           id="method"
-          className="border-t border-[#DDDCE3] dark:border-[#2a2a2a] bg-[#20202A] text-white"
+          className="border-t border-[#D7D5DE] dark:border-[#34343c] bg-[#20202A] text-white"
         >
           <div className="mx-auto flex w-full max-w-4xl flex-col gap-7 px-6 py-24 sm:px-10 sm:py-28">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#A9A4FF]">
@@ -285,14 +293,14 @@ export default function Home() {
               own.”
             </p>
 
-            <p className="text-sm text-[#A7A6B0] dark:text-[#9a9a9a]">
+            <p className="text-sm text-[#A7A6B0] dark:text-[#a9a9b1]">
               Alex Chen, PhD researcher
             </p>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="border-t border-[#DDDCE3] dark:border-[#2a2a2a]">
+        <section className="border-t border-[#D7D5DE] dark:border-[#34343c]">
           <div className="mx-auto flex w-full max-w-4xl flex-col items-start gap-6 px-6 py-24 sm:px-10 sm:py-28">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#5146E5]">
               Start today
@@ -302,7 +310,7 @@ export default function Home() {
               Start your archive today.
             </h2>
 
-            <p className="max-w-xl text-lg text-[#686873] dark:text-[#a3a3a3]">
+            <p className="max-w-xl text-lg text-[#686873] dark:text-[#b0b0b9]">
               Give your ideas somewhere to grow, connect, and come back to you.
             </p>
 
@@ -326,11 +334,11 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414]">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-4 px-6 py-9 text-sm text-[#888793] dark:text-[#8a8a8a] sm:flex-row sm:items-center sm:px-10">
+      <footer className="border-t border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f]">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-4 px-6 py-9 text-sm text-[#888793] dark:text-[#9b9ba3] sm:flex-row sm:items-center sm:px-10">
           <div className="flex items-center gap-2">
             <Logomark />
-            <span className="font-medium text-[#20202A] dark:text-[#e5e5e5]">Mindbase</span>
+            <span className="font-medium text-[#20202A] dark:text-[#ececf1]">Mindbase</span>
           </div>
 
           <p>© {new Date().getFullYear()} Mindbase. All notes reserved.</p>

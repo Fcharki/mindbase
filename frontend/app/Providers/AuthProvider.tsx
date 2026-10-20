@@ -37,6 +37,7 @@ type AuthContextValue = {
     passwordConfirmation: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(
@@ -113,6 +114,15 @@ export function AuthProvider({
     setUser(null);
   }
 
+  async function refreshUser() {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch {
+      setUser(null);
+    }
+  }
+
   async function loginWithGoogle() {
     await loginWithGoogleRequest();
   }
@@ -146,6 +156,7 @@ export function AuthProvider({
         forgotPassword,
         resetPassword,
         logout,
+        refreshUser,
       }}
     >
       {children}

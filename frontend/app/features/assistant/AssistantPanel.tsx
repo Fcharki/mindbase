@@ -9,6 +9,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ThumbsDown, ThumbsUp } from "lucide-react";
 
 import {
   askErrorMessage,
@@ -358,8 +359,8 @@ export function AssistantPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414]">
-      <div className="flex items-center justify-between border-b border-[#DDDCE3] px-7 py-5 sm:px-8 dark:border-[#2a2a2a]">
+    <section className="rounded-2xl border border-[#D7D5DE] bg-white shadow-sm dark:border-[#34343c] dark:bg-[#1b1b1f]">
+      <div className="flex items-center justify-between border-b border-[#D7D5DE] px-7 py-5 sm:px-8 dark:border-[#34343c]">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5] dark:text-[#a5b4fc]">
             Assistant
@@ -384,11 +385,11 @@ export function AssistantPanel({
       <div className="px-7 py-5 sm:px-8">
         {loadingHistory ? (
           <div className="flex flex-col gap-3" aria-hidden="true">
-            <div className="h-4 w-1/3 animate-pulse rounded bg-[#EEEDEF] dark:bg-[#242424]" />
-            <div className="h-20 animate-pulse rounded-lg bg-[#F7F6F2] dark:bg-[#1c1c1c]" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-[#E7E6ED] dark:bg-[#2c2c33]" />
+            <div className="h-20 animate-pulse rounded-lg bg-[#F2F0EA] dark:bg-[#24242a]" />
           </div>
         ) : turns.length === 0 ? (
-          <p className="text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+          <p className="text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
             Ask a question and it will be answered from the entries in this
             workspace. Answers cite the passages they came from. The first answer
             can take a few minutes while the model loads.
@@ -402,12 +403,12 @@ export function AssistantPanel({
 
               return (
                 <div key={turn.id} className="flex flex-col gap-3">
-                  <p className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+                  <p className="text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
                     {turn.question}
                   </p>
 
                   {stillWorking && (
-                    <p className="flex flex-wrap items-center gap-2 text-sm text-[#686873] dark:text-[#a3a3a3]">
+                    <p className="flex flex-wrap items-center gap-2 text-sm text-[#686873] dark:text-[#b0b0b9]">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-[#5146E5]" />
                       {text
                         ? `Writing the answer - ${elapsedLabel(waited)} so far.`
@@ -426,14 +427,14 @@ export function AssistantPanel({
                   )}
 
                   {text && (
-                    <div className="rounded-lg border border-[#EEEDEF] bg-[#F7F6F2] px-4 py-3 dark:border-[#2a2a2a] dark:bg-[#1c1c1c]">
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5]">
+                    <div className="rounded-lg border border-[#E7E6ED] bg-[#F2F0EA] px-4 py-3 dark:border-[#34343c] dark:bg-[#24242a]">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#20202A] dark:text-[#ececf1]">
                         {text}
                       </p>
 
                       {turn.answer?.sources && turn.answer.sources.length > 0 && (
-                        <details className="mt-3 border-t border-[#DDDCE3] pt-3 dark:border-[#2a2a2a]">
-                          <summary className="cursor-pointer text-xs font-medium text-[#686873] dark:text-[#a3a3a3]">
+                        <details className="mt-3 border-t border-[#D7D5DE] pt-3 dark:border-[#34343c]">
+                          <summary className="cursor-pointer text-xs font-medium text-[#686873] dark:text-[#b0b0b9]">
                             {turn.answer.sources.length}{" "}
                             {turn.answer.sources.length === 1
                               ? "source"
@@ -446,9 +447,9 @@ export function AssistantPanel({
                                 <button
                                   type="button"
                                   onClick={() => setActiveSource(source)}
-                                  className="w-full rounded-md px-2 py-1.5 text-left text-xs leading-relaxed text-[#686873] transition hover:bg-[#EEEDEF] dark:text-[#a3a3a3] dark:hover:bg-[#242424]"
+                                  className="w-full rounded-md px-2 py-1.5 text-left text-xs leading-relaxed text-[#686873] transition hover:bg-[#E7E6ED] dark:text-[#b0b0b9] dark:hover:bg-[#2c2c33]"
                                 >
-                                  <span className="font-medium text-[#20202A] dark:text-[#e5e5e5]">
+                                  <span className="font-medium text-[#20202A] dark:text-[#ececf1]">
                                     {source.title ?? "Untitled entry"}
                                   </span>
                                   {" - "}
@@ -463,11 +464,11 @@ export function AssistantPanel({
                       )}
 
                       {ready && (
-                        <div className="mt-3 flex items-center gap-1 border-t border-[#DDDCE3] pt-3 dark:border-[#2a2a2a]">
+                        <div className="mt-3 flex items-center gap-1 border-t border-[#D7D5DE] pt-3 dark:border-[#34343c]">
                           <button
                             type="button"
                             onClick={() => copyAnswer(text)}
-                            className="rounded-md px-2 py-1 text-xs font-medium text-[#686873] transition hover:bg-[#EEEDEF] hover:text-[#20202A] dark:text-[#a3a3a3] dark:hover:bg-[#242424]"
+                            className="rounded-md px-2 py-1 text-xs font-medium text-[#686873] transition hover:bg-[#E7E6ED] hover:text-[#20202A] dark:text-[#b0b0b9] dark:hover:bg-[#2c2c33]"
                           >
                             Copy
                           </button>
@@ -476,25 +477,26 @@ export function AssistantPanel({
                             type="button"
                             onClick={() => handleRegenerate(turn)}
                             disabled={busy}
-                            className="rounded-md px-2 py-1 text-xs font-medium text-[#686873] transition hover:bg-[#EEEDEF] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-40 dark:text-[#a3a3a3] dark:hover:bg-[#242424]"
+                            className="rounded-md px-2 py-1 text-xs font-medium text-[#686873] transition hover:bg-[#E7E6ED] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-40 dark:text-[#b0b0b9] dark:hover:bg-[#2c2c33]"
                           >
                             Regenerate
                           </button>
 
-                          <span className="mx-1 h-4 w-px bg-[#DDDCE3] dark:bg-[#2a2a2a]" />
+                          <span className="mx-1 h-4 w-px bg-[#D7D5DE] dark:bg-[#34343c]" />
 
                           <button
                             type="button"
                             onClick={() => handleFeedback(turn, "up")}
                             aria-label="This answer was helpful"
                             aria-pressed={turn.answer?.feedback === "up"}
-                            className={`rounded-md px-2 py-1 text-xs transition hover:bg-[#EEEDEF] dark:hover:bg-[#242424] ${
+                            title="Helpful"
+                            className={`rounded-md p-1.5 transition hover:bg-[#E7E6ED] dark:hover:bg-[#2c2c33] ${
                               turn.answer?.feedback === "up"
                                 ? "text-[#159A9C] dark:text-[#3ac6c8]"
-                                : "text-[#9897A1] dark:text-[#737373]"
+                                : "text-[#9897A1] dark:text-[#8b8b94]"
                             }`}
                           >
-                            👍
+                            <ThumbsUp className="h-4 w-4" aria-hidden="true" />
                           </button>
 
                           <button
@@ -502,13 +504,14 @@ export function AssistantPanel({
                             onClick={() => handleFeedback(turn, "down")}
                             aria-label="This answer was not helpful"
                             aria-pressed={turn.answer?.feedback === "down"}
-                            className={`rounded-md px-2 py-1 text-xs transition hover:bg-[#EEEDEF] dark:hover:bg-[#242424] ${
+                            title="Not helpful"
+                            className={`rounded-md p-1.5 transition hover:bg-[#E7E6ED] dark:hover:bg-[#2c2c33] ${
                               turn.answer?.feedback === "down"
                                 ? "text-[#B13D55] dark:text-[#f3a7b6]"
-                                : "text-[#9897A1] dark:text-[#737373]"
+                                : "text-[#9897A1] dark:text-[#8b8b94]"
                             }`}
                           >
-                            👎
+                            <ThumbsDown className="h-4 w-4" aria-hidden="true" />
                           </button>
                         </div>
                       )}
@@ -534,12 +537,12 @@ export function AssistantPanel({
             onChange={(event) => setQuestion(event.target.value)}
             disabled={busy}
             placeholder="How do tokens expire?"
-            className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-3 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a] disabled:opacity-60 dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#e5e5e5] dark:placeholder:text-[#737373]"
+            className="w-full rounded-lg border border-[#D7D5DE] bg-white px-4 py-3 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a] disabled:opacity-60 dark:border-[#34343c] dark:bg-[#1b1b1f] dark:text-[#ececf1] dark:placeholder:text-[#8b8b94]"
           />
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-4">
-              <label className="flex items-center gap-2 text-xs font-medium text-[#686873] dark:text-[#a3a3a3]">
+              <label className="flex items-center gap-2 text-xs font-medium text-[#686873] dark:text-[#b0b0b9]">
                 Passages
                 <input
                   type="number"
@@ -555,17 +558,17 @@ export function AssistantPanel({
                     )
                   }
                   disabled={busy}
-                  className="w-16 rounded-md border border-[#DDDCE3] bg-white px-2 py-1 text-sm text-[#20202A] outline-none focus:border-[#5146E5] disabled:opacity-60 dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#e5e5e5]"
+                  className="w-16 rounded-md border border-[#D7D5DE] bg-white px-2 py-1 text-sm text-[#20202A] outline-none focus:border-[#5146E5] disabled:opacity-60 dark:border-[#34343c] dark:bg-[#1b1b1f] dark:text-[#ececf1]"
                 />
               </label>
 
-              <label className="flex items-center gap-2 text-xs font-medium text-[#686873] dark:text-[#a3a3a3]">
+              <label className="flex items-center gap-2 text-xs font-medium text-[#686873] dark:text-[#b0b0b9]">
                 <input
                   type="checkbox"
                   checked={rewrite}
                   onChange={(event) => setRewrite(event.target.checked)}
                   disabled={busy}
-                  className="h-4 w-4 rounded border-[#DDDCE3] text-[#5146E5] focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a] dark:border-[#2a2a2a]"
+                  className="h-4 w-4 rounded border-[#D7D5DE] text-[#5146E5] focus:ring-[#EEEDFF] dark:focus:ring-[#32324a] dark:border-[#34343c]"
                 />
                 Rewrite query when nothing matches
               </label>
@@ -591,17 +594,17 @@ export function AssistantPanel({
           onClick={() => setActiveSource(null)}
         >
           <div
-            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-[#141414]"
+            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-[#1b1b1f]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-4 border-b border-[#DDDCE3] px-5 py-3 dark:border-[#2a2a2a]">
+            <div className="flex items-center justify-between gap-4 border-b border-[#D7D5DE] px-5 py-3 dark:border-[#34343c]">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+                <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
                   {activeSource.title ?? "Untitled entry"}
                 </p>
 
                 {activeSource.position !== undefined && (
-                  <p className="mt-0.5 text-xs text-[#9897A1] dark:text-[#737373]">
+                  <p className="mt-0.5 text-xs text-[#9897A1] dark:text-[#8b8b94]">
                     Passage {activeSource.position + 1}
                     {activeSource.found_by?.length
                       ? ` · found by ${activeSource.found_by.join(" + ")}`
@@ -613,19 +616,19 @@ export function AssistantPanel({
               <button
                 type="button"
                 onClick={() => setActiveSource(null)}
-                className="shrink-0 rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] hover:text-[#20202A] dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                className="shrink-0 rounded-lg border border-[#D7D5DE] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F2F0EA] hover:text-[#20202A] dark:border-[#34343c] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
               >
                 Close
               </button>
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5]">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#20202A] dark:text-[#ececf1]">
                 {activeSource.body}
               </p>
             </div>
 
-            <div className="flex justify-end border-t border-[#DDDCE3] px-5 py-3 dark:border-[#2a2a2a]">
+            <div className="flex justify-end border-t border-[#D7D5DE] px-5 py-3 dark:border-[#34343c]">
               <Link
                 href={`/workspaces/${workspaceId}/entries/${activeSource.entry_id}`}
                 className="rounded-lg bg-[#5146E5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338CA]"

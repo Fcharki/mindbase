@@ -62,7 +62,7 @@ export function ResetPasswordForm({
       <div className="flex flex-col gap-2">
         <label
           htmlFor="password"
-          className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]"
+          className="text-sm font-medium text-[#20202A] dark:text-[#ececf1]"
         >
           New password
         </label>
@@ -77,14 +77,14 @@ export function ResetPasswordForm({
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="At least 8 characters"
-          className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
+          className="w-full rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-3 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
         />
       </div>
 
       <div className="flex flex-col gap-2">
         <label
           htmlFor="confirmPassword"
-          className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]"
+          className="text-sm font-medium text-[#20202A] dark:text-[#ececf1]"
         >
           Confirm new password
         </label>
@@ -99,14 +99,14 @@ export function ResetPasswordForm({
           value={confirmPassword}
           onChange={(event) => setConfirmPassword(event.target.value)}
           placeholder="Enter your password again"
-          className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-3 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
+          className="w-full rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-3 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
         />
       </div>
 
       {error && (
         <p
           role="alert"
-          className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
+          className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
         >
           {error}
         </p>

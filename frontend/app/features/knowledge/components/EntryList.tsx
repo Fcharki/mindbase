@@ -10,7 +10,7 @@ function EntryMark({ pinned }: { pinned: boolean }) {
     <div
       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
         pinned
-          ? "bg-[#EEEDFF] text-[#5146E5] dark:bg-[#242450] dark:text-[#a5b4fc]"
+          ? "bg-[#EEEDFF] text-[#5146E5] dark:bg-[#2b2b5e] dark:text-[#a5b4fc]"
           : "bg-[#EAF7F6] text-[#159A9C] dark:bg-[#11312f] dark:text-[#5fd3cf]"
       }`}
     >
@@ -76,7 +76,7 @@ export function EntryList({
   canContribute?: boolean;
 }) {
   return (
-    <ul className="divide-y divide-[#EEEDEF] dark:divide-[#242424]">
+    <ul className="divide-y divide-[#E7E6ED] dark:divide-[#2c2c33]">
       {entries.map((entry) => {
         const snippet = htmlToPlainText(entry.content);
         const updated = new Date(entry.updated_at ?? entry.created_at);
@@ -92,30 +92,30 @@ export function EntryList({
                   checked={selected}
                   onChange={() => onToggleSelect?.(entry.id)}
                   aria-label={`Select ${entry.title}`}
-                  className="h-4 w-4 rounded border-[#C9C7D0] text-[#5146E5] focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a] dark:border-[#3a3a3a]"
+                  className="h-4 w-4 rounded border-[#C9C7D0] text-[#5146E5] focus:ring-[#EEEDFF] dark:focus:ring-[#32324a] dark:border-[#474751]"
                 />
               </label>
             )}
 
             <Link
               href={`${basePath}/${entry.id}`}
-              className="group flex min-w-0 flex-1 items-start gap-4 px-7 py-4 transition hover:bg-[#F7F6F2] sm:px-8 dark:hover:bg-[#1c1c1c]"
+              className="group flex min-w-0 flex-1 items-start gap-4 px-7 py-4 transition hover:bg-[#F2F0EA] sm:px-8 dark:hover:bg-[#24242a]"
             >
               <EntryMark pinned={pinned} />
 
               <div className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
-                  <span className="truncate text-sm font-medium text-[#20202A] transition group-hover:text-[#5146E5] dark:text-[#e5e5e5]">
+                  <span className="truncate text-sm font-medium text-[#20202A] transition group-hover:text-[#5146E5] dark:text-[#ececf1]">
                     {entry.title}
                   </span>
                   {pinned && (
-                    <span className="shrink-0 rounded-full bg-[#EEEDFF] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#4338CA] dark:bg-[#242450] dark:text-[#a5b4fc]">
+                    <span className="shrink-0 rounded-full bg-[#EEEDFF] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#4338CA] dark:bg-[#2b2b5e] dark:text-[#a5b4fc]">
                       Pinned
                     </span>
                   )}
                 </span>
 
-                <span className="mt-0.5 block truncate text-sm text-[#9897A1] dark:text-[#737373]">
+                <span className="mt-0.5 block truncate text-sm text-[#9897A1] dark:text-[#8b8b94]">
                   {snippet || "No content yet"}
                 </span>
 
@@ -124,7 +124,7 @@ export function EntryList({
                     {(entry.tags ?? []).map((tag) => (
                       <span
                         key={tag.id}
-                        className="rounded-full bg-[#EEEDFF] px-2 py-0.5 text-xs font-medium text-[#4338CA] dark:bg-[#242450] dark:text-[#a5b4fc]"
+                        className="rounded-full bg-[#EEEDFF] px-2 py-0.5 text-xs font-medium text-[#4338CA] dark:bg-[#2b2b5e] dark:text-[#a5b4fc]"
                       >
                         {tag.name}
                       </span>
@@ -134,7 +134,7 @@ export function EntryList({
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
-                <span className="hidden text-xs text-[#9897A1] sm:block dark:text-[#737373]">
+                <span className="hidden text-xs text-[#9897A1] sm:block dark:text-[#8b8b94]">
                   {updated.toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -169,7 +169,7 @@ export function EntryList({
                     onClick={() => onTogglePin(entry)}
                     aria-label={pinned ? `Unpin ${entry.title}` : `Pin ${entry.title}`}
                     title={pinned ? "Unpin" : "Pin to top"}
-                    className={`rounded-md p-1.5 transition hover:bg-[#EEEDEF] dark:hover:bg-[#242424] ${
+                    className={`rounded-md p-1.5 transition hover:bg-[#E7E6ED] dark:hover:bg-[#2c2c33] ${
                       pinned
                         ? "text-[#5146E5] dark:text-[#a5b4fc]"
                         : "text-[#C9C7D0] dark:text-[#4a4a4a]"
@@ -198,7 +198,7 @@ export function EntryList({
                     onClick={() => onExport(entry)}
                     aria-label={`Export ${entry.title}`}
                     title="Export as Markdown"
-                    className="rounded-md p-1.5 text-[#C9C7D0] transition hover:bg-[#EEEDEF] hover:text-[#20202A] dark:text-[#4a4a4a] dark:hover:bg-[#242424]"
+                    className="rounded-md p-1.5 text-[#C9C7D0] transition hover:bg-[#E7E6ED] hover:text-[#20202A] dark:text-[#4a4a4a] dark:hover:bg-[#2c2c33]"
                   >
                     <svg
                       width="15"

@@ -10,13 +10,13 @@ export function NewWorkspaceView() {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
+    <div className="flex min-h-screen flex-col bg-[#F2F0EA] dark:bg-[#121214] font-sans text-[#20202A] dark:text-[#ececf1]">
       <WorkspaceNav />
 
       <main className="flex flex-1 items-center justify-center px-6 py-20 sm:px-10">
         <section className="w-full max-w-lg">
-          <div className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-8 shadow-sm sm:p-10">
-            <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d]">
+          <div className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-8 shadow-sm sm:p-10">
+            <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#262449]">
               <svg
                 width="22"
                 height="22"
@@ -41,7 +41,7 @@ export function NewWorkspaceView() {
               Create a workspace
             </h1>
 
-            <p className="mt-3 max-w-md leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+            <p className="mt-3 max-w-md leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               Give your new workspace a name, then you&rsquo;ll go straight into
               it to start organizing your knowledge.
             </p>

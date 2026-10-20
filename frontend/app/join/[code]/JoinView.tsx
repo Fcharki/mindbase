@@ -70,8 +70,8 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
 
   if (status === "loading") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] font-sans">
+        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#b0b0b9]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
           Loading…
         </div>
@@ -81,13 +81,13 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
 
   if (status === "missing" || !workspace) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-6 font-sans">
-        <div className="w-full max-w-md rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-8 text-center shadow-sm sm:p-10">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] px-6 font-sans">
+        <div className="w-full max-w-md rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-8 text-center shadow-sm sm:p-10">
           <h1 className="text-2xl font-semibold tracking-[-0.025em]">
             Link not found
           </h1>
 
-          <p className="mt-3 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+          <p className="mt-3 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
             This invite link doesn&rsquo;t point to a workspace. Double-check
             the link your owner shared.
           </p>
@@ -104,9 +104,9 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-6 py-12 font-sans">
-      <div className="w-full max-w-md rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-8 text-center shadow-sm sm:p-10">
-        <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] px-6 py-12 font-sans">
+      <div className="w-full max-w-md rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-8 text-center shadow-sm sm:p-10">
+        <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#262449] text-[#5146E5]">
           <svg
             width="23"
             height="23"
@@ -131,7 +131,7 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
           {workspace.name}
         </h1>
 
-        <p className="mt-3 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+        <p className="mt-3 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
           Owned by {workspace.owner.name}. Join as a member to add and manage
           knowledge entries.
         </p>
@@ -139,14 +139,14 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
         {error && (
           <p
             role="alert"
-            className="mt-5 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
+            className="mt-5 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
           >
             {error}
           </p>
         )}
 
         {authLoading ? (
-          <p className="mt-7 text-sm text-[#686873] dark:text-[#a3a3a3]">Loading…</p>
+          <p className="mt-7 text-sm text-[#686873] dark:text-[#b0b0b9]">Loading…</p>
         ) : user ? (
           <button
             type="button"
@@ -165,7 +165,7 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
               Log in to join
             </Link>
 
-            <p className="mt-4 text-sm text-[#686873] dark:text-[#a3a3a3]">
+            <p className="mt-4 text-sm text-[#686873] dark:text-[#b0b0b9]">
               Don&rsquo;t have an account?{" "}
               <Link
                 href="/auth/register"

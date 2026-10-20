@@ -8,6 +8,7 @@ use App\Http\Controllers\EmailAuthController;
 use App\Http\Controllers\KnowledgeEntryController;
 use App\Http\Controllers\MembershipRequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TagController;
@@ -122,6 +123,24 @@ Route::get('join/{inviteCode}', [
     WorkspaceController::class,
     'byInviteCode',
 ]);
+
+/*
+|--------------------------------------------------------------------------
+| Profile API
+|--------------------------------------------------------------------------
+| Sits in the web middleware group like the other session-auth routes, since
+| deleting an account has to be able to invalidate the session.
+*/
+
+Route::middleware(['web', 'auth:sanctum'])->group(function () {
+    Route::get('profile', [ProfileController::class, 'show']);
+
+    Route::patch('profile', [ProfileController::class, 'update']);
+
+    Route::patch('profile/password', [ProfileController::class, 'updatePassword']);
+
+    Route::delete('profile', [ProfileController::class, 'destroy']);
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -25,8 +25,8 @@ function EmptyState({
   hasAny: boolean;
 }) {
   return (
-    <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-7 py-12 text-center shadow-sm">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d]">
+    <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-7 py-12 text-center shadow-sm">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#262449]">
         <svg
           width="20"
           height="20"
@@ -51,7 +51,7 @@ function EmptyState({
             : "No workspaces yet"}
       </h2>
 
-      <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+      <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
         {hasAny
           ? "Try a different filter to see the rest of your workspaces."
           : "Create a workspace to start organizing your knowledge."}
@@ -156,8 +156,8 @@ export function WorkspacesPageView() {
 
   if (authLoading || !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] font-sans">
+        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#b0b0b9]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
           Loading your workspaces…
         </div>
@@ -166,7 +166,7 @@ export function WorkspacesPageView() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
+    <div className="flex min-h-screen flex-col bg-[#F2F0EA] dark:bg-[#121214] font-sans text-[#20202A] dark:text-[#ececf1]">
       <WorkspaceNav workspaces={workspaces ?? []} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 sm:px-10 sm:py-12">
@@ -178,7 +178,7 @@ export function WorkspacesPageView() {
             <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
               Everything you can work in
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3] sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9] sm:text-base">
               Workspaces you own can be renamed, shared and deleted here.
               Workspaces shared with you are read and contribute until you ask
               for a member role.
@@ -188,7 +188,7 @@ export function WorkspacesPageView() {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/dashboard"
-              className="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-5 py-3 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-white"
+              className="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-5 py-3 text-sm font-medium text-[#20202A] dark:text-[#ececf1] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-white"
             >
               Browse directory
             </Link>
@@ -218,7 +218,7 @@ export function WorkspacesPageView() {
         {loadingError && (
           <p
             role="alert"
-            className="mt-6 rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
+            className="mt-6 rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
           >
             {loadingError}
           </p>
@@ -245,7 +245,7 @@ export function WorkspacesPageView() {
                   className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
                     active
                       ? "bg-[#5146E5] text-white"
-                      : "border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] text-[#686873] dark:text-[#a3a3a3] hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:text-[#20202A]"
+                      : "border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] text-[#686873] dark:text-[#b0b0b9] hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:text-[#20202A]"
                   }`}
                 >
                   {option.label}
@@ -259,7 +259,7 @@ export function WorkspacesPageView() {
         )}
 
         {!workspaces ? (
-          <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] text-sm text-[#686873] dark:text-[#a3a3a3] shadow-sm">
+          <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] text-sm text-[#686873] dark:text-[#b0b0b9] shadow-sm">
             Loading workspaces…
           </div>
         ) : visibleWorkspaces.length === 0 ? (

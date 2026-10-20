@@ -140,7 +140,10 @@ services:
     ports:
       - "3001:3000"
 
-    command: npm run dev -- --hostname 0.0.0.0
+    # node_modules lives in an anonymous volume so the host bind mount does not
+    # hide it. That volume survives recreation, so install on every start to
+    # pick up dependencies added since it was created.
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --hostname 0.0.0.0"
 
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8001/api/v1

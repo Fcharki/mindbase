@@ -200,16 +200,16 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
 
   if (status === "missing") {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0f0f0f] dark:text-[#e5e5e5]">
+      <div className="flex min-h-screen flex-col bg-[#F2F0EA] font-sans text-[#20202A] dark:bg-[#121214] dark:text-[#ececf1]">
         <WorkspaceNav />
 
         <main className="flex flex-1 items-center justify-center px-6 py-20">
-          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] bg-white p-8 text-center shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414] sm:p-10">
+          <section className="w-full max-w-md rounded-2xl border border-[#D7D5DE] bg-white p-8 text-center shadow-sm dark:border-[#34343c] dark:bg-[#1b1b1f] sm:p-10">
             <h1 className="text-2xl font-semibold tracking-[-0.025em]">
               Workspace not available
             </h1>
 
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               This workspace may have been deleted, or you don&rsquo;t have
               access to it.
             </p>
@@ -228,25 +228,25 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
 
   if (status === "loading" || !workspace) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans dark:bg-[#0f0f0f]">
+      <div className="flex min-h-screen flex-col bg-[#F2F0EA] font-sans dark:bg-[#121214]">
         <WorkspaceNav />
 
         <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-10 sm:px-10 sm:py-12">
-          <div className="h-28 animate-pulse rounded-2xl border border-[#DDDCE3] bg-white dark:border-[#2a2a2a] dark:bg-[#141414]" />
-          <div className="h-64 animate-pulse rounded-2xl border border-[#DDDCE3] bg-white dark:border-[#2a2a2a] dark:bg-[#141414]" />
+          <div className="h-28 animate-pulse rounded-2xl border border-[#D7D5DE] bg-white dark:border-[#34343c] dark:bg-[#1b1b1f]" />
+          <div className="h-64 animate-pulse rounded-2xl border border-[#D7D5DE] bg-white dark:border-[#34343c] dark:bg-[#1b1b1f]" />
         </main>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0f0f0f] dark:text-[#e5e5e5]">
+    <div className="flex min-h-screen flex-col bg-[#F2F0EA] font-sans text-[#20202A] dark:bg-[#121214] dark:text-[#ececf1]">
       <WorkspaceNav />
 
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
         <Link
           href={`/workspaces/${workspace.id}`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#a3a3a3] dark:hover:text-[#e5e5e5]"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#b0b0b9] dark:hover:text-[#ececf1]"
         >
           <svg
             className="h-4 w-4"
@@ -267,7 +267,7 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
           {workspace.name}
         </Link>
 
-        <section className="rounded-2xl border border-[#DDDCE3] bg-white p-7 shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414] sm:p-8">
+        <section className="rounded-2xl border border-[#D7D5DE] bg-white p-7 shadow-sm dark:border-[#34343c] dark:bg-[#1b1b1f] sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5] dark:text-[#a5b4fc]">
             Organize
           </p>
@@ -276,27 +276,27 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
             Tags
           </h1>
 
-          <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
             Nest related tags to keep this workspace tidy. Tags appear as soon
             as you add them to an entry; here you can rename them or choose
             which tag they sit under.
           </p>
         </section>
 
-        <section className="rounded-2xl border border-[#DDDCE3] bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414]">
+        <section className="rounded-2xl border border-[#D7D5DE] bg-white shadow-sm dark:border-[#34343c] dark:bg-[#1b1b1f]">
           {tags.length === 0 ? (
             <div className="flex min-h-[200px] flex-col items-center justify-center px-7 py-12 text-center sm:px-8">
               <h2 className="text-lg font-semibold tracking-tight">
                 No tags yet
               </h2>
 
-              <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+              <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                 Add tags to an entry and they will show up here, ready to be
                 organized.
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-[#EEEDEF] dark:divide-[#1f1f1f]">
+            <ul className="divide-y divide-[#E7E6ED] dark:divide-[#2a2a31]">
               {rows.map(({ tag, depth }) => {
                 const editing = editingId === tag.id;
                 const blocked = descendantIds(tags, tag.id);
@@ -312,7 +312,7 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
                     >
                       {depth > 0 && (
                         <span
-                          className="text-[#C9C7D0] dark:text-[#3a3a3a]"
+                          className="text-[#C9C7D0] dark:text-[#474751]"
                           aria-hidden="true"
                         >
                           ↳
@@ -326,16 +326,16 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
                           maxLength={50}
                           autoFocus
                           onChange={(event) => setDraftName(event.target.value)}
-                          className="w-40 rounded-lg border border-[#DDDCE3] bg-white px-2.5 py-1.5 text-sm text-[#20202A] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:border-[#2a2a2a] dark:bg-[#0f0f0f] dark:text-[#e5e5e5] dark:focus:ring-[#2a2a3a]"
+                          className="w-40 rounded-lg border border-[#D7D5DE] bg-white px-2.5 py-1.5 text-sm text-[#20202A] outline-none transition focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:border-[#34343c] dark:bg-[#121214] dark:text-[#ececf1] dark:focus:ring-[#32324a]"
                         />
                       ) : (
-                        <span className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+                        <span className="truncate text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
                           {tag.name}
                         </span>
                       )}
 
                       {tag.entries_count !== undefined && !editing && (
-                        <span className="shrink-0 rounded-full bg-[#F2F1F7] px-2 py-0.5 text-xs font-medium text-[#686873] dark:bg-[#1c1c1c] dark:text-[#a3a3a3]">
+                        <span className="shrink-0 rounded-full bg-[#F2F1F7] px-2 py-0.5 text-xs font-medium text-[#686873] dark:bg-[#24242a] dark:text-[#b0b0b9]">
                           {tag.entries_count}
                         </span>
                       )}
@@ -355,7 +355,7 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
                               onChange={(event) =>
                                 setDraftParent(event.target.value)
                               }
-                              className="max-w-[160px] rounded-lg border border-[#DDDCE3] bg-white px-2 py-1.5 text-sm text-[#20202A] outline-none focus:border-[#5146E5] dark:border-[#2a2a2a] dark:bg-[#0f0f0f] dark:text-[#e5e5e5]"
+                              className="max-w-[160px] rounded-lg border border-[#D7D5DE] bg-white px-2 py-1.5 text-sm text-[#20202A] outline-none focus:border-[#5146E5] dark:border-[#34343c] dark:bg-[#121214] dark:text-[#ececf1]"
                             >
                               <option value="">No parent</option>
 
@@ -385,7 +385,7 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
                               type="button"
                               onClick={cancelEdit}
                               disabled={saving}
-                              className="rounded-lg px-2 py-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A] disabled:opacity-50 dark:text-[#a3a3a3] dark:hover:text-[#e5e5e5]"
+                              className="rounded-lg px-2 py-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A] disabled:opacity-50 dark:text-[#b0b0b9] dark:hover:text-[#ececf1]"
                             >
                               Cancel
                             </button>
@@ -394,7 +394,7 @@ export function TagsPageView({ workspaceId }: { workspaceId: string }) {
                           <button
                             type="button"
                             onClick={() => beginEdit(tag)}
-                            className="rounded-lg border border-[#DDDCE3] bg-white px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F7F6F2] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c] dark:hover:text-[#e5e5e5]"
+                            className="rounded-lg border border-[#D7D5DE] bg-white px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] hover:bg-[#F2F0EA] hover:text-[#20202A] dark:border-[#34343c] dark:bg-[#1b1b1f] dark:text-[#b0b0b9] dark:hover:bg-[#24242a] dark:hover:text-[#ececf1]"
                           >
                             Edit
                           </button>

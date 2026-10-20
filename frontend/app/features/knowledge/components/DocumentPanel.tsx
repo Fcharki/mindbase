@@ -210,8 +210,8 @@ export function DocumentPanel({
   }, []);
 
   return (
-    <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
+    <section className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D7D5DE] dark:border-[#34343c] px-7 py-5 sm:px-8">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
             Attachments
@@ -247,11 +247,11 @@ export function DocumentPanel({
 
       <div className="px-7 py-7 sm:px-8">
         {documents === null && (
-          <span className="text-sm text-[#9897A1] dark:text-[#737373]">Loading documents…</span>
+          <span className="text-sm text-[#9897A1] dark:text-[#8b8b94]">Loading documents…</span>
         )}
 
         {documents !== null && documents.length === 0 && (
-          <span className="text-sm text-[#9897A1] dark:text-[#737373]">
+          <span className="text-sm text-[#9897A1] dark:text-[#8b8b94]">
             No documents attached yet.
           </span>
         )}
@@ -267,11 +267,11 @@ export function DocumentPanel({
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E8E7EC] px-4 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+                    <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
                       {document.original_name}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-[#9897A1] dark:text-[#737373]">
+                    <p className="mt-0.5 text-xs text-[#9897A1] dark:text-[#8b8b94]">
                       {document.human_size}
                       {document.uploader
                         ? ` · ${document.uploader.name}`
@@ -283,7 +283,7 @@ export function DocumentPanel({
                         className={`mt-0.5 text-xs ${
                           document.extraction_status === "ready"
                             ? "text-[#3B9C6B]"
-                            : "text-[#9897A1] dark:text-[#737373]"
+                            : "text-[#9897A1] dark:text-[#8b8b94]"
                         }`}
                       >
                         {EXTRACTION_LABELS[document.extraction_status]}
@@ -297,7 +297,7 @@ export function DocumentPanel({
                         type="button"
                         onClick={() => handlePreview(document)}
                         disabled={busy}
-                        className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-lg border border-[#D7D5DE] dark:border-[#34343c] px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#b0b0b9] transition hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Preview
                       </button>
@@ -308,12 +308,12 @@ export function DocumentPanel({
                         type="button"
                         onClick={() => handleDownload(document)}
                         disabled={busy}
-                        className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-lg border border-[#D7D5DE] dark:border-[#34343c] px-3 py-1.5 text-sm font-medium text-[#686873] dark:text-[#b0b0b9] transition hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {busy ? "Working…" : "Download"}
                       </button>
                     ) : (
-                      <span className="text-xs text-[#9897A1] dark:text-[#737373]">
+                      <span className="text-xs text-[#9897A1] dark:text-[#8b8b94]">
                         Download not available
                       </span>
                     )}
@@ -338,7 +338,7 @@ export function DocumentPanel({
         {error && (
           <p
             role="alert"
-            className="mt-4 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
+            className="mt-4 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
           >
             {error}
           </p>
@@ -354,24 +354,24 @@ export function DocumentPanel({
           onClick={closePreview}
         >
           <div
-            className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-[#141414]"
+            className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-[#1b1b1f]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-4 border-b border-[#DDDCE3] px-5 py-3 dark:border-[#2a2a2a]">
-              <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+            <div className="flex items-center justify-between gap-4 border-b border-[#D7D5DE] px-5 py-3 dark:border-[#34343c]">
+              <p className="truncate text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
                 {preview.document.original_name}
               </p>
 
               <button
                 type="button"
                 onClick={closePreview}
-                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] hover:text-[#20202A] dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                className="rounded-lg border border-[#D7D5DE] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F2F0EA] hover:text-[#20202A] dark:border-[#34343c] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
               >
                 Close
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto bg-[#F7F6F2] dark:bg-[#0e0e0e]">
+            <div className="min-h-0 flex-1 overflow-auto bg-[#F2F0EA] dark:bg-[#121214]">
               {preview.kind === "image" ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

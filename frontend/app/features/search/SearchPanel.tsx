@@ -90,15 +90,15 @@ export function SearchPanel({
     (results?.entries.length ?? 0) + (results?.tags.length ?? 0);
 
   return (
-    <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
-      <div className="border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
+    <section className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] shadow-sm">
+      <div className="border-b border-[#D7D5DE] dark:border-[#34343c] px-7 py-5 sm:px-8">
         <label htmlFor="workspace-search" className="sr-only">
           Search knowledge
         </label>
 
         <div className="relative">
           <svg
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9897A1] dark:text-[#737373]"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9897A1] dark:text-[#8b8b94]"
             width="16"
             height="16"
             viewBox="0 0 24 24"
@@ -126,7 +126,7 @@ export function SearchPanel({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search entries and tags…"
-            className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] py-3 pl-10 pr-4 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
+            className="w-full rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] py-3 pl-10 pr-4 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
           />
         </div>
       </div>
@@ -134,7 +134,7 @@ export function SearchPanel({
       {hasQuery && (
         <div className="px-7 py-5 sm:px-8">
           {!current && (
-            <p className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
+            <p className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#b0b0b9]">
               <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
               Searching…
             </p>
@@ -143,7 +143,7 @@ export function SearchPanel({
           {current?.error && (
             <p
               role="alert"
-              className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
+              className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
             >
               Search failed. Please try again.
             </p>
@@ -152,7 +152,7 @@ export function SearchPanel({
           {results && (
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
+                <p className="text-sm text-[#686873] dark:text-[#b0b0b9]">
                   {resultCount === 0 ? (
                     <>No results for &ldquo;{trimmed}&rdquo;.</>
                   ) : (
@@ -188,7 +188,7 @@ export function SearchPanel({
                         className={
                           isActive
                             ? "inline-flex items-center gap-1 rounded-full bg-[#5146E5] px-3 py-1.5 text-xs font-medium text-white transition"
-                            : "inline-flex items-center gap-1 rounded-full bg-[#EEEDFF] dark:bg-[#211f3d] px-3 py-1.5 text-xs font-medium text-[#4338CA] transition hover:bg-[#E2E0FA] dark:hover:bg-[#2a2748]"
+                            : "inline-flex items-center gap-1 rounded-full bg-[#EEEDFF] dark:bg-[#262449] px-3 py-1.5 text-xs font-medium text-[#4338CA] transition hover:bg-[#E2E0FA] dark:hover:bg-[#2a2748]"
                         }
                       >
                         {tag.name}
@@ -204,7 +204,7 @@ export function SearchPanel({
                   <EntryList entries={results.entries} basePath={basePath} />
                 </div>
               ) : (
-                <div className="mt-6 rounded-lg border border-dashed border-[#DDDCE3] dark:border-[#2a2a2a] px-5 py-8 text-center text-sm text-[#686873] dark:text-[#a3a3a3]">
+                <div className="mt-6 rounded-lg border border-dashed border-[#D7D5DE] dark:border-[#34343c] px-5 py-8 text-center text-sm text-[#686873] dark:text-[#b0b0b9]">
                   No entries match this search yet.
                 </div>
               )}

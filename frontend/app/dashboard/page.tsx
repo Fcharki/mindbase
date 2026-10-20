@@ -17,7 +17,7 @@ import {
 
 function WorkspaceMark() {
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#211f3d]">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEEDFF] dark:bg-[#262449]">
       <svg
         width="20"
         height="20"
@@ -126,8 +126,8 @@ export default function DashboardPage() {
 
   if (authLoading || !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] font-sans">
+        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#b0b0b9]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
           Loading workspaces…
         </div>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
+    <div className="flex min-h-screen flex-col bg-[#F2F0EA] dark:bg-[#121214] font-sans text-[#20202A] dark:text-[#ececf1]">
       <WorkspaceNav workspaces={workspaces ?? []} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 sm:px-10 sm:py-12">
@@ -148,7 +148,7 @@ export default function DashboardPage() {
             <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
               Explore shared knowledge
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3] sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9] sm:text-base">
               Browse every workspace as a viewer, read its knowledge entries,
               and join the ones you want to help build.
             </p>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
         {loadingError && (
           <p
             role="alert"
-            className="mt-6 rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
+            className="mt-6 rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
           >
             {loadingError}
           </p>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
           <section className="min-w-0">
             <div className="relative">
               <svg
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9897A1] dark:text-[#737373]"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9897A1] dark:text-[#8b8b94]"
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
@@ -216,11 +216,11 @@ export default function DashboardPage() {
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search workspaces or owners"
                 aria-label="Search workspaces or owners"
-                className="h-12 w-full rounded-xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] pl-11 pr-4 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
+                className="h-12 w-full rounded-xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] pl-11 pr-4 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
               />
             </div>
 
-            <div className="mt-4 flex items-center justify-between text-sm text-[#686873] dark:text-[#a3a3a3]">
+            <div className="mt-4 flex items-center justify-between text-sm text-[#686873] dark:text-[#b0b0b9]">
               <span>
                 {workspaces
                   ? `${filteredWorkspaces.length} ${filteredWorkspaces.length === 1 ? "workspace" : "workspaces"}`
@@ -232,23 +232,23 @@ export default function DashboardPage() {
             {joinError && (
               <p
                 role="alert"
-                className="mt-4 rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
+                className="mt-4 rounded-xl border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm text-[#B13D55] dark:text-[#f0a0b0]"
               >
                 {joinError}
               </p>
             )}
 
             {!workspaces ? (
-              <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] text-sm text-[#686873] dark:text-[#a3a3a3] shadow-sm">
+              <div className="mt-5 flex min-h-64 items-center justify-center rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] text-sm text-[#686873] dark:text-[#b0b0b9] shadow-sm">
                 Loading workspaces…
               </div>
             ) : filteredWorkspaces.length === 0 ? (
-              <div className="mt-5 flex min-h-64 flex-col items-center justify-center rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-7 py-12 text-center shadow-sm">
+              <div className="mt-5 flex min-h-64 flex-col items-center justify-center rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-7 py-12 text-center shadow-sm">
                 <WorkspaceMark />
                 <h2 className="mt-5 text-lg font-semibold tracking-tight">
                   {query ? "No matching workspaces" : "No workspaces yet"}
                 </h2>
-                <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+                <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                   {query
                     ? "Try a different workspace or owner name."
                     : "Create the first workspace to start sharing knowledge."}
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                 {filteredWorkspaces.map((workspace) => (
                   <article
                     key={workspace.id}
-                    className="flex min-h-64 flex-col rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    className="flex min-h-64 flex-col rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <WorkspaceMark />
@@ -268,14 +268,14 @@ export default function DashboardPage() {
 
                     <Link
                       href={`/workspaces/${workspace.id}`}
-                      className="mt-5 text-xl font-semibold tracking-tight text-[#20202A] dark:text-[#e5e5e5] transition hover:text-[#5146E5]"
+                      className="mt-5 text-xl font-semibold tracking-tight text-[#20202A] dark:text-[#ececf1] transition hover:text-[#5146E5]"
                     >
                       {workspace.name}
                     </Link>
-                    <p className="mt-1 text-sm text-[#686873] dark:text-[#a3a3a3]">
+                    <p className="mt-1 text-sm text-[#686873] dark:text-[#b0b0b9]">
                       Owned by {workspace.owner.name}
                     </p>
-                    <p className="mt-3 text-sm text-[#9897A1] dark:text-[#737373]">
+                    <p className="mt-3 text-sm text-[#9897A1] dark:text-[#8b8b94]">
                       {workspace.entries_count ?? 0}{" "}
                       {workspace.entries_count === 1 ? "entry" : "entries"}
                     </p>
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                           type="button"
                           onClick={() => handleJoin(workspace.id)}
                           disabled={joiningId === workspace.id}
-                          className="rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#e5e5e5] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-2.5 text-sm font-medium text-[#20202A] dark:text-[#ececf1] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {joiningId === workspace.id ? "Joining…" : "Join"}
                         </button>
@@ -304,14 +304,14 @@ export default function DashboardPage() {
             )}
           </section>
 
-          <aside className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-6 shadow-sm lg:sticky lg:top-6">
+          <aside className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-6 shadow-sm lg:sticky lg:top-6">
             <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
               Start something new
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight">
               Create a workspace
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+            <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               You&rsquo;ll become its owner and can add entries and members.
             </p>
             <div className="mt-6">

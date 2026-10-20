@@ -72,7 +72,7 @@ export function LoginForm() {
         type="button"
         onClick={handleGoogleLogin}
         disabled={submitting}
-        className="flex w-full items-center justify-center gap-2 rounded-full border border-[#D8D5C9] bg-white px-4 py-2.5 text-sm font-medium text-[#1E211D] hover:bg-[#F7F6F2] disabled:opacity-50 dark:border-[#2C2E23] dark:bg-transparent dark:text-[#E7E5DC] dark:hover:bg-[#22261B]"
+        className="flex w-full items-center justify-center gap-2 rounded-full border border-[#D8D5C9] bg-white px-4 py-2.5 text-sm font-medium text-[#1E211D] hover:bg-[#F2F0EA] disabled:opacity-50 dark:border-[#2C2E23] dark:bg-transparent dark:text-[#E7E5DC] dark:hover:bg-[#22261B]"
       >
         <GoogleIcon />
         Continue with Google

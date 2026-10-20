@@ -3,7 +3,7 @@
 import axios from "axios";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
@@ -61,6 +61,36 @@ export function EntryDetailPageView({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggesting, setSuggesting] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close the export menu on an outside click or Escape, the same way the
+  // notification panel does. Without this it stayed open until Export was
+  // pressed again, so the next stray click landed on a format item.
+  useEffect(() => {
+    if (!exportMenuOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!exportMenuRef.current?.contains(event.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setExportMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [exportMenuOpen]);
 
   useEffect(() => {
     if (authLoading) {
@@ -227,6 +257,10 @@ export function EntryDetailPageView({
       return;
     }
 
+    // Choosing a format consumes the menu, so a later click cannot re-trigger
+    // an export from a menu that is no longer meant to be open.
+    setExportMenuOpen(false);
+
     try {
       await exportEntry(workspaceId, entry, format);
       toast.success("Entry exported.");
@@ -278,8 +312,8 @@ export function EntryDetailPageView({
 
   if (status === "loading" || !workspace || !entry) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans">
-        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#a3a3a3]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] font-sans">
+        <div className="flex items-center gap-3 text-sm text-[#686873] dark:text-[#b0b0b9]">
           <span className="h-2 w-2 rounded-full bg-[#5146E5]" />
           Loading entry…
         </div>
@@ -292,13 +326,13 @@ export function EntryDetailPageView({
   const permissions = permissionsFor(workspace.role, workspace.is_member);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] dark:bg-[#0f0f0f] font-sans text-[#20202A] dark:text-[#e5e5e5]">
+    <div className="flex min-h-screen flex-col bg-[#F2F0EA] dark:bg-[#121214] font-sans text-[#20202A] dark:text-[#ececf1]">
       <WorkspaceNav />
 
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
         <Link
           href={`/workspaces/${workspace.id}/entries`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] dark:text-[#a3a3a3] transition hover:text-[#20202A]"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#20202A]"
         >
           <svg
             className="h-4 w-4"
@@ -331,7 +365,7 @@ export function EntryDetailPageView({
                   {entry.title}
                 </h1>
 
-                <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+                <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                   Written by {author}
                   {entry.updated_at
                     ? ` · Updated ${updatedAt.toLocaleDateString("en-US", {
@@ -350,48 +384,61 @@ export function EntryDetailPageView({
                     disabled={pinSaving}
                     className={`rounded-lg border px-5 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
                       entry.is_pinned
-                        ? "border-[#5146E5] bg-[#EEEDFF] text-[#4338CA] dark:bg-[#242450] dark:text-[#a5b4fc]"
-                        : "border-[#DDDCE3] bg-white text-[#686873] hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
+                        ? "border-[#5146E5] bg-[#EEEDFF] text-[#4338CA] dark:bg-[#2b2b5e] dark:text-[#a5b4fc]"
+                        : "border-[#D7D5DE] bg-white text-[#686873] hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A] dark:border-[#34343c] dark:bg-[#1b1b1f] dark:text-[#b0b0b9]"
                     }`}
                   >
                     {entry.is_pinned ? "Pinned" : "Pin"}
                   </button>
 
                   {permissions.isMember && (
-                    <div className="relative">
+                    <div
+                      className="relative"
+                      ref={exportMenuRef}
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <button
                         onClick={() => setExportMenuOpen((open) => !open)}
-                        className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
+                        aria-haspopup="menu"
+                        aria-expanded={exportMenuOpen}
+                        className="rounded-lg border border-[#D7D5DE] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A] dark:border-[#34343c] dark:bg-[#1b1b1f] dark:text-[#b0b0b9]"
                       >
                         Export
                       </button>
                       {exportMenuOpen && (
-                        <div className="absolute right-0 z-20 mt-2 w-36 rounded-lg border border-[#DDDCE3] bg-white shadow-lg dark:border-[#2a2a2a] dark:bg-[#141414]">
+                        <div
+                          role="menu"
+                          className="absolute right-0 z-20 mt-2 w-36 rounded-lg border border-[#D7D5DE] bg-white shadow-lg dark:border-[#34343c] dark:bg-[#1b1b1f]"
+                        >
                           <button
                             type="button"
+                            role="menuitem"
                             onClick={() => handleExport("md")}
-                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F2F0EA] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
                           >
                             Markdown
                           </button>
                           <button
                             type="button"
+                            role="menuitem"
                             onClick={() => handleExport("html")}
-                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F2F0EA] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
                           >
                             HTML
                           </button>
                           <button
                             type="button"
+                            role="menuitem"
                             onClick={() => handleExport("json")}
-                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F2F0EA] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
                           >
                             JSON
                           </button>
                           <button
                             type="button"
+                            role="menuitem"
                             onClick={() => handleExport("pdf")}
-                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F7F6F2] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                            className="flex w-full items-center justify-start px-4 py-2 text-sm text-[#686873] transition hover:bg-[#F2F0EA] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
                           >
                             PDF
                           </button>
@@ -405,7 +452,7 @@ export function EntryDetailPageView({
                       setError(null);
                       setEditing(true);
                     }}
-                    className="rounded-lg border border-[#DDDCE3] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#3a3a3a] hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#a3a3a3]"
+                    className="rounded-lg border border-[#D7D5DE] bg-white px-5 py-3 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A] dark:border-[#34343c] dark:bg-[#1b1b1f] dark:text-[#b0b0b9]"
                   >
                     Edit
                   </button>
@@ -421,8 +468,8 @@ export function EntryDetailPageView({
               )}
             </div>
 
-            <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
-              <div className="flex items-start justify-between gap-4 border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
+            <section className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] shadow-sm">
+              <div className="flex items-start justify-between gap-4 border-b border-[#D7D5DE] dark:border-[#34343c] px-7 py-5 sm:px-8">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                     {workspace.name}
@@ -448,18 +495,18 @@ export function EntryDetailPageView({
                   dangerouslySetInnerHTML={{ __html: entry.content }}
                 />
               ) : (
-                <p className="px-7 py-7 text-sm leading-relaxed text-[#9897A1] dark:text-[#737373] sm:px-8">
+                <p className="px-7 py-7 text-sm leading-relaxed text-[#9897A1] dark:text-[#8b8b94] sm:px-8">
                   This entry has no content yet.
                 </p>
               )}
 
               {summary && (
-                <div className="border-t border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-6 sm:px-8">
+                <div className="border-t border-[#D7D5DE] dark:border-[#34343c] px-7 py-6 sm:px-8">
                   <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                     AI Summary
                   </p>
 
-                  <p className="mt-2 text-sm leading-relaxed text-[#20202A] dark:text-[#e5e5e5]">
+                  <p className="mt-2 text-sm leading-relaxed text-[#20202A] dark:text-[#ececf1]">
                     {summary}
                   </p>
                 </div>
@@ -468,15 +515,15 @@ export function EntryDetailPageView({
               {summaryError && (
                 <p
                   role="alert"
-                  className="mx-7 mb-6 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0] sm:mx-8"
+                  className="mx-7 mb-6 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0] sm:mx-8"
                 >
                   {summaryError}
                 </p>
               )}
             </section>
 
-            <section className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm">
-              <div className="border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-7 py-5 sm:px-8">
+            <section className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] shadow-sm">
+              <div className="border-b border-[#D7D5DE] dark:border-[#34343c] px-7 py-5 sm:px-8">
                 <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
                   Organize
                 </p>
@@ -491,7 +538,7 @@ export function EntryDetailPageView({
                   {(entry.tags ?? []).map((tag) => (
                     <span
                       key={tag.id}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#EEEDFF] dark:bg-[#211f3d] px-3 py-1 text-sm font-medium text-[#4338CA]"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#EEEDFF] dark:bg-[#262449] px-3 py-1 text-sm font-medium text-[#4338CA]"
                     >
                       {tag.name}
 
@@ -510,7 +557,7 @@ export function EntryDetailPageView({
                   ))}
 
                   {(entry.tags ?? []).length === 0 && (
-                    <span className="text-sm text-[#9897A1] dark:text-[#737373]">
+                    <span className="text-sm text-[#9897A1] dark:text-[#8b8b94]">
                       No tags yet.
                     </span>
                   )}
@@ -519,7 +566,7 @@ export function EntryDetailPageView({
                 {tagError && (
                   <p
                     role="alert"
-                    className="mt-4 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#3a1c24] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
+                    className="mt-4 rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-4 py-3 text-sm leading-relaxed text-[#B13D55] dark:text-[#f0a0b0]"
                   >
                     {tagError}
                   </p>
@@ -536,7 +583,7 @@ export function EntryDetailPageView({
                       value={tagInput}
                       onChange={(event) => setTagInput(event.target.value)}
                       disabled={tagSaving}
-                      className="w-full rounded-lg border border-[#DDDCE3] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a] dark:border-[#2a2a2a] dark:bg-[#141414] dark:text-[#e5e5e5]"
+                      className="w-full rounded-lg border border-[#D7D5DE] bg-white px-4 py-2.5 text-sm text-[#20202A] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a] dark:border-[#34343c] dark:bg-[#1b1b1f] dark:text-[#ececf1]"
                     />
 
                     <button
@@ -561,15 +608,15 @@ export function EntryDetailPageView({
                     </button>
 
                     {suggestions.length > 0 && (
-                      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-[#EEEDEF] bg-[#F7F6F2] px-3 py-2 dark:border-[#2a2a2a] dark:bg-[#1c1c1c]">
-                        <span className="text-xs font-medium text-[#686873] dark:text-[#a3a3a3]">
+                      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-[#E7E6ED] bg-[#F2F0EA] px-3 py-2 dark:border-[#34343c] dark:bg-[#24242a]">
+                        <span className="text-xs font-medium text-[#686873] dark:text-[#b0b0b9]">
                           Suggested:
                         </span>
 
                         {suggestions.map((name) => (
                           <span
                             key={name}
-                            className="rounded-full bg-[#EEEDFF] px-2 py-0.5 text-xs font-medium text-[#4338CA] dark:bg-[#242450] dark:text-[#a5b4fc]"
+                            className="rounded-full bg-[#EEEDFF] px-2 py-0.5 text-xs font-medium text-[#4338CA] dark:bg-[#2b2b5e] dark:text-[#a5b4fc]"
                           >
                             {name}
                           </span>
@@ -587,7 +634,7 @@ export function EntryDetailPageView({
                         <button
                           type="button"
                           onClick={() => setSuggestions([])}
-                          className="rounded-md px-2 py-1 text-xs font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#a3a3a3]"
+                          className="rounded-md px-2 py-1 text-xs font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#b0b0b9]"
                         >
                           Dismiss
                         </button>
@@ -620,15 +667,15 @@ export function EntryDetailPageView({
                 />
               </>
             ) : (
-              <section className="rounded-2xl border border-[#E8E7EC] bg-white dark:bg-[#141414] px-6 py-8">
-                <h2 className="text-lg font-semibold tracking-tight text-[#20202A] dark:text-[#e5e5e5]">
+              <section className="rounded-2xl border border-[#E8E7EC] bg-white dark:bg-[#1b1b1f] px-6 py-8">
+                <h2 className="text-lg font-semibold tracking-tight text-[#20202A] dark:text-[#ececf1]">
                   Documents and discussion are private
                 </h2>
-                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                   You are not a member of this workspace, so its documents and
                   discussions are closed to you. You can still read this entry.
                 </p>
-                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                   Ask a member or the owner to add you if you need access.
                 </p>
               </section>

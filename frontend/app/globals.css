@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
+/* Tailwind v4 defaults `dark:` to prefers-color-scheme. next-themes adds a
+   `.dark` class to <html>, so point the variant at that class instead. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
+  --background: #fbfaf7;
   --foreground: #171717;
+
+  /* Native form controls, scrollbars and the caret follow the active theme
+     instead of the OS preference. */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -16,8 +24,9 @@
    picked light on a dark desktop on a dark page background with light-mode
    cards on top, because it cannot be overridden by the class. */
 .dark {
-  --background: #0a0a0a;
+  --background: #0f0f11;
   --foreground: #ededed;
+  color-scheme: dark;
 }
 
 body {
@@ -183,24 +192,24 @@ body {
    so the palette is restated here against the `dark` class. */
 .dark .prose-content,
 .dark .tiptap-editor .ProseMirror {
-  color: #e5e5e5;
+  color: #ececf1;
 }
 
 .dark .prose-content blockquote,
 .dark .tiptap-editor .ProseMirror blockquote {
-  border-left-color: #3a3a3a;
-  color: #a3a3a3;
+  border-left-color: #474751;
+  color: #b0b0b9;
 }
 
 .dark .prose-content code,
 .dark .tiptap-editor .ProseMirror code {
-  background: #242450;
+  background: #2b2b5e;
   color: #a5b4fc;
 }
 
 .dark .prose-content pre,
 .dark .tiptap-editor .ProseMirror pre {
-  background: #0f0f0f;
+  background: #121214;
   color: #ededed;
 }
 
@@ -211,5 +220,5 @@ body {
 
 .dark .prose-content hr,
 .dark .tiptap-editor .ProseMirror hr {
-  border-top-color: #2a2a2a;
+  border-top-color: #34343c;
 }

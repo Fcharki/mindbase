@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ForgotPasswordForm } from "@/app/features/auth/ForgotPasswordForm";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 
 function Logomark() {
@@ -27,8 +28,8 @@ function Logomark() {
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-5 py-10 font-sans sm:px-8">
-      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-sm sm:grid-cols-2">
+    <div className="flex min-h-screen items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] px-5 py-10 font-sans sm:px-8">
+      <main className="grid w-full max-w-4xl overflow-hidden rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] shadow-sm sm:grid-cols-2">
         {/* Brand panel */}
         <div className="relative hidden min-h-[600px] overflow-hidden sm:flex sm:flex-col sm:justify-between">
           <Image
@@ -68,16 +69,20 @@ export default function ForgotPasswordPage() {
 
         {/* Form panel */}
         <div className="flex flex-col justify-center gap-8 p-7 sm:p-12">
-          <div className="sm:hidden">
+          <div className="flex items-center justify-between gap-3">
             <Link
               href="/"
-              className="flex items-center gap-2 text-[#20202A] dark:text-[#e5e5e5]"
+              className="flex items-center gap-2 text-[#20202A] dark:text-[#ececf1] sm:hidden"
             >
               <Logomark />
               <span className="text-lg font-semibold tracking-tight">
                 Mindbase
               </span>
             </Link>
+
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -85,11 +90,11 @@ export default function ForgotPasswordPage() {
               Account recovery
             </p>
 
-            <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A] dark:text-[#e5e5e5]">
+            <h1 className="text-3xl font-semibold tracking-[-0.025em] text-[#20202A] dark:text-[#ececf1]">
               Forgot your password?
             </h1>
 
-            <p className="text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+            <p className="text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               Enter the email address linked to your account and we&rsquo;ll
               send you a link to create a new password.
             </p>
@@ -97,7 +102,7 @@ export default function ForgotPasswordPage() {
 
           <ForgotPasswordForm />
 
-          <p className="text-sm text-[#686873] dark:text-[#a3a3a3]">
+          <p className="text-sm text-[#686873] dark:text-[#b0b0b9]">
             Remember your password?{" "}
             <Link
               href="/auth/login"

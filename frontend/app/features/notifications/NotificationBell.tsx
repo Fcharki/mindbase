@@ -121,7 +121,7 @@ export function NotificationBell() {
             ? `Notifications, ${unreadCount} unread`
             : "Notifications"
         }
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] text-[#686873] dark:text-[#a3a3a3] transition hover:bg-[#F7F6F2] dark:hover:bg-[#1c1c1c] hover:text-[#20202A] focus:outline-none focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] text-[#686873] dark:text-[#b0b0b9] transition hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A] focus:outline-none focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
       >
         <svg
           width="16"
@@ -147,9 +147,9 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-[340px] overflow-hidden rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] shadow-lg">
-          <div className="flex items-center justify-between gap-3 border-b border-[#DDDCE3] dark:border-[#2a2a2a] px-4 py-3">
-            <p className="text-sm font-semibold text-[#20202A] dark:text-[#e5e5e5]">
+        <div className="absolute right-0 z-20 mt-2 w-[340px] overflow-hidden rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] shadow-lg">
+          <div className="flex items-center justify-between gap-3 border-b border-[#D7D5DE] dark:border-[#34343c] px-4 py-3">
+            <p className="text-sm font-semibold text-[#20202A] dark:text-[#ececf1]">
               Notifications
             </p>
 
@@ -167,13 +167,13 @@ export function NotificationBell() {
 
           <ul className="max-h-[380px] overflow-y-auto">
             {notifications === null && (
-              <li className="px-4 py-6 text-center text-sm text-[#9897A1] dark:text-[#737373]">
+              <li className="px-4 py-6 text-center text-sm text-[#9897A1] dark:text-[#8b8b94]">
                 Loading notifications…
               </li>
             )}
 
             {notifications !== null && notifications.length === 0 && (
-              <li className="px-4 py-6 text-center text-sm text-[#9897A1] dark:text-[#737373]">
+              <li className="px-4 py-6 text-center text-sm text-[#9897A1] dark:text-[#8b8b94]">
                 You have no notifications yet.
               </li>
             )}
@@ -187,20 +187,20 @@ export function NotificationBell() {
                   <p
                     className={`text-sm leading-snug ${
                       unread
-                        ? "font-semibold text-[#20202A] dark:text-[#e5e5e5]"
-                        : "font-medium text-[#686873] dark:text-[#a3a3a3]"
+                        ? "font-semibold text-[#20202A] dark:text-[#ececf1]"
+                        : "font-medium text-[#686873] dark:text-[#b0b0b9]"
                     }`}
                   >
                     {notificationSummary(notification)}
                   </p>
 
                   {notification.excerpt && (
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#9897A1] dark:text-[#737373]">
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#9897A1] dark:text-[#8b8b94]">
                       {notification.excerpt}
                     </p>
                   )}
 
-                  <p className="mt-1 text-xs text-[#9897A1] dark:text-[#737373]">
+                  <p className="mt-1 text-xs text-[#9897A1] dark:text-[#8b8b94]">
                     {new Date(
                       notification.created_at,
                     ).toLocaleString("en-US", {
@@ -216,8 +216,8 @@ export function NotificationBell() {
               return (
                 <li
                   key={notification.id}
-                  className={`border-b border-[#F0EFF3] dark:border-[#242424] last:border-b-0 ${
-                    unread ? "bg-[#F7F6FF] dark:bg-[#141414]" : ""
+                  className={`border-b border-[#F0EFF3] dark:border-[#2c2c33] last:border-b-0 ${
+                    unread ? "bg-[#F7F6FF] dark:bg-[#1b1b1f]" : ""
                   }`}
                 >
                   {/* A notification that no longer points at a live post is
@@ -242,7 +242,7 @@ export function NotificationBell() {
           {error && (
             <p
               role="alert"
-              className="border-t border-[#DDDCE3] dark:border-[#2a2a2a] px-4 py-2.5 text-xs text-[#B13D55] dark:text-[#f0a0b0]"
+              className="border-t border-[#D7D5DE] dark:border-[#34343c] px-4 py-2.5 text-xs text-[#B13D55] dark:text-[#f0a0b0]"
             >
               {error}
             </p>

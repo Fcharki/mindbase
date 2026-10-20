@@ -31,13 +31,13 @@ type Status = "loading" | "ready" | "missing";
 
 function EntryListSkeleton() {
   return (
-    <ul className="divide-y divide-[#EEEDEF] dark:divide-[#242424]" aria-hidden="true">
+    <ul className="divide-y divide-[#E7E6ED] dark:divide-[#2c2c33]" aria-hidden="true">
       {Array.from({ length: 4 }).map((_, index) => (
         <li key={index} className="flex items-start gap-4 px-7 py-4 sm:px-8">
-          <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-[#EEEDEF] dark:bg-[#242424]" />
+          <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-[#E7E6ED] dark:bg-[#2c2c33]" />
           <div className="min-w-0 flex-1">
-            <div className="h-4 w-1/3 animate-pulse rounded bg-[#EEEDEF] dark:bg-[#242424]" />
-            <div className="mt-2 h-3 w-2/3 animate-pulse rounded bg-[#F0EFF2] dark:bg-[#1f1f1f]" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-[#E7E6ED] dark:bg-[#2c2c33]" />
+            <div className="mt-2 h-3 w-2/3 animate-pulse rounded bg-[#F0EFF2] dark:bg-[#2a2a31]" />
           </div>
         </li>
       ))}
@@ -238,16 +238,16 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0e0e0e] dark:text-[#e5e5e5]">
+      <div className="flex min-h-screen flex-col bg-[#F2F0EA] font-sans text-[#20202A] dark:bg-[#121214] dark:text-[#ececf1]">
         <WorkspaceNav />
 
         <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
           <div>
-            <div className="h-4 w-24 animate-pulse rounded bg-[#EEEDEF] dark:bg-[#242424]" />
-            <div className="mt-3 h-8 w-40 animate-pulse rounded bg-[#EEEDEF] dark:bg-[#242424]" />
+            <div className="h-4 w-24 animate-pulse rounded bg-[#E7E6ED] dark:bg-[#2c2c33]" />
+            <div className="mt-3 h-8 w-40 animate-pulse rounded bg-[#E7E6ED] dark:bg-[#2c2c33]" />
           </div>
 
-          <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414]">
+          <section className="overflow-hidden rounded-2xl border border-[#D7D5DE] bg-white shadow-sm dark:border-[#34343c] dark:bg-[#1b1b1f]">
             <EntryListSkeleton />
           </section>
         </main>
@@ -257,12 +257,12 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
 
   if (status === "missing" || !workspace) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0e0e0e] dark:text-[#e5e5e5]">
+      <div className="flex min-h-screen flex-col bg-[#F2F0EA] font-sans text-[#20202A] dark:bg-[#121214] dark:text-[#ececf1]">
         <WorkspaceNav />
 
         <main className="flex flex-1 items-center justify-center px-6 py-20">
-          <section className="w-full max-w-md rounded-2xl border border-[#DDDCE3] bg-white p-8 text-center shadow-sm sm:p-10 dark:border-[#2a2a2a] dark:bg-[#141414]">
-            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] dark:bg-[#3a1c24] text-[#E85D75] dark:text-[#f08098]">
+          <section className="w-full max-w-md rounded-2xl border border-[#D7D5DE] bg-white p-8 text-center shadow-sm sm:p-10 dark:border-[#34343c] dark:bg-[#1b1b1f]">
+            <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FCECEF] dark:bg-[#43212b] text-[#E85D75] dark:text-[#f08098]">
               <svg
                 width="22"
                 height="22"
@@ -290,7 +290,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
               Workspace not available
             </h1>
 
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               This workspace may have been deleted, or you don&rsquo;t have
               access to it.
             </p>
@@ -310,7 +310,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
   const canWrite = permissionsFor(workspace.role, workspace.is_member).canContribute;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F6F2] font-sans text-[#20202A] dark:bg-[#0e0e0e] dark:text-[#e5e5e5]">
+    <div className="flex min-h-screen flex-col bg-[#F2F0EA] font-sans text-[#20202A] dark:bg-[#121214] dark:text-[#ececf1]">
       <WorkspaceNav />
 
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10 sm:px-10 sm:py-12">
@@ -318,7 +318,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
           <div>
             <Link
               href={`/workspaces/${workspace.id}`}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#a3a3a3] dark:hover:text-[#e5e5e5]"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#b0b0b9] dark:hover:text-[#ececf1]"
             >
               <svg
                 className="h-4 w-4"
@@ -343,7 +343,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
               Entries
             </h1>
 
-            <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+            <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               {entries.length === 0
                 ? "Nothing here yet."
                 : `${entries.length} ${entries.length === 1 ? "entry" : "entries"} in this workspace.`}
@@ -366,9 +366,9 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
         />
 
         {recentEntries.length > 0 && (
-          <section className="rounded-2xl border border-[#DDDCE3] bg-white px-7 py-5 shadow-sm sm:px-8 dark:border-[#2a2a2a] dark:bg-[#141414]">
+          <section className="rounded-2xl border border-[#D7D5DE] bg-white px-7 py-5 shadow-sm sm:px-8 dark:border-[#34343c] dark:bg-[#1b1b1f]">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-[#686873] dark:text-[#a3a3a3]">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-[#686873] dark:text-[#b0b0b9]">
                 Recently viewed
               </h2>
 
@@ -386,7 +386,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
                 <Link
                   key={entry.id}
                   href={`/workspaces/${workspace.id}/entries/${entry.id}`}
-                  className="max-w-[240px] truncate rounded-full border border-[#DDDCE3] px-3 py-1 text-xs font-medium text-[#20202A] transition hover:border-[#5146E5] hover:text-[#5146E5] dark:border-[#2a2a2a] dark:text-[#e5e5e5]"
+                  className="max-w-[240px] truncate rounded-full border border-[#D7D5DE] px-3 py-1 text-xs font-medium text-[#20202A] transition hover:border-[#5146E5] hover:text-[#5146E5] dark:border-[#34343c] dark:text-[#ececf1]"
                 >
                   {entry.title}
                 </Link>
@@ -396,8 +396,8 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
         )}
 
         {canWrite && selected.size > 0 && (
-          <div className="sticky top-4 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-[#5146E5] bg-white px-4 py-3 shadow-md dark:bg-[#141414]">
-            <span className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]">
+          <div className="sticky top-4 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-[#5146E5] bg-white px-4 py-3 shadow-md dark:bg-[#1b1b1f]">
+            <span className="text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
               {selected.size} selected
             </span>
 
@@ -406,7 +406,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
                 type="button"
                 onClick={() => handleBulk("pin")}
                 disabled={bulkPending}
-                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] disabled:opacity-50 dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                className="rounded-lg border border-[#D7D5DE] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F2F0EA] disabled:opacity-50 dark:border-[#34343c] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
               >
                 Pin
               </button>
@@ -415,7 +415,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
                 type="button"
                 onClick={() => handleBulk("unpin")}
                 disabled={bulkPending}
-                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] disabled:opacity-50 dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                className="rounded-lg border border-[#D7D5DE] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F2F0EA] disabled:opacity-50 dark:border-[#34343c] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
               >
                 Unpin
               </button>
@@ -424,7 +424,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
                 type="button"
                 onClick={() => handleBulk("tag")}
                 disabled={bulkPending}
-                className="rounded-lg border border-[#DDDCE3] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F7F6F2] disabled:opacity-50 dark:border-[#2a2a2a] dark:text-[#a3a3a3] dark:hover:bg-[#1c1c1c]"
+                className="rounded-lg border border-[#D7D5DE] px-3 py-1.5 text-sm font-medium text-[#686873] transition hover:bg-[#F2F0EA] disabled:opacity-50 dark:border-[#34343c] dark:text-[#b0b0b9] dark:hover:bg-[#24242a]"
               >
                 Tag
               </button>
@@ -441,7 +441,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
-                className="text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#a3a3a3]"
+                className="text-sm font-medium text-[#686873] transition hover:text-[#20202A] dark:text-[#b0b0b9]"
               >
                 Clear
               </button>
@@ -449,10 +449,10 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
           </div>
         )}
 
-        <section className="overflow-hidden rounded-2xl border border-[#DDDCE3] bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#141414]">
+        <section className="overflow-hidden rounded-2xl border border-[#D7D5DE] bg-white shadow-sm dark:border-[#34343c] dark:bg-[#1b1b1f]">
           {entries.length === 0 ? (
             <div className="flex min-h-[260px] flex-col items-center justify-center px-7 py-12 text-center sm:px-8">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] dark:bg-[#10262a] text-[#159A9C] dark:text-[#3ac6c8]">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF7F6] dark:bg-[#143036] text-[#159A9C] dark:text-[#3ac6c8]">
                 <svg
                   width="23"
                   height="23"
@@ -480,7 +480,7 @@ export function EntriesPageView({ workspaceId }: { workspaceId: string }) {
                 No entries yet
               </h3>
 
-              <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873] dark:text-[#a3a3a3]">
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                 {canWrite
                   ? "Capture your first thought, note, or idea in this workspace."
                   : "There are no knowledge entries to browse in this workspace yet."}

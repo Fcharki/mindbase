@@ -23,6 +23,9 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'email_verified_at' => $this->email_verified_at,
+            // Google-only accounts have no password the user knows, so the
+            // delete confirmation must not ask for one.
+            'has_password' => $this->google_id === null,
         ];
     }
 }

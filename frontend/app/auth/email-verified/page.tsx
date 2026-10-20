@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+import { ThemeToggle } from "@/app/components/ThemeToggle";
+
 function EmailVerifiedContent() {
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
@@ -25,15 +27,18 @@ function EmailVerifiedContent() {
       : "This verification link is no longer valid. Please request a new verification email and try again.";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] dark:bg-[#0f0f0f] px-5 py-10 font-sans sm:px-8">
+    <main className="flex min-h-screen items-center justify-center bg-[#F2F0EA] dark:bg-[#121214] px-5 py-10 font-sans sm:px-8">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] p-7 shadow-sm sm:p-10">
+        <div className="relative rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-7 shadow-sm sm:p-10">
+          <div className="absolute right-4 top-4">
+            <ThemeToggle />
+          </div>
           {/* Status icon */}
           <div
             className={`mb-7 flex h-12 w-12 items-center justify-center rounded-xl ${
               isVerified
-                ? "bg-[#EEEDFF] dark:bg-[#211f3d] text-[#5146E5]"
-                : "bg-[#FCECEF] dark:bg-[#3a1c24] text-[#E85D75] dark:text-[#f08098]"
+                ? "bg-[#EEEDFF] dark:bg-[#262449] text-[#5146E5]"
+                : "bg-[#FCECEF] dark:bg-[#43212b] text-[#E85D75] dark:text-[#f08098]"
             }`}
           >
             {isVerified ? (
@@ -88,11 +93,11 @@ function EmailVerifiedContent() {
               {isVerified ? "Email confirmed" : "Verification issue"}
             </p>
 
-            <h1 className="text-3xl font-semibold leading-tight tracking-[-0.025em] text-[#20202A] dark:text-[#e5e5e5] sm:text-4xl">
+            <h1 className="text-3xl font-semibold leading-tight tracking-[-0.025em] text-[#20202A] dark:text-[#ececf1] sm:text-4xl">
               {title}
             </h1>
 
-            <p className="text-sm leading-6 text-[#686873] dark:text-[#a3a3a3] sm:text-base">
+            <p className="text-sm leading-6 text-[#686873] dark:text-[#b0b0b9] sm:text-base">
               {description}
             </p>
           </div>
@@ -112,7 +117,7 @@ function EmailVerifiedContent() {
         <div className="mt-6 flex justify-center">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-[#20202A] dark:text-[#e5e5e5]"
+            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-[#20202A] dark:text-[#ececf1]"
           >
             <svg
               width="20"

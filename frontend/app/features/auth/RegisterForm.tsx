@@ -54,7 +54,7 @@ export function RegisterForm() {
       <button
         type="button"
         onClick={handleGoogleRegister}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-[#C8C5B8] bg-white px-4 py-2.5 text-sm font-medium text-[#1E211D] transition-colors hover:bg-[#F7F6F2] dark:border-[#3A3D30] dark:bg-[#1B1E24] dark:text-[#E7E5DC] dark:hover:bg-[#22252C]"
+        className="flex w-full items-center justify-center gap-3 rounded-full border border-[#C8C5B8] bg-white px-4 py-2.5 text-sm font-medium text-[#1E211D] transition-colors hover:bg-[#F2F0EA] dark:border-[#3A3D30] dark:bg-[#1B1E24] dark:text-[#E7E5DC] dark:hover:bg-[#22252C]"
       >
         <svg
           width="18"

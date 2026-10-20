@@ -32,7 +32,7 @@ export function CreateWorkspaceForm({
       <div className="flex flex-col gap-2">
         <label
           htmlFor="workspace-name"
-          className="text-sm font-medium text-[#20202A] dark:text-[#e5e5e5]"
+          className="text-sm font-medium text-[#20202A] dark:text-[#ececf1]"
         >
           Workspace name
         </label>
@@ -45,7 +45,7 @@ export function CreateWorkspaceForm({
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="e.g. Research, Personal, Team"
-          className="w-full rounded-lg border border-[#DDDCE3] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] px-4 py-2.5 text-sm text-[#20202A] dark:text-[#e5e5e5] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#6b6b6b] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#2a2a3a]"
+          className="w-full rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-4 py-2.5 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
         />
       </div>
 
