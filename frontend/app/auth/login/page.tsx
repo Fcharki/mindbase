@@ -49,7 +49,7 @@ export default function LoginPage() {
         {/* Brand panel */}
         <div className="relative hidden min-h-[600px] overflow-hidden sm:flex sm:flex-col sm:justify-between">
           <Image
-            src="/images/login_img.jpg"
+            src="/images/login_img.webp"
             alt=""
             fill
             priority

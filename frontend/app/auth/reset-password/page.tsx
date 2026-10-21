@@ -165,7 +165,7 @@ export default function ResetPasswordPage() {
         {/* Brand panel */}
         <div className="relative hidden min-h-[600px] overflow-hidden sm:flex sm:flex-col sm:justify-between">
           <Image
-            src="/images/register_img.jpg"
+            src="/images/register_img.webp"
             alt=""
             fill
             priority
