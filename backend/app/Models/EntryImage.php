@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Storage;
 
 class EntryImage extends Model
 {
+    public const EXTRACTION_PENDING = 'pending';
+
+    public const EXTRACTION_READY = 'ready';
+
+    public const EXTRACTION_EMPTY = 'empty';
+
+    public const EXTRACTION_FAILED = 'failed';
+
     protected $fillable = [
         'uuid',
         'workspace_id',
@@ -20,10 +28,15 @@ class EntryImage extends Model
         'mime_type',
         'size',
         'checksum',
+        'extracted_text',
+        'extraction_status',
+        'extraction_error',
+        'extracted_at',
     ];
 
     protected $casts = [
         'size' => 'integer',
+        'extracted_at' => 'datetime',
     ];
 
     /**
@@ -100,5 +113,14 @@ class EntryImage extends Model
     public function fileExists(): bool
     {
         return Storage::disk($this->disk)->exists($this->path);
+    }
+
+    /**
+     * Whether OCR produced text worth indexing.
+     */
+    public function hasExtractedText(): bool
+    {
+        return $this->extraction_status === self::EXTRACTION_READY
+            && trim((string) $this->extracted_text) !== '';
     }
 }

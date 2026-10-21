@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EntryImage\StoreEntryImageRequest;
 use App\Http\Resources\EntryImageResource;
+use App\Jobs\ExtractEntryImageText;
 use App\Models\EntryImage;
 use App\Models\KnowledgeEntry;
 use App\Models\Workspace;
@@ -27,6 +28,9 @@ class EntryImageController extends Controller
             $workspace,
             $request->user()->id
         );
+
+        // Queued: OCR loads a model, and the editor only needs the URL now.
+        ExtractEntryImageText::dispatch($image->id);
 
         return EntryImageResource::make($image)
             ->response()

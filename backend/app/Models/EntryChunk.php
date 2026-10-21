@@ -31,6 +31,14 @@ class EntryChunk extends Model
         return 'document:'.$documentId;
     }
 
+    /**
+     * Source for text OCR read out of an inline image.
+     */
+    public static function sourceForImage(int $entryImageId): string
+    {
+        return 'image:'.$entryImageId;
+    }
+
     protected $fillable = [
         'knowledge_entry_id',
         'source',

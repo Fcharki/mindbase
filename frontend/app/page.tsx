@@ -196,7 +196,7 @@ export default function Home() {
 
             <p className="mt-7 max-w-2xl text-lg leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
               Mindbase is a place to capture what you read, connect what you
-              learn, and find it again when you need it — without folders
+              learn, and find it again when you need it, without folders
               you&rsquo;ll forget to check.
             </p>
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Document;
 use App\Models\EntryChunk;
+use App\Models\EntryImage;
 use App\Models\KnowledgeEntry;
 use App\Models\Summary;
 use Illuminate\Support\Facades\Log;
@@ -93,6 +94,10 @@ class ChunkingService
             $chunks[] = $chunk;
         }
 
+        foreach ($this->entryImageChunks($entry) as $chunk) {
+            $chunks[] = $chunk;
+        }
+
         return $this->cap($chunks);
     }
 
@@ -120,6 +125,43 @@ class ChunkingService
 
             $position = 0;
             $source = EntryChunk::sourceForDocument($document->id);
+
+            foreach ($this->split($body) as $piece) {
+                $chunks[] = [
+                    'source' => $source,
+                    'position' => $position++,
+                    'body' => $piece,
+                ];
+            }
+        }
+
+        return $chunks;
+    }
+
+    /**
+     * Chunks for text OCR read out of images embedded in the entry.
+     *
+     * @return list<array{source: string, position: int, body: string}>
+     */
+    private function entryImageChunks(KnowledgeEntry $entry): array
+    {
+        $images = $entry->entryImages()
+            ->where('extraction_status', EntryImage::EXTRACTION_READY)
+            ->whereNotNull('extracted_text')
+            ->orderBy('id')
+            ->get();
+
+        $chunks = [];
+
+        foreach ($images as $image) {
+            $body = $this->flatten((string) $image->extracted_text);
+
+            if ($body === '') {
+                continue;
+            }
+
+            $position = 0;
+            $source = EntryChunk::sourceForImage($image->id);
 
             foreach ($this->split($body) as $piece) {
                 $chunks[] = [

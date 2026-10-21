@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\KnowledgeEntry;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\AI\OcrService;
 use App\Services\EntrySummaryService;
 use App\Services\Extraction\TextExtractionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -65,6 +66,57 @@ class DocumentTextExtractionTest extends TestCase
 
         $this->assertSame(Document::EXTRACTION_READY, $document->extraction_status);
         $this->assertStringContainsString('Hello extraction world', (string) $document->extracted_text);
+    }
+
+    public function test_an_image_is_ocred_and_stored(): void
+    {
+        $this->mock(OcrService::class)
+            ->shouldReceive('extract')
+            ->once()
+            ->andReturn('Invoice 42'.PHP_EOL.'Total 10.00');
+
+        $document = $this->document('receipt.png', 'not-really-a-png');
+
+        $this->runExtraction($document);
+
+        $document->refresh();
+
+        $this->assertSame(Document::EXTRACTION_READY, $document->extraction_status);
+        $this->assertSame("Invoice 42\nTotal 10.00", $document->extracted_text);
+    }
+
+    public function test_an_image_without_text_is_recorded_as_empty(): void
+    {
+        $this->mock(OcrService::class)
+            ->shouldReceive('extract')
+            ->once()
+            ->andReturn('');
+
+        $document = $this->document('photo.webp', 'not-really-an-image');
+
+        $this->runExtraction($document);
+
+        $document->refresh();
+
+        $this->assertSame(Document::EXTRACTION_EMPTY, $document->extraction_status);
+        $this->assertNull($document->extracted_text);
+    }
+
+    public function test_an_ocr_failure_is_recorded_as_failed(): void
+    {
+        $this->mock(OcrService::class)
+            ->shouldReceive('extract')
+            ->once()
+            ->andThrow(new \RuntimeException('The OCR model is unavailable.'));
+
+        $document = $this->document('receipt.png', 'not-really-a-png');
+
+        $this->runExtraction($document);
+
+        $document->refresh();
+
+        $this->assertSame(Document::EXTRACTION_FAILED, $document->extraction_status);
+        $this->assertStringContainsString('OCR model', (string) $document->extraction_error);
     }
 
     public function test_an_unsupported_extension_is_recorded_as_unsupported(): void

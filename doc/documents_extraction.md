@@ -20,11 +20,13 @@ in the entry someone typed around it.
 | `.xlsx` | `XlsxReader` | Worksheet names, cell coordinates, shared/inline strings, booleans, formulas, dates |
 | `.pptx` | `PptxReader` | Slides in presentation order, titles, tables, charts |
 | `.txt` `.md` `.csv` | `TextExtractionService` | Read straight from disk |
+| `.jpg` `.jpeg` `.png` `.gif` `.webp` | `OcrService` → PaddleOCR | Raster images are OCR'd; see [ocr.md](ocr.md) |
 | `.doc` `.xls` `.ppt` | — | Legacy binary container, recorded `unsupported` |
 
 A **scanned PDF with no text layer** extracts to an empty string and is recorded
-as `empty`, not as a failure. There is no OCR in this pipeline; adding it would
-be a separate concern with its own model and timeout budget.
+as `empty`, not as a failure. PDF pages are not OCR'd. Raster images, whether
+uploaded as attachments or embedded in an entry, are read by PaddleOCR through
+a separate queued job; see [ocr.md](ocr.md).
 
 ## 2. Where it runs
 
@@ -50,6 +52,10 @@ upload ──► DocumentController@store ──► ExtractDocumentText (queued)
                                              ▼
                         entry_chunks → hybrid search / RAG passages
 ```
+
+Raster images take one more branch from `TextExtractionService` through
+`OcrService` to the AI service's PaddleOCR endpoint; that path is documented in
+[ocr.md](ocr.md).
 
 Extraction is **queued**, not run inline. Parsing a PDF is not instant and an
 upload should not hold a request open while it happens. The API returns `201`
@@ -226,8 +232,9 @@ show whether a document's text is searchable:
 
 ## 9. Limits
 
-- **No OCR.** Image-only PDFs and scanned documents extract to nothing. They are
-  stored and downloadable, but not searchable.
+- **No PDF OCR.** Image-only PDFs and scanned documents extract to nothing. They
+  are stored and downloadable, but not searchable. Standalone raster images are
+  OCR'd separately — see [ocr.md](ocr.md).
 - **No legacy office formats.** `.doc`, `.xls` and `.ppt` are recorded
   `unsupported`.
 - **Structure, not layout.** Headings, lists, tables and spreadsheet rows keep

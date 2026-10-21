@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Document;
 use App\Models\EntryChunk;
+use App\Models\EntryImage;
 use App\Models\KnowledgeEntry;
 use App\Models\Summary;
 use App\Models\User;
@@ -229,6 +230,57 @@ class ChunkingServiceTest extends TestCase
             $this->assertNotEmpty($positions);
             $this->assertSame(range(0, count($positions) - 1), $positions);
         }
+    }
+
+    public function test_ocr_text_from_an_inline_image_is_indexed_as_its_own_source(): void
+    {
+        $entry = $this->entry('<p>Body only.</p>');
+
+        $image = EntryImage::create([
+            'uuid' => '9f1d8e6a-6c1c-4f86-9d4e-1234567890ab',
+            'workspace_id' => $entry->workspace_id,
+            'knowledge_entry_id' => $entry->id,
+            'uploaded_by' => $entry->created_by,
+            'disk' => 'documents',
+            'path' => 'entry-images/workspaces/1/receipt.png',
+            'original_name' => 'receipt.png',
+            'mime_type' => 'image/png',
+            'size' => 100,
+            'checksum' => str_repeat('a', 64),
+            'extracted_text' => 'A fact that lives only in the screenshot.',
+            'extraction_status' => EntryImage::EXTRACTION_READY,
+        ]);
+
+        $chunks = app(ChunkingService::class)->chunksFor($entry);
+
+        $this->assertContains(EntryChunk::sourceForImage($image->id), array_column($chunks, 'source'));
+        $this->assertContains(
+            'A fact that lives only in the screenshot.',
+            array_column($chunks, 'body'),
+        );
+    }
+
+    public function test_an_image_without_extracted_text_is_not_indexed(): void
+    {
+        $entry = $this->entry('<p>Body only.</p>');
+
+        EntryImage::create([
+            'uuid' => '9f1d8e6a-6c1c-4f86-9d4e-1234567890ab',
+            'workspace_id' => $entry->workspace_id,
+            'knowledge_entry_id' => $entry->id,
+            'uploaded_by' => $entry->created_by,
+            'disk' => 'documents',
+            'path' => 'entry-images/workspaces/1/photo.png',
+            'original_name' => 'photo.png',
+            'mime_type' => 'image/png',
+            'size' => 100,
+            'checksum' => str_repeat('a', 64),
+            'extraction_status' => EntryImage::EXTRACTION_EMPTY,
+        ]);
+
+        $chunks = app(ChunkingService::class)->chunksFor($entry);
+
+        $this->assertSame(['content'], array_column($chunks, 'source'));
     }
 
     private function document(KnowledgeEntry $entry, string $status, ?string $text): Document

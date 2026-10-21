@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\ExtractEntryImageText;
+use App\Jobs\IndexEntryChunks;
 use App\Models\EntryImage;
 use App\Models\KnowledgeEntry;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\AI\OcrService;
 use App\Services\EntryImageService;
+use App\Services\EntrySummaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -93,6 +97,65 @@ class EntryImageTest extends TestCase
             (string) $response->json('data.url')
         );
         Storage::disk('documents')->assertExists($image->path);
+        Queue::assertPushed(ExtractEntryImageText::class);
+    }
+
+    public function test_ocr_text_is_stored_and_the_entry_is_reindexed(): void
+    {
+        $workspace = $this->workspace();
+        $image = $this->image($workspace);
+        Storage::disk('documents')->put($image->path, base64_decode(self::PNG));
+
+        $entry = KnowledgeEntry::create([
+            'workspace_id' => $workspace->id,
+            'created_by' => $workspace->owner->id,
+            'title' => 'With a receipt',
+            'content' => '<p><img src="'.$image->url().'"></p>',
+        ]);
+        $image->forceFill(['knowledge_entry_id' => $entry->id])->save();
+
+        $this->mock(OcrService::class)
+            ->shouldReceive('extract')
+            ->once()
+            ->andReturn('Order #1234');
+
+        (new ExtractEntryImageText($image->id))->handle(
+            app(OcrService::class),
+            app(EntrySummaryService::class),
+        );
+
+        $image->refresh();
+
+        $this->assertSame(EntryImage::EXTRACTION_READY, $image->extraction_status);
+        $this->assertSame('Order #1234', $image->extracted_text);
+        $this->assertNotNull($image->extracted_at);
+        Queue::assertPushed(
+            IndexEntryChunks::class,
+            fn (IndexEntryChunks $job) => $job->knowledgeEntryId === $entry->id,
+        );
+    }
+
+    public function test_an_image_without_text_is_marked_empty(): void
+    {
+        $workspace = $this->workspace();
+        $image = $this->image($workspace);
+        Storage::disk('documents')->put($image->path, base64_decode(self::PNG));
+
+        $this->mock(OcrService::class)
+            ->shouldReceive('extract')
+            ->once()
+            ->andReturn('');
+
+        (new ExtractEntryImageText($image->id))->handle(
+            app(OcrService::class),
+            app(EntrySummaryService::class),
+        );
+
+        $image->refresh();
+
+        $this->assertSame(EntryImage::EXTRACTION_EMPTY, $image->extraction_status);
+        $this->assertNull($image->extracted_text);
+        Queue::assertNotPushed(IndexEntryChunks::class);
     }
 
     public function test_only_contributors_can_upload_an_image(): void

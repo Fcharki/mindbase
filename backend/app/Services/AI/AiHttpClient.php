@@ -46,11 +46,37 @@ class AiHttpClient
      */
     public function post(string $path, array $json, ?int $timeout = null): array
     {
-        $response = $this->sendWithRetries($path, [
+        return $this->decode($this->sendWithRetries($path, [
             'json' => $json,
             'timeout' => $timeout ?? $this->client->getConfig('timeout'),
-        ]);
+        ]));
+    }
 
+    /**
+     * POST a multipart body. Pass retries: 0 when a queued job owns retrying.
+     *
+     * @param  list<array<string, mixed>>  $multipart
+     * @return array<string, mixed>
+     *
+     * @throws GuzzleException
+     */
+    public function postMultipart(
+        string $path,
+        array $multipart,
+        ?int $timeout = null,
+        ?int $retries = null,
+    ): array {
+        return $this->decode($this->sendWithRetries($path, [
+            'multipart' => $multipart,
+            'timeout' => $timeout ?? $this->client->getConfig('timeout'),
+        ], $retries));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decode(string $response): array
+    {
         $body = json_decode($response, true);
 
         if (! is_array($body)) {
@@ -65,10 +91,10 @@ class AiHttpClient
     /**
      * @param  array<string, mixed>  $options
      */
-    private function sendWithRetries(string $path, array $options): string
+    private function sendWithRetries(string $path, array $options, ?int $retries = null): string
     {
         $attempt = 0;
-        $maxAttempts = $this->retries + 1;
+        $maxAttempts = ($retries ?? $this->retries) + 1;
 
         while (true) {
             $attempt++;

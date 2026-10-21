@@ -89,6 +89,9 @@ services:
       # Budget for a queued summary or chunk index, which is allowed to wait for
       # the model to load. Must exceed AI_SERVICE_TIMEOUT.
       AI_SERVICE_BACKGROUND_TIMEOUT: "${AI_SERVICE_BACKGROUND_TIMEOUT:-600}"
+      # Reading an uploaded image. Queued, but the first call builds the OCR
+      # models, so it needs its own budget below the job's $timeout.
+      AI_SERVICE_OCR_TIMEOUT: "${AI_SERVICE_OCR_TIMEOUT:-300}"
       # Budget for one queued assistant answer. Separate from the background
       # timeout above, which would also change what a summary may pick.
       # Must stay below GenerateAssistantAnswer::$timeout.
@@ -175,6 +178,12 @@ services:
       - ./ai-service:/srv
 
     environment:
+      # Keep downloaded OCR models on the bind mount across recreations.
+      PADDLE_PDX_CACHE_HOME: "${PADDLE_PDX_CACHE_HOME:-/srv/app/models/paddlex}"
+      # Recognition language for /ocr.
+      OCR_LANG: "${OCR_LANG:-en}"
+      # Direct-caller ceiling for /ocr.
+      OCR_MAX_IMAGE_BYTES: "${OCR_MAX_IMAGE_BYTES:-20971520}"
       AI_SUMMARY_BACKEND: "${AI_SUMMARY_BACKEND:-t5}"
       AI_MAX_INPUT_LENGTH: "${AI_MAX_INPUT_LENGTH:-512}"
       AI_MAX_NEW_TOKENS: "${AI_MAX_NEW_TOKENS:-150}"

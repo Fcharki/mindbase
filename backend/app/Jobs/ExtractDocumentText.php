@@ -26,7 +26,8 @@ class ExtractDocumentText implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public int $timeout = 300;
+    // Above the OCR client timeout, which includes a cold model load.
+    public int $timeout = 600;
 
     public int $tries = 3;
 

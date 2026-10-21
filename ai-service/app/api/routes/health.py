@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.ocr import is_loaded as ocr_is_loaded
 from app.services.embeddings import embedding_service
 from app.services.llm import MAX_NEW_TOKENS, llm_service
 from app.services.rerank import RERANK_MODEL, rerank_service
@@ -25,6 +26,7 @@ class HealthResponse(BaseModel):
     embedder_loaded: bool
     llm_loaded: bool
     rerank_loaded: bool
+    ocr_loaded: bool
 
     # The instruction backend is only reachable from the 'qwen' summarization
     # backend, so its cost is reported wherever the cost of summarizing is.
@@ -46,6 +48,7 @@ def health():
         "embedder_loaded": embedding_service.is_loaded(),
         "llm_loaded": llm_service.is_loaded(),
         "rerank_loaded": rerank_service.is_loaded(),
+        "ocr_loaded": ocr_is_loaded(),
         "llm_max_new_tokens": MAX_NEW_TOKENS,
         "llm_known_slow": True,
         "rerank_model": RERANK_MODEL,

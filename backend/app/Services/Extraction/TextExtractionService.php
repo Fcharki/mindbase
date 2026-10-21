@@ -3,6 +3,7 @@
 namespace App\Services\Extraction;
 
 use App\Models\Document;
+use App\Services\AI\OcrService;
 use App\Services\DocumentStorageService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -11,16 +12,20 @@ use Throwable;
 /**
  * Turns an uploaded file into the plain text that gets chunked and embedded.
  *
- * PDFs and office documents go through a dedicated extractor; formats that are
- * already text are read straight from disk. Every path returns a result rather
- * than throwing, because a file nobody can read must not fail the job that
- * indexes its entry.
+ * PDFs and office documents go through a dedicated extractor, images through
+ * OCR, and formats that are already text are read straight from disk. Every
+ * path returns a result rather than throwing, because a file nobody can read
+ * must not fail the job that indexes its entry.
  */
 class TextExtractionService
 {
+    // Raster formats the OCR service accepts. SVG is never sent to the model.
+    private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
     public function __construct(
         private readonly PdfTextExtractor $pdf,
         private readonly OpenXmlTextExtractor $openXml,
+        private readonly OcrService $ocr,
     ) {}
 
     public function extract(Document $document): ExtractionResult
@@ -46,9 +51,14 @@ class TextExtractionService
             } else {
                 $warnings = [];
 
-                $text = match ($extension) {
-                    'pdf' => $this->pdf->extract($disk->path($document->path)),
-                    'txt', 'md', 'csv' => $disk->get($document->path),
+                $text = match (true) {
+                    $extension === 'pdf' => $this->pdf->extract($disk->path($document->path)),
+                    in_array($extension, ['txt', 'md', 'csv'], true) => $disk->get($document->path),
+                    in_array($extension, self::IMAGE_EXTENSIONS, true) => $this->ocr->extract(
+                        (string) $disk->get($document->path),
+                        $document->original_name,
+                        $document->mime_type,
+                    ),
                     default => null,
                 };
             }
