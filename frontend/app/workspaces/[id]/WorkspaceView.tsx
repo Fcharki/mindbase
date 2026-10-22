@@ -3,7 +3,12 @@
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
@@ -29,6 +34,7 @@ import {
   updateWorkspace,
   updateWorkspaceMemberRole,
   Workspace,
+  WorkspaceMember,
   WorkspaceRole,
 } from "@/lib/workspaces";
 
@@ -139,6 +145,20 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
     };
   }, [workspaceId, user, authLoading, router]);
 
+  useEffect(() => {
+    if (
+      status !== "ready" ||
+      joinRequests.length === 0 ||
+      window.location.hash !== "#join-requests"
+    ) {
+      return;
+    }
+
+    document
+      .getElementById("join-requests")
+      ?.scrollIntoView({ block: "start" });
+  }, [status, joinRequests.length]);
+
   async function handleRename(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -231,9 +251,58 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
     }
   }
 
-  async function handleRoleChange(memberId: number, role: WorkspaceRole) {
-    if (!workspace) {
+  function handleRoleSelection(
+    event: ChangeEvent<HTMLSelectElement>,
+    member: WorkspaceMember,
+  ) {
+    const select = event.currentTarget;
+    const role = select.value as WorkspaceRole;
+
+    if (
+      !window.confirm(
+        `Change @${member.username}'s role from ${member.pivot.role} to ${role}?`,
+      )
+    ) {
+      select.value = member.pivot.role;
       return;
+    }
+
+    void handleRoleChange(member.id, role).then((updated) => {
+      if (!updated) {
+        select.value = member.pivot.role;
+      }
+    });
+  }
+
+  function handleApproveSelection(
+    event: ChangeEvent<HTMLSelectElement>,
+    request: MembershipRequest,
+  ) {
+    const select = event.currentTarget;
+    const role = select.value as WorkspaceRole;
+
+    if (
+      !window.confirm(
+        `Approve @${request.user?.username ?? "this user"} as ${role} for "${workspace?.name ?? "this workspace"}"?`,
+      )
+    ) {
+      select.value = request.requested_role;
+      return;
+    }
+
+    void handleApproveRequest(request.id, role).then((approved) => {
+      if (!approved) {
+        select.value = request.requested_role;
+      }
+    });
+  }
+
+  async function handleRoleChange(
+    memberId: number,
+    role: WorkspaceRole,
+  ): Promise<boolean> {
+    if (!workspace) {
+      return false;
     }
 
     setMemberError(null);
@@ -253,8 +322,11 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
             : member,
         ),
       });
+
+      return true;
     } catch {
       setMemberError("Could not change that member\u2019s role.");
+      return false;
     }
   }
 
@@ -285,9 +357,9 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   async function handleApproveRequest(
     requestId: number,
     role: WorkspaceRole,
-  ) {
+  ): Promise<boolean> {
     if (!workspace) {
-      return;
+      return false;
     }
 
     setRequestsError(null);
@@ -301,13 +373,29 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
       setWorkspace(updatedWorkspace);
       setJoinRequests(requests);
+
+      return true;
     } catch {
       setRequestsError("Could not approve that request.");
+      return false;
     }
   }
 
   async function handleRejectRequest(requestId: number) {
     if (!workspace) {
+      return;
+    }
+
+    const request = joinRequests.find((item) => item.id === requestId);
+    const username = request?.user?.username
+      ? `@${request.user.username}`
+      : "this user";
+
+    if (
+      !window.confirm(
+        `Reject ${username}'s request to join "${workspace.name}"?`,
+      )
+    ) {
       return;
     }
 
@@ -580,7 +668,10 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
           {isOwner && (
             <>
               {joinRequests.length > 0 && (
-                <div className="border-b border-[#E7E6ED] dark:border-[#2a2a31] px-7 py-6 sm:px-8">
+                <div
+                  id="join-requests"
+                  className="scroll-mt-6 border-b border-[#E7E6ED] dark:border-[#2a2a31] px-7 py-6 sm:px-8"
+                >
                   <h3 className="text-sm font-semibold tracking-tight">
                     Pending requests{" "}
                     <span className="text-[#9897A1] dark:text-[#8b8b94]">
@@ -624,10 +715,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                           <select
                             defaultValue={request.requested_role}
                             onChange={(event) =>
-                              handleApproveRequest(
-                                request.id,
-                                event.target.value as WorkspaceRole,
-                              )
+                              handleApproveSelection(event, request)
                             }
                             className="w-fit rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-3 py-2 text-sm text-[#20202A] dark:text-[#ececf1] outline-none focus:border-[#5146E5]"
                           >
@@ -752,10 +840,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                           className="rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-2 py-1.5 text-sm text-[#20202A] dark:text-[#ececf1] outline-none focus:border-[#5146E5]"
                           value={member.pivot.role}
                           onChange={(event) =>
-                            handleRoleChange(
-                              member.id,
-                              event.target.value as WorkspaceRole,
-                            )
+                            handleRoleSelection(event, member)
                           }
                         >
                           <option value="member">member</option>

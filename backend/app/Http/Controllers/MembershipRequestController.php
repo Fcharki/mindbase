@@ -10,6 +10,7 @@ use App\Http\Resources\MembershipRequestResource;
 use App\Models\AuditLog;
 use App\Models\MembershipRequest;
 use App\Models\Workspace;
+use App\Notifications\JoinRequestReceived;
 use App\Services\WorkspaceIndexCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -40,6 +41,10 @@ class MembershipRequestController extends Controller
                 'email' => $request->user()->email,
                 'role' => $membershipRequest->requested_role,
             ],
+        );
+
+        $workspace->owner?->notify(
+            new JoinRequestReceived($membershipRequest, $request->user(), $workspace)
         );
 
         return MembershipRequestResource::make(

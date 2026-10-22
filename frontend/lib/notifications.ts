@@ -1,6 +1,10 @@
 import { api } from "./api";
 
-export type NotificationKind = "comment" | "reply" | "unknown";
+export type NotificationKind =
+  | "comment"
+  | "reply"
+  | "join_request"
+  | "unknown";
 
 export interface AppNotification {
   id: string;
@@ -17,6 +21,9 @@ export interface AppNotification {
   // Null when the notification cannot be linked to, which happens when the
   // entry or the comment it referred to has since been deleted.
   workspace_id: number | null;
+  workspace_name: string | null;
+  membership_request_id: number | null;
+  requested_role: string | null;
   entry_id: number | null;
   comment_id: number | null;
   reply_id: number | null;
@@ -62,11 +69,15 @@ export async function markAllNotificationsRead(): Promise<number> {
 export function notificationHref(
   notification: AppNotification,
 ): string | null {
-  if (
-    notification.workspace_id === null ||
-    notification.entry_id === null ||
-    notification.comment_id === null
-  ) {
+  if (notification.workspace_id === null) {
+    return null;
+  }
+
+  if (notification.kind === "join_request") {
+    return `/workspaces/${notification.workspace_id}#join-requests`;
+  }
+
+  if (notification.entry_id === null || notification.comment_id === null) {
     return null;
   }
 
@@ -96,6 +107,10 @@ export function notificationSummary(notification: AppNotification): string {
 
   if (notification.kind === "comment") {
     return `${actor} commented on “${notification.entry_title ?? "an entry"}”`;
+  }
+
+  if (notification.kind === "join_request") {
+    return `${actor} requested to join “${notification.workspace_name ?? "your workspace"}”`;
   }
 
   return "You have a new notification";

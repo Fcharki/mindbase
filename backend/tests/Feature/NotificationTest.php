@@ -7,6 +7,7 @@ use App\Models\KnowledgeEntry;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\CommentedOnEntry;
+use App\Notifications\JoinRequestReceived;
 use App\Notifications\RepliedToComment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -75,6 +76,44 @@ class NotificationTest extends TestCase
             ->where('knowledge_entry_id', $entry->id)
             ->latest('id')
             ->sole();
+    }
+
+    public function test_requesting_to_join_notifies_the_owner_and_carries_the_request(): void
+    {
+        $workspace = $this->workspace();
+        $requester = User::factory()->create();
+
+        $this->actingAs($requester)
+            ->postJson("/api/v1/workspaces/{$workspace->id}/join-requests", [
+                'role' => 'viewer',
+            ])
+            ->assertCreated();
+
+        $request = $workspace->membershipRequests()->sole();
+        $notification = $workspace->owner->notifications()->sole();
+
+        $this->assertSame(JoinRequestReceived::class, $notification->type);
+
+        $data = $notification->data;
+
+        $this->assertSame('join_request', $data['kind']);
+        $this->assertSame($requester->username, $data['actor_username']);
+        $this->assertSame($workspace->id, $data['workspace_id']);
+        $this->assertSame($workspace->name, $data['workspace_name']);
+        $this->assertSame($request->id, $data['membership_request_id']);
+        $this->assertSame('viewer', $data['requested_role']);
+        $this->assertNull($notification->read_at);
+
+        // The requester does not need to be told about their own request.
+        $this->assertSame(0, $requester->notifications()->count());
+
+        $this->actingAs($workspace->owner)
+            ->getJson('/api/v1/notifications')
+            ->assertOk()
+            ->assertJsonPath('data.0.kind', 'join_request')
+            ->assertJsonPath('data.0.workspace_name', $workspace->name)
+            ->assertJsonPath('data.0.membership_request_id', $request->id)
+            ->assertJsonPath('data.0.requested_role', 'viewer');
     }
 
     public function test_commenting_notifies_the_entry_author_and_carries_the_ids_needed_to_link_to_it(): void
