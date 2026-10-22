@@ -9,7 +9,7 @@ export function RegisterForm() {
   const router = useRouter();
   const { register, loginWithGoogle } = useAuth();
 
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -24,7 +24,7 @@ export function RegisterForm() {
 
     try {
       await register(
-        name,
+        username,
         email,
         password,
         passwordConfirmation,
@@ -94,21 +94,28 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex flex-col gap-1.5">
           <label
-            htmlFor="name"
+            htmlFor="username"
             className="text-sm text-[#4A4D45] dark:text-[#9C9F94]"
           >
-            Name
+            Username
           </label>
 
           <input
-            id="name"
+            id="username"
             type="text"
             required
-            autoComplete="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            minLength={3}
+            maxLength={30}
+            pattern="[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?"
+            autoComplete="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
             className="w-full border-b border-[#C8C5B8] bg-transparent py-1.5 text-[#1E211D] focus:border-[#3B4A6B] focus:outline-none dark:border-[#3A3D30] dark:text-[#E7E5DC] dark:focus:border-[#8CA0D8]"
           />
+
+          <p className="text-xs text-[#8A8D83] dark:text-[#777B70]">
+            3–30 characters: letters, numbers, hyphens, and underscores.
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">

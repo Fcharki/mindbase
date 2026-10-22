@@ -35,9 +35,9 @@ class CommentController extends Controller
         $comments = $entry
             ->comments()
             ->with([
-                'user:id,name',
+                'user:id,username',
                 'replies' => fn ($query) => $query
-                    ->with('user:id,name')
+                    ->with('user:id,username')
                     ->orderBy('created_at')
                     ->orderBy('id'),
             ])
@@ -64,7 +64,7 @@ class CommentController extends Controller
             'body' => $request->validated('body'),
         ]);
 
-        $comment->load('user:id,name');
+        $comment->load('user:id,username');
 
         $this->notifyEntryAuthor($comment, $request->user());
 
@@ -113,7 +113,7 @@ class CommentController extends Controller
             'body' => $request->validated('body'),
         ]);
 
-        $comment->load('user:id,name');
+        $comment->load('user:id,username');
 
         return CommentResource::make($comment);
     }

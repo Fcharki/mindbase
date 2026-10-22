@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
 use Illuminate\Support\Facades\Route;
@@ -162,6 +163,11 @@ Route::get('entry-images/{entryImage}', [
 */
 
 Route::middleware(['web', 'auth:sanctum'])->group(function () {
+    Route::get('users', [UserController::class, 'index']);
+
+    Route::get('users/{username}', [UserController::class, 'show'])
+        ->where('username', '[A-Za-z0-9_-]+');
+
     Route::get('profile', [ProfileController::class, 'show']);
 
     Route::patch('profile', [ProfileController::class, 'update']);

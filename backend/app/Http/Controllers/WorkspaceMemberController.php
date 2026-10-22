@@ -37,7 +37,7 @@ class WorkspaceMemberController extends Controller
             AuditLog::ENTITY_MEMBER,
             $member->id,
             [
-                'name' => $member->name,
+                'username' => $member->username,
                 'email' => $member->email,
                 'role' => $validated['role'],
             ],
@@ -71,7 +71,7 @@ class WorkspaceMemberController extends Controller
             AuditLog::ENTITY_MEMBER,
             $member->id,
             [
-                'name' => $member->name,
+                'username' => $member->username,
                 'email' => $member->email,
                 'from' => $previousRole,
                 'to' => $member->pivot->role,
@@ -98,7 +98,7 @@ class WorkspaceMemberController extends Controller
             AuditLog::ENTITY_MEMBER,
             $user->id,
             [
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
             ],
         );

@@ -157,7 +157,7 @@ export function WorkspaceNav({
             href="/profile"
             className="hidden max-w-[160px] truncate text-sm font-medium text-[#686873] transition hover:text-[#5146E5] dark:text-[#b0b0b9] dark:hover:text-[#a5b4fc] sm:block"
           >
-            {user?.name}
+            {user?.username ? `@${user.username}` : null}
           </Link>
 
           <div className="flex items-center gap-2">

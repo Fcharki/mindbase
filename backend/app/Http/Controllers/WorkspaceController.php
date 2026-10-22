@@ -76,7 +76,7 @@ class WorkspaceController extends Controller
         $limit = min(50, max(1, (int) $request->query('limit', 30)));
 
         $messages = $workspace->assistantMessages()
-            ->with('user:id,name')
+            ->with('user:id,username')
             ->orderByDesc('id')
             ->limit($limit)
             ->get();
@@ -247,7 +247,7 @@ class WorkspaceController extends Controller
     public function byInviteCode(string $inviteCode): JsonResource
     {
         $workspace = Workspace::where('invite_code', $inviteCode)
-            ->with('owner:id,name')
+            ->with('owner:id,username')
             ->first();
 
         abort_if($workspace === null, 404, 'Workspace not found.');
@@ -277,7 +277,7 @@ class WorkspaceController extends Controller
                     ->where('status', MembershipRequest::STATUS_PENDING)
                     ->limit(1),
                 ])
-                ->with('owner:id,name,email,bio,location,photo_path')
+                ->with('owner:id,username,email,bio,location,photo_path')
                 ->withCount(['knowledgeEntries as entries_count'])
                 ->orderBy('workspaces.name')
                 ->get()
@@ -331,7 +331,7 @@ class WorkspaceController extends Controller
         ])->handle();
 
         return WorkspaceResource::make(
-            $workspace->load('owner:id,name,email,bio,location,photo_path')
+            $workspace->load('owner:id,username,email,bio,location,photo_path')
         )->response()->setStatusCode(201);
     }
 
@@ -339,7 +339,7 @@ class WorkspaceController extends Controller
     {
         Gate::authorize('view', $workspace);
 
-        $workspace->load(['owner:id,name,email,bio,location,photo_path', 'members:id,name,email']);
+        $workspace->load(['owner:id,username,email,bio,location,photo_path', 'members:id,username,email']);
 
         return WorkspaceResource::make($workspace);
     }
@@ -352,7 +352,7 @@ class WorkspaceController extends Controller
 
         $workspace->update($request->validated());
 
-        $workspace->load('owner:id,name,email,bio,location,photo_path');
+        $workspace->load('owner:id,username,email,bio,location,photo_path');
 
         return WorkspaceResource::make($workspace);
     }

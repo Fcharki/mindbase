@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/app/Providers/AuthProvider";
 import { CreateWorkspaceForm } from "@/app/features/workspaces/CreateWorkspaceForm";
+import { UserSearch } from "@/app/features/users/UserSearch";
 import { RoleBadge } from "@/app/features/workspaces/RoleBadge";
 import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import {
@@ -81,14 +82,14 @@ export default function DashboardPage() {
       return [];
     }
 
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = query.trim().toLowerCase().replace(/^@/, "");
 
     if (!normalizedQuery) {
       return workspaces;
     }
 
     return workspaces.filter((workspace) =>
-      [workspace.name, workspace.owner.name].some((value) =>
+      [workspace.name, workspace.owner.username].some((value) =>
         value.toLowerCase().includes(normalizedQuery),
       ),
     );
@@ -228,8 +229,8 @@ export default function DashboardPage() {
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search workspaces or owners"
-                aria-label="Search workspaces or owners"
+                placeholder="Search workspaces or owner usernames"
+                aria-label="Search workspaces or owner usernames"
                 className="h-12 w-full rounded-xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] pl-11 pr-4 text-sm text-[#20202A] dark:text-[#ececf1] outline-none transition placeholder:text-[#A3A2AC] dark:placeholder:text-[#7e7e88] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
               />
             </div>
@@ -264,7 +265,7 @@ export default function DashboardPage() {
                 </h2>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
                   {query
-                    ? "Try a different workspace or owner name."
+                    ? "Try a different workspace name or owner username."
                     : "Create the first workspace to start sharing knowledge."}
                 </p>
               </div>
@@ -287,7 +288,7 @@ export default function DashboardPage() {
                       {workspace.name}
                     </Link>
                     <p className="mt-1 text-sm text-[#686873] dark:text-[#b0b0b9]">
-                      Owned by {workspace.owner.name}
+                      Owned by @{workspace.owner.username}
                     </p>
                     <p className="mt-3 text-sm text-[#9897A1] dark:text-[#8b8b94]">
                       {workspace.entries_count ?? 0}{" "}
@@ -326,23 +327,27 @@ export default function DashboardPage() {
             )}
           </section>
 
-          <aside className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-6 shadow-sm lg:sticky lg:top-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
-              Start something new
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight">
-              Create a workspace
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
-              You&rsquo;ll become its owner and can add entries and members.
-            </p>
-            <div className="mt-6">
-              <CreateWorkspaceForm
-                onCreated={(workspace) =>
-                  router.push(`/workspaces/${workspace.id}`)
-                }
-              />
-            </div>
+          <aside className="space-y-6 lg:sticky lg:top-6">
+            <UserSearch />
+
+            <section className="rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] p-6 shadow-sm">
+              <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5146E5]">
+                Start something new
+              </p>
+              <h2 className="mt-2 text-xl font-semibold tracking-tight">
+                Create a workspace
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
+                You&rsquo;ll become its owner and can add entries and members.
+              </p>
+              <div className="mt-6">
+                <CreateWorkspaceForm
+                  onCreated={(workspace) =>
+                    router.push(`/workspaces/${workspace.id}`)
+                  }
+                />
+              </div>
+            </section>
           </aside>
         </div>
       </main>

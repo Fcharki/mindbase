@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useEffect,
@@ -66,7 +67,7 @@ function ProfileDetails({
   user: User;
   refreshUser: () => Promise<void>;
 }) {
-  const [name, setName] = useState(user.name);
+  const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email);
   const [bio, setBio] = useState(user.bio ?? "");
   const [location, setLocation] = useState(user.location ?? "");
@@ -83,7 +84,7 @@ function ProfileDetails({
 
     try {
       const result = await updateProfile({
-        name,
+        username,
         email,
         bio: bio.trim() || null,
         location: location.trim() || null,
@@ -150,11 +151,11 @@ function ProfileDetails({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={photoUrl}
-              alt={`${user.name}'s profile photo`}
+              alt={`${user.username}'s profile photo`}
               className="h-full w-full object-cover"
             />
           ) : (
-            user.name.charAt(0).toUpperCase()
+            user.username.charAt(0).toUpperCase()
           )}
         </div>
 
@@ -197,18 +198,24 @@ function ProfileDetails({
 
       <form onSubmit={handleProfileSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="name" className={labelClass}>
-            Name
+          <label htmlFor="username" className={labelClass}>
+            Username
           </label>
           <input
-            id="name"
+            id="username"
             type="text"
             required
-            autoComplete="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            minLength={3}
+            maxLength={30}
+            pattern="[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?"
+            autoComplete="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
             className={inputClass}
           />
+          <p className="text-xs text-[#9897A1] dark:text-[#8b8b94]">
+            3–30 characters: letters, numbers, hyphens, and underscores.
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -381,9 +388,15 @@ export default function ProfilePage() {
             Your profile
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9] sm:text-base">
-            Manage your photo, name, bio, location and email, change your
+            Manage your photo, username, bio, location and email, change your
             password, or delete the account entirely.
           </p>
+          <Link
+            href={`/users/${user.username}`}
+            className="mt-4 inline-flex text-sm font-medium text-[#5146E5] transition hover:text-[#4338CA]"
+          >
+            View your public profile
+          </Link>
         </header>
 
         <section className={`mt-9 ${cardClass}`}>

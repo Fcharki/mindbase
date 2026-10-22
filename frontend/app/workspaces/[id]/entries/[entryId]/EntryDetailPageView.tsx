@@ -322,7 +322,7 @@ export function EntryDetailPageView({
   }
 
   const updatedAt = new Date(entry.updated_at ?? entry.created_at);
-  const author = entry.creator?.name ?? user?.name ?? "you";
+  const author = entry.creator?.username ?? user?.username ?? "you";
   const permissions = permissionsFor(workspace.role, workspace.is_member);
 
   return (

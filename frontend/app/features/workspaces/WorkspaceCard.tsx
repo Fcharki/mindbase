@@ -195,7 +195,7 @@ export function WorkspaceCard({
       )}
 
       <p className="mt-1 text-sm text-[#686873] dark:text-[#b0b0b9]">
-        {isOwner ? "You own this workspace" : `Owned by ${workspace.owner.name}`}
+        {isOwner ? "You own this workspace" : `Owned by @${workspace.owner.username}`}
       </p>
 
       <p className="mt-3 text-sm text-[#9897A1] dark:text-[#8b8b94]">

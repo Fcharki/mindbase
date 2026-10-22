@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { MapPin } from "lucide-react";
 
@@ -24,7 +25,7 @@ export function OwnerAvatar({
           className="h-full w-full object-cover"
         />
       ) : (
-        owner.name.charAt(0).toUpperCase()
+        owner.username.charAt(0).toUpperCase()
       )}
     </span>
   );
@@ -53,7 +54,7 @@ export function OwnerProfileDialog({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`${owner.name}'s profile`}
+      aria-label={`${owner.username}'s profile`}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={onClose}
     >
@@ -81,7 +82,7 @@ export function OwnerProfileDialog({
 
             <div className="min-w-0">
               <h2 className="truncate text-xl font-semibold tracking-tight">
-                {owner.name}
+                @{owner.username}
               </h2>
 
               {owner.location && (
@@ -96,6 +97,13 @@ export function OwnerProfileDialog({
           <p className="mt-5 whitespace-pre-wrap text-sm leading-relaxed text-[#20202A] dark:text-[#ececf1]">
             {owner.bio?.trim() || "This owner has not added a bio yet."}
           </p>
+
+          <Link
+            href={`/users/${owner.username}`}
+            className="mt-6 inline-flex rounded-lg bg-[#5146E5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338CA]"
+          >
+            View full profile
+          </Link>
         </div>
       </div>
     </div>

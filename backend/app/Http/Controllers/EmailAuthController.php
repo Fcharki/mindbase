@@ -31,7 +31,7 @@ class EmailAuthController extends Controller
         $validated = $request->validated();
 
         $user = User::create([
-            'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => $validated['password'],
         ]);

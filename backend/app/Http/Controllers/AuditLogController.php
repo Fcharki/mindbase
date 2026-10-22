@@ -31,7 +31,7 @@ class AuditLogController extends Controller
 
         $query = AuditLog::query()
             ->where('workspace_id', $workspace->id)
-            ->with('user:id,name,email')
+            ->with('user:id,username,email')
             ->orderBy('occurred_at', 'desc')
             ->orderBy('id', 'desc');
 
@@ -76,7 +76,7 @@ class AuditLogController extends Controller
 
         abort_unless($auditLog->workspace_id === $workspace->id, 404);
 
-        return AuditLogResource::make($auditLog->load('user:id,name,email'));
+        return AuditLogResource::make($auditLog->load('user:id,username,email'));
     }
 
     // Distinct values across the workspace's history, used to populate the
@@ -98,12 +98,12 @@ class AuditLogController extends Controller
             ->all();
 
         $users = $workspace->members()
-            ->select('users.id', 'users.name', 'users.email')
-            ->orderBy('users.name')
+            ->select('users.id', 'users.username', 'users.email')
+            ->orderBy('users.username')
             ->get()
             ->map(fn ($user) => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
             ])
             ->all();

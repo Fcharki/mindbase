@@ -29,7 +29,7 @@ class DocumentController extends Controller
 
         $documents = $entry
             ->documents()
-            ->with('uploader:id,name')
+            ->with('uploader:id,username')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -52,7 +52,7 @@ class DocumentController extends Controller
             $request->user()->id
         );
 
-        $document->load('uploader:id,name');
+        $document->load('uploader:id,username');
 
         // Extraction is queued; the response goes out with the metadata the
         // browser needs and the text arrives once the file has been read.

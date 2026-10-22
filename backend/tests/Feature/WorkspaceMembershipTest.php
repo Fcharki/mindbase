@@ -291,7 +291,7 @@ class WorkspaceMembershipTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.id', $workspace->id)
             ->assertJsonPath('data.name', 'Acme')
-            ->assertJsonPath('data.owner.name', $workspace->owner->name);
+            ->assertJsonPath('data.owner.username', $workspace->owner->username);
     }
 
     public function test_unknown_invite_code_returns_404(): void

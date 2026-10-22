@@ -144,7 +144,7 @@ class ResourceContractTest extends TestCase
         $this->assertArrayNotHasKey('checksum', $document);
         $this->assertSame('2 KB', $document['human_size']);
         $this->assertSame(
-            ['id', 'name'],
+            ['id', 'username'],
             array_keys($document['uploader'])
         );
     }
@@ -156,7 +156,7 @@ class ResourceContractTest extends TestCase
         $this->getJson("/api/v1/join/{$workspace->invite_code}")
             ->assertOk()
             ->assertJsonStructure([
-                'data' => ['id', 'name', 'invite_code', 'owner' => ['id', 'name']],
+                'data' => ['id', 'name', 'invite_code', 'owner' => ['id', 'username']],
             ])
             ->assertJsonMissingPath('data.owner_id')
             ->assertJsonMissingPath('data.role')

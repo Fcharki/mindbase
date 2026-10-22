@@ -4,7 +4,7 @@ export type WorkspaceRole = "owner" | "member" | "viewer";
 
 export interface WorkspaceOwner {
   id: number;
-  name: string;
+  username: string;
   email: string;
   bio: string | null;
   location: string | null;
@@ -13,7 +13,7 @@ export interface WorkspaceOwner {
 
 export interface WorkspaceMember {
   id: number;
-  name: string;
+  username: string;
   email: string;
   pivot: {
     role: WorkspaceRole;
@@ -34,7 +34,7 @@ export interface MembershipRequest {
   created_at: string;
   user?: {
     id: number;
-    name: string;
+    username: string;
     email: string;
   };
 }
@@ -65,7 +65,7 @@ export interface JoinableWorkspace {
   invite_code: string;
   owner: {
     id: number;
-    name: string;
+    username: string;
   };
 }
 

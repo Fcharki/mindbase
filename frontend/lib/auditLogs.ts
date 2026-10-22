@@ -2,7 +2,7 @@ import { api } from "./api";
 
 export interface AuditLogUser {
   id: number;
-  name: string;
+  username: string;
   email: string;
 }
 

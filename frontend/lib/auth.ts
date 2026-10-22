@@ -2,7 +2,7 @@ import { api, fetchCsrfCookie } from "./api";
 
 export interface User {
   id: number;
-  name: string;
+  username: string;
   email: string;
   email_verified_at: string | null;
   has_password: boolean;
@@ -33,7 +33,7 @@ export async function loginWithGoogle() {
 }
 
 export async function register(
-  name: string,
+  username: string,
   email: string,
   password: string,
   passwordConfirmation: string,
@@ -41,7 +41,7 @@ export async function register(
   await fetchCsrfCookie();
 
   await api.post("/auth/register", {
-    name,
+    username,
     email,
     password,
     password_confirmation: passwordConfirmation,

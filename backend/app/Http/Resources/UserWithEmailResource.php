@@ -21,7 +21,7 @@ class UserWithEmailResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'username' => $this->username,
             'email' => $this->email,
             // Read-only profile details a viewer sees for a workspace owner.
             'bio' => $this->bio,

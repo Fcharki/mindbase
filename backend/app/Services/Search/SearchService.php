@@ -64,7 +64,7 @@ class SearchService
         int $limit = 20
     ): Collection {
         $entries = $workspace->knowledgeEntries()
-            ->with('creator:id,name', 'tags:id,name,workspace_id')
+            ->with('creator:id,username', 'tags:id,name,workspace_id')
             ->withCount('tags');
 
         if ($this->isPostgres() && $query !== '') {

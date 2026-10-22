@@ -37,17 +37,17 @@ class ProfileTest extends TestCase
             ->assertJsonPath('user.has_password', false);
     }
 
-    public function test_it_updates_the_name_without_touching_verification(): void
+    public function test_it_updates_the_username_without_touching_verification(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->patchJson('/api/v1/profile', [
-                'name' => 'New Name',
+                'username' => 'new-name',
                 'email' => $user->email,
             ])
             ->assertOk()
-            ->assertJsonPath('user.name', 'New Name');
+            ->assertJsonPath('user.username', 'new-name');
 
         $this->assertNotNull($user->fresh()->email_verified_at);
     }
@@ -60,7 +60,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)
             ->patchJson('/api/v1/profile', [
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => 'changed@example.com',
             ])
             ->assertOk()
@@ -78,7 +78,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)
             ->patchJson('/api/v1/profile', [
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => $other->email,
             ])
             ->assertStatus(422)
@@ -170,7 +170,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)
             ->patchJson('/api/v1/profile', [
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'bio' => 'Backend engineer who likes small tools.',
                 'location' => 'Casablanca, Morocco',
@@ -194,7 +194,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)
             ->patchJson('/api/v1/profile', [
-                'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'bio' => null,
                 'location' => null,
@@ -307,7 +307,7 @@ class ProfileTest extends TestCase
         $this->actingAs($viewer)
             ->getJson("/api/v1/workspaces/{$workspace->id}")
             ->assertOk()
-            ->assertJsonPath('data.owner.name', $owner->name)
+            ->assertJsonPath('data.owner.username', $owner->username)
             ->assertJsonPath('data.owner.bio', 'Builds things.')
             ->assertJsonPath('data.owner.location', 'Rabat')
             ->assertJsonPath(

@@ -35,7 +35,7 @@ class KnowledgeEntryController extends Controller
         $entries = $workspace
             ->knowledgeEntries()
             // Pinned entries lead the list; within each group the newest first.
-            ->with('creator:id,name', 'tags:id,name,workspace_id,parent_id')
+            ->with('creator:id,username', 'tags:id,name,workspace_id,parent_id')
             ->withCount('tags')
             ->orderByDesc('is_pinned')
             ->orderByDesc('created_at')
@@ -64,7 +64,7 @@ class KnowledgeEntryController extends Controller
 
         app(ScheduleEntrySummary::class, ['entry' => $knowledgeEntry])->handle();
 
-        $knowledgeEntry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
+        $knowledgeEntry->load('creator:id,username', 'tags:id,name,workspace_id,parent_id');
         $knowledgeEntry->loadCount('tags');
 
         return KnowledgeEntryResource::make($knowledgeEntry)
@@ -80,7 +80,7 @@ class KnowledgeEntryController extends Controller
 
         $this->abortUnlessEntryBelongsToWorkspace($entry, $workspace);
 
-        $entry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
+        $entry->load('creator:id,username', 'tags:id,name,workspace_id,parent_id');
         $entry->loadCount('tags');
 
         return KnowledgeEntryResource::make($entry);
@@ -114,7 +114,7 @@ class KnowledgeEntryController extends Controller
             app(ScheduleEntrySummary::class, ['entry' => $entry])->handle();
         }
 
-        $entry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
+        $entry->load('creator:id,username', 'tags:id,name,workspace_id,parent_id');
         $entry->loadCount('tags');
 
         return KnowledgeEntryResource::make($entry);
@@ -318,7 +318,7 @@ class KnowledgeEntryController extends Controller
 
     private function loadRelations(KnowledgeEntry $entry): void
     {
-        $entry->load('creator:id,name', 'tags:id,name,workspace_id,parent_id');
+        $entry->load('creator:id,username', 'tags:id,name,workspace_id,parent_id');
         $entry->loadCount('tags');
     }
 

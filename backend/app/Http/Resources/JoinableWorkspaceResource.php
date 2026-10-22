@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * A workspace as shown to somebody who has an invite code but no account
- * context yet: no role, no membership, and an owner reduced to a name.
+ * context yet: no role, no membership, and an owner reduced to a username.
  *
  * @mixin Workspace
  */

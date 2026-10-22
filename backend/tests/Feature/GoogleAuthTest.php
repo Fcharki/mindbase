@@ -58,7 +58,7 @@ class GoogleAuthTest extends TestCase
 
         $this->assertNotNull($user);
         $this->assertSame('google-123', $user->google_id);
-        $this->assertSame('Ada Lovelace', $user->name);
+        $this->assertSame('ada-lovelace', $user->username);
 
         // Google has already verified the address, so demanding a second
         // confirmation email would be asking the user to prove a thing Google

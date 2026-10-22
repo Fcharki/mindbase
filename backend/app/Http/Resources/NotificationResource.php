@@ -31,7 +31,7 @@ class NotificationResource extends JsonResource
             // notification type identifiable rather than unrenderable.
             'type' => $this->type,
             'kind' => $data['kind'] ?? 'unknown',
-            'actor_name' => $data['actor_name'] ?? null,
+            'actor_username' => $data['actor_username'] ?? $data['actor_name'] ?? null,
             'entry_title' => $data['entry_title'] ?? null,
             'excerpt' => $data['excerpt'] ?? null,
             'workspace_id' => $data['workspace_id'] ?? null,

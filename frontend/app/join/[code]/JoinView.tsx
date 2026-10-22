@@ -132,7 +132,7 @@ export function JoinView({ inviteCode }: { inviteCode: string }) {
         </h1>
 
         <p className="mt-3 text-sm leading-relaxed text-[#686873] dark:text-[#b0b0b9]">
-          Owned by {workspace.owner.name}. Join as a member to add and manage
+          Owned by @{workspace.owner.username}. Join as a member to add and manage
           knowledge entries.
         </p>
 

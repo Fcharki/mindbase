@@ -46,7 +46,7 @@ class CommentedOnEntry extends Notification
     {
         return [
             'kind' => 'comment',
-            'actor_name' => $this->actor->name,
+            'actor_username' => $this->actor->username,
             'entry_title' => $this->comment->knowledgeEntry?->title,
             'excerpt' => Str::limit($this->comment->body, 140),
             // The ids the client needs to navigate to this exact comment, and to
@@ -65,8 +65,8 @@ class CommentedOnEntry extends Notification
         $entry = $this->comment->knowledgeEntry;
 
         $message = (new MailMessage)
-            ->subject("{$this->actor->name} commented on \"{$entry?->title}\"")
-            ->line("{$this->actor->name} commented on \"{$entry?->title}\":")
+            ->subject("{$this->actor->username} commented on \"{$entry?->title}\"")
+            ->line("{$this->actor->username} commented on \"{$entry?->title}\":")
             ->line(Str::limit($this->comment->body, 400));
 
         if ($entry !== null) {

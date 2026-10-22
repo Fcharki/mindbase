@@ -38,7 +38,7 @@ class ReplyController extends Controller
 
         $replies = $comment
             ->replies()
-            ->with('user:id,name')
+            ->with('user:id,username')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -63,7 +63,7 @@ class ReplyController extends Controller
             'body' => $request->validated('body'),
         ]);
 
-        $reply->load('user:id,name');
+        $reply->load('user:id,username');
 
         $this->notifyCommentAuthor($reply, $comment, $request->user());
 
@@ -115,7 +115,7 @@ class ReplyController extends Controller
             'body' => $request->validated('body'),
         ]);
 
-        $reply->load('user:id,name');
+        $reply->load('user:id,username');
 
         return ReplyResource::make($reply);
     }

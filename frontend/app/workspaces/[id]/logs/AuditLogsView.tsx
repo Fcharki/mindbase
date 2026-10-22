@@ -406,7 +406,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                 <option value="">Anyone</option>
                 {filterOptions.users.map((person) => (
                   <option key={person.id} value={person.id}>
-                    {person.name}
+                    {person.username}
                   </option>
                 ))}
               </select>
@@ -547,7 +547,7 @@ export function AuditLogsView({ workspaceId }: { workspaceId: string }) {
                           {log.user ? (
                             <>
                               <span className="font-medium text-[#20202A] dark:text-[#ececf1]">
-                                {log.user.name}
+                                {log.user.username}
                               </span>
                               <span className="block text-xs text-[#9897A1] dark:text-[#8b8b94]">
                                 {log.user.email}

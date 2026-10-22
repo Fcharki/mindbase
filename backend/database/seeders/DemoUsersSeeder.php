@@ -14,17 +14,17 @@ class DemoUsersSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            ['name' => 'Sana Park', 'email' => 'sana@example.com'],
-            ['name' => 'Omar Haddad', 'email' => 'omar@example.com'],
-            ['name' => 'Lina Chen', 'email' => 'lina@example.com'],
-            ['name' => 'Marco Rossi', 'email' => 'marco@example.com'],
+            ['username' => 'sana-park', 'email' => 'sana@example.com'],
+            ['username' => 'omar-haddad', 'email' => 'omar@example.com'],
+            ['username' => 'lina-chen', 'email' => 'lina@example.com'],
+            ['username' => 'marco-rossi', 'email' => 'marco@example.com'],
         ];
 
         foreach ($users as $user) {
             User::firstOrCreate(
                 ['email' => $user['email']],
                 [
-                    'name' => $user['name'],
+                    'username' => $user['username'],
                     'password' => Hash::make('Password@123'),
                     'email_verified_at' => now(),
                 ]

@@ -287,7 +287,7 @@ export function CommentsPanel({
   }
 
   function authorName(post: EntryComment | EntryReply) {
-    return post.user?.name ?? "Deleted user";
+    return post.user?.username ?? "Deleted user";
   }
 
   async function handlePost(event: FormEvent<HTMLFormElement>) {

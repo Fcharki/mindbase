@@ -36,14 +36,14 @@ class MembershipRequestController extends Controller
             AuditLog::ENTITY_JOIN_REQUEST,
             $membershipRequest->id,
             [
-                'name' => $request->user()->name,
+                'username' => $request->user()->username,
                 'email' => $request->user()->email,
                 'role' => $membershipRequest->requested_role,
             ],
         );
 
         return MembershipRequestResource::make(
-            $membershipRequest->load('user:id,name,email')
+            $membershipRequest->load('user:id,username,email')
         )->response()->setStatusCode(201);
     }
 
@@ -53,7 +53,7 @@ class MembershipRequestController extends Controller
 
         $requests = $workspace->membershipRequests()
             ->where('status', MembershipRequest::STATUS_PENDING)
-            ->with('user:id,name,email')
+            ->with('user:id,username,email')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -84,14 +84,14 @@ class MembershipRequestController extends Controller
             AuditLog::ENTITY_JOIN_REQUEST,
             $resolved->id,
             [
-                'name' => $resolved->user?->name,
+                'username' => $resolved->user?->username,
                 'email' => $resolved->user?->email,
                 'role' => $request->validated('role') ?? $resolved->requested_role,
             ],
         );
 
         return MembershipRequestResource::make(
-            $resolved->load('user:id,name,email')
+            $resolved->load('user:id,username,email')
         );
     }
 
@@ -112,7 +112,7 @@ class MembershipRequestController extends Controller
             AuditLog::ENTITY_JOIN_REQUEST,
             $membershipRequest->id,
             [
-                'name' => $membershipRequest->user?->name,
+                'username' => $membershipRequest->user?->username,
                 'email' => $membershipRequest->user?->email,
             ],
         );

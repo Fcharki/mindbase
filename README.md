@@ -21,8 +21,9 @@ locally in Docker, so no request leaves the machine.
 - Email registration and login, with email verification and password reset.
 - Google sign-in through Socialite.
 - Sanctum cookie/session auth for the SPA; every workspace route sits behind it.
-- Member profiles with a name, bio, location and optional photo, plus password
-  change and account deletion. Workspace cards open the owner's read-only profile.
+- Member profiles with a unique username, bio, location and optional photo, plus
+  password change and account deletion. Users can search for each other and open
+  a public profile that lists the workspaces they own.
 
 ### Workspaces and access
 

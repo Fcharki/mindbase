@@ -24,7 +24,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   register: (
-    name: string,
+    username: string,
     email: string,
     password: string,
     passwordConfirmation: string,
@@ -94,13 +94,13 @@ export function AuthProvider({
   }
 
   async function register(
-    name: string,
+    username: string,
     email: string,
     password: string,
     passwordConfirmation: string,
   ) {
     await registerRequest(
-      name,
+      username,
       email,
       password,
       passwordConfirmation,

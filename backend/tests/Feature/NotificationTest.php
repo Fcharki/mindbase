@@ -98,7 +98,7 @@ class NotificationTest extends TestCase
         $data = $notification->data;
 
         $this->assertSame('comment', $data['kind']);
-        $this->assertSame($member->name, $data['actor_name']);
+        $this->assertSame($member->username, $data['actor_username']);
         $this->assertSame($entry->title, $data['entry_title']);
         $this->assertSame($workspace->id, $data['workspace_id']);
         $this->assertSame($entry->id, $data['entry_id']);
@@ -221,7 +221,7 @@ class NotificationTest extends TestCase
             'type' => CommentedOnEntry::class,
             'data' => [
                 'kind' => 'comment',
-                'actor_name' => $member->name,
+                'actor_username' => $member->username,
                 'workspace_id' => $workspace->id,
                 'entry_id' => $entry->id,
                 'comment_id' => $older->id,
@@ -242,7 +242,7 @@ class NotificationTest extends TestCase
             'type' => CommentedOnEntry::class,
             'data' => [
                 'kind' => 'comment',
-                'actor_name' => $member->name,
+                'actor_username' => $member->username,
                 'workspace_id' => $workspace->id,
                 'entry_id' => $entry->id,
                 'comment_id' => $newer->id,

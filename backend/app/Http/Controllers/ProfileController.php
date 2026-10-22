@@ -9,6 +9,7 @@ use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Auth\EmailService;
+use App\Services\WorkspaceIndexCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,8 +45,9 @@ class ProfileController extends Controller
         $validated = $request->validated();
 
         $emailChanged = strcasecmp($validated['email'], $user->email) !== 0;
+        $usernameChanged = $validated['username'] !== $user->username;
 
-        $user->name = $validated['name'];
+        $user->username = $validated['username'];
 
         if (array_key_exists('bio', $validated)) {
             $user->bio = $validated['bio'];
@@ -61,6 +63,10 @@ class ProfileController extends Controller
         }
 
         $user->save();
+
+        if ($usernameChanged) {
+            app(WorkspaceIndexCache::class)->flush();
+        }
 
         if ($emailChanged) {
             $this->emailService->sendVerificationEmail($user);

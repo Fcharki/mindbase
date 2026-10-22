@@ -8,7 +8,7 @@ export async function getProfile(): Promise<User> {
 }
 
 export async function updateProfile(input: {
-  name: string;
+  username: string;
   email: string;
   bio: string | null;
   location: string | null;
@@ -34,6 +34,11 @@ export async function uploadProfilePhoto(
   const response = await api.post<{ user: User; message: string }>(
     "/profile/photo",
     body,
+    {
+      // Same FormData/JSON caveat as document uploads: let the browser set
+      // the multipart boundary instead of inheriting the client's JSON header.
+      headers: { "Content-Type": null },
+    },
   );
 
   return response.data;

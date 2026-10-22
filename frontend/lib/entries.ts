@@ -2,7 +2,7 @@ import { api } from "./api";
 
 export interface EntryCreator {
   id: number;
-  name: string;
+  username: string;
 }
 
 export interface EntryTag {

@@ -10,7 +10,7 @@ export interface AppNotification {
   kind: NotificationKind;
   // Null when the notification was written before these fields existed, or when
   // the account that caused it has since been deleted.
-  actor_name: string | null;
+  actor_username: string | null;
   entry_title: string | null;
   excerpt: string | null;
   // The ids that make the notification a link to a post rather than to a page.
@@ -88,7 +88,7 @@ export function notificationHref(
  * One line describing what happened, for the panel and for the accessible name.
  */
 export function notificationSummary(notification: AppNotification): string {
-  const actor = notification.actor_name ?? "Someone";
+  const actor = notification.actor_username ?? "Someone";
 
   if (notification.kind === "reply") {
     return `${actor} replied to your comment`;

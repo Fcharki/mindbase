@@ -84,7 +84,7 @@ class CommentThreadTest extends TestCase
             ->assertJsonPath('data.body', 'Worth revisiting next quarter.')
             ->assertJsonPath('data.user_id', $member->id)
             ->assertJsonPath('data.knowledge_entry_id', $entry->id)
-            ->assertJsonPath('data.user.name', $member->name);
+            ->assertJsonPath('data.user.username', $member->username);
 
         $this->assertSame(1, Comment::count());
     }

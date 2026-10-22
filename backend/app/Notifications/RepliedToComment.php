@@ -47,7 +47,7 @@ class RepliedToComment extends Notification
 
         return [
             'kind' => 'reply',
-            'actor_name' => $this->actor->name,
+            'actor_username' => $this->actor->username,
             'entry_title' => $comment?->knowledgeEntry?->title,
             // The comment body, not the reply's: it is the thread being
             // continued, and it is what the reader needs to recognise the
@@ -66,8 +66,8 @@ class RepliedToComment extends Notification
         $entry = $comment?->knowledgeEntry;
 
         $message = (new MailMessage)
-            ->subject("{$this->actor->name} replied to your comment")
-            ->line("{$this->actor->name} replied to your comment on \"{$entry?->title}\":")
+            ->subject("{$this->actor->username} replied to your comment")
+            ->line("{$this->actor->username} replied to your comment on \"{$entry?->title}\":")
             ->line(Str::limit($this->reply->body, 400));
 
         if ($entry !== null) {

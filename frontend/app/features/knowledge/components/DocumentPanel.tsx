@@ -274,7 +274,7 @@ export function DocumentPanel({
                     <p className="mt-0.5 text-xs text-[#9897A1] dark:text-[#8b8b94]">
                       {document.human_size}
                       {document.uploader
-                        ? ` · ${document.uploader.name}`
+                        ? ` · ${document.uploader.username}`
                         : ""}
                     </p>
 

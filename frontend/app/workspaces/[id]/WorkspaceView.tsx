@@ -434,7 +434,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                   <button
                     type="button"
                     onClick={() => setOwnerProfileOpen(true)}
-                    aria-label={`View ${workspace.owner.name}'s profile`}
+                    aria-label={`View ${workspace.owner.username}'s profile`}
                     className="group flex min-w-0 items-center gap-2 rounded-full border border-transparent py-1 pl-1 pr-3 transition hover:border-[#D7D5DE] hover:bg-[#F2F0EA] dark:hover:border-[#34343c] dark:hover:bg-[#24242a]"
                   >
                     <OwnerAvatar
@@ -444,7 +444,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                     <span className="truncate">
                       Owned by{" "}
                       <span className="font-medium text-[#5146E5] group-hover:underline">
-                        {workspace.owner.name}
+                        @{workspace.owner.username}
                       </span>
                     </span>
                   </button>
@@ -605,12 +605,12 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] dark:bg-[#262449] text-sm font-semibold text-[#5146E5]">
-                            {request.user?.name.charAt(0).toUpperCase()}
+                            {request.user?.username.charAt(0).toUpperCase()}
                           </div>
 
                           <div className="flex min-w-0 flex-col">
                             <span className="truncate text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
-                              {request.user?.name}
+                              @{request.user?.username}
                             </span>
 
                             <span className="truncate text-sm text-[#9897A1] dark:text-[#8b8b94]">
@@ -729,12 +729,12 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFF] dark:bg-[#262449] text-sm font-semibold text-[#5146E5]">
-                      {member.name.charAt(0).toUpperCase()}
+                      {member.username.charAt(0).toUpperCase()}
                     </div>
 
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate text-sm font-medium text-[#20202A] dark:text-[#ececf1]">
-                        {member.name}
+                        @{member.username}
                       </span>
 
                       <span className="truncate text-sm text-[#9897A1] dark:text-[#8b8b94]">

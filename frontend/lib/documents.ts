@@ -2,7 +2,7 @@ import { api } from "./api";
 
 export interface DocumentUploader {
   id: number;
-  name: string;
+  username: string;
 }
 
 export type DocumentExtractionStatus =
