@@ -28,6 +28,9 @@ export function PublicProfileView({ username }: { username: string }) {
   const [status, setStatus] = useState<Status>("loading");
   const [requestingId, setRequestingId] = useState<number | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ src: string; alt: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (authLoading) {
@@ -60,6 +63,22 @@ export function PublicProfileView({ username }: { username: string }) {
       cancelled = true;
     };
   }, [authLoading, router, user, username]);
+
+  // Close the image preview with Esc
+  useEffect(() => {
+    if (!preview) {
+      return;
+    }
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setPreview(null);
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [preview]);
 
   const totalEntries = useMemo(
     () =>
@@ -178,38 +197,62 @@ export function PublicProfileView({ username }: { username: string }) {
         </Link>
 
         <section className="mt-6 overflow-hidden rounded-2xl border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] shadow-sm">
-          <div className="h-28 bg-gradient-to-r from-[#EEEDFF] via-[#E7F1FF] to-[#EAF7F6] dark:from-[#262449] dark:via-[#1c2b3a] dark:to-[#143036]" />
+          {/* Cover */}
+          <div className="relative aspect-[5/2] w-full bg-gradient-to-r from-[#EEEDFF] via-[#E7F1FF] to-[#EAF7F6] dark:from-[#262449] dark:via-[#1c2b3a] dark:to-[#143036] sm:aspect-[4/1]">
+            {person.cover_url && (
+              <button
+                type="button"
+                onClick={() =>
+                  setPreview({
+                    src: person.cover_url!,
+                    alt: `${person.username}'s profile cover`,
+                  })
+                }
+                className="absolute inset-0 block h-full w-full cursor-zoom-in"
+                aria-label="View cover photo"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={person.cover_url}
+                  alt={`${person.username}'s profile cover`}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            )}
+          </div>
 
           <div className="px-6 pb-7 sm:px-8">
-            <div className="-mt-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#EEEDFF] text-3xl font-semibold text-[#5146E5] dark:border-[#1b1b1f] dark:bg-[#262449]">
-                  {person.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+            {/* Avatar row */}
+            <div className="flex items-end justify-between gap-4">
+              <div className="relative z-10 -mt-14 sm:-mt-20">
+                {person.photo_url ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreview({
+                        src: person.photo_url!,
+                        alt: `${person.username}'s profile photo`,
+                      })
+                    }
+                    className="block cursor-zoom-in rounded-full focus:outline-none focus-visible:ring-4 focus-visible:ring-[#5146E5]/40"
+                    aria-label="View profile photo"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={person.photo_url}
                       alt={`${person.username}'s profile photo`}
-                      className="h-full w-full object-cover"
+                      className="h-28 w-28 rounded-full border-4 border-white bg-[#EEEDFF] object-cover shadow-md dark:border-[#1b1b1f] dark:bg-[#262449] sm:h-40 sm:w-40 sm:border-[5px]"
                     />
-                  ) : (
-                    person.username.charAt(0).toUpperCase()
-                  )}
-                </span>
-
-                <div className="pb-1">
-                  <h1 className="text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
-                    @{person.username}
-                  </h1>
-                  {person.location && (
-                    <p className="mt-1 text-sm text-[#686873] dark:text-[#b0b0b9]">
-                      {person.location}
-                    </p>
-                  )}
-                </div>
+                  </button>
+                ) : (
+                  <span className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#EEEDFF] to-[#DCD8FF] text-4xl font-semibold text-[#5146E5] shadow-md dark:border-[#1b1b1f] dark:from-[#262449] dark:to-[#33306a] sm:h-40 sm:w-40 sm:border-[5px] sm:text-6xl">
+                    {person.username.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
 
-              <div className="flex gap-5 pb-1 text-sm">
-                <div>
+              <div className="flex gap-6 pb-1 text-sm">
+                <div className="text-center sm:text-left">
                   <p className="text-lg font-semibold">
                     {person.owned_workspaces.length}
                   </p>
@@ -219,7 +262,7 @@ export function PublicProfileView({ username }: { username: string }) {
                       : "workspaces"}
                   </p>
                 </div>
-                <div>
+                <div className="text-center sm:text-left">
                   <p className="text-lg font-semibold">{totalEntries}</p>
                   <p className="text-[#686873] dark:text-[#b0b0b9]">
                     {totalEntries === 1 ? "entry" : "entries"}
@@ -228,7 +271,40 @@ export function PublicProfileView({ username }: { username: string }) {
               </div>
             </div>
 
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-[#4A4D45] dark:text-[#c4c3cc]">
+            {/* Identity */}
+            <div className="mt-4">
+              <h1 className="text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
+                @{person.username}
+              </h1>
+              {person.location && (
+                <p className="mt-1 flex items-center gap-1.5 text-sm text-[#686873] dark:text-[#b0b0b9]">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="10"
+                      r="2.5"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    />
+                  </svg>
+                  {person.location}
+                </p>
+              )}
+            </div>
+
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#4A4D45] dark:text-[#c4c3cc]">
               {person.bio?.trim() || "This person has not added a bio yet."}
             </p>
 
@@ -341,6 +417,22 @@ export function PublicProfileView({ username }: { username: string }) {
           )}
         </section>
       </main>
+
+      {preview && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setPreview(null)}
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={preview.src}
+            alt={preview.alt}
+            className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
+          />
+        </div>
+      )}
     </div>
   );
 }

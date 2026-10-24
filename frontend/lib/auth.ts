@@ -9,6 +9,7 @@ export interface User {
   bio: string | null;
   location: string | null;
   photo_url: string | null;
+  cover_url: string | null;
 }
 
 export async function login(

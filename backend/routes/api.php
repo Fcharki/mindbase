@@ -140,6 +140,11 @@ Route::get('users/{user}/photo', [
     'photo',
 ])->name('users.photo');
 
+Route::get('users/{user}/cover', [
+    ProfileController::class,
+    'cover',
+])->name('users.cover');
+
 /*
 |--------------------------------------------------------------------------
 | Public Entry Images
@@ -175,6 +180,10 @@ Route::middleware(['web', 'auth:sanctum'])->group(function () {
     Route::post('profile/photo', [ProfileController::class, 'updatePhoto']);
 
     Route::delete('profile/photo', [ProfileController::class, 'destroyPhoto']);
+
+    Route::post('profile/cover', [ProfileController::class, 'updateCover']);
+
+    Route::delete('profile/cover', [ProfileController::class, 'destroyCover']);
 
     Route::patch('profile/password', [ProfileController::class, 'updatePassword']);
 

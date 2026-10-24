@@ -24,6 +24,7 @@ class PublicUserResource extends JsonResource
             'bio' => $this->bio,
             'location' => $this->location,
             'photo_url' => $this->photoUrl(),
+            'cover_url' => $this->coverUrl(),
             'created_at' => $this->created_at,
             'owned_workspaces' => PublicWorkspaceResource::collection(
                 $this->whenLoaded('ownedWorkspaces')

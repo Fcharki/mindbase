@@ -26,6 +26,7 @@ export interface PublicUser {
   bio: string | null;
   location: string | null;
   photo_url: string | null;
+  cover_url: string | null;
   created_at: string;
   owned_workspaces: PublicWorkspace[];
 }

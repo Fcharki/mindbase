@@ -287,12 +287,79 @@ class ProfileTest extends TestCase
         $this->get("/api/v1/users/{$user->id}/photo")->assertNotFound();
     }
 
+    public function test_it_uploads_replaces_and_removes_a_profile_cover(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/api/v1/profile/cover', [
+                'cover' => UploadedFile::fake()->createWithContent(
+                    'cover.png',
+                    $this->pngBytes()
+                ),
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('message', 'Cover updated.');
+
+        $firstPath = $user->fresh()->cover_path;
+
+        $this->assertNotNull($firstPath);
+        Storage::disk('local')->assertExists($firstPath);
+
+        $this->actingAs($user)
+            ->post('/api/v1/profile/cover', [
+                'cover' => UploadedFile::fake()->createWithContent(
+                    'cover.png',
+                    $this->pngBytes()
+                ),
+            ], ['Accept' => 'application/json'])
+            ->assertOk();
+
+        $secondPath = $user->fresh()->cover_path;
+
+        $this->assertNotSame($firstPath, $secondPath);
+        Storage::disk('local')->assertMissing($firstPath);
+
+        $this->actingAs($user)
+            ->deleteJson('/api/v1/profile/cover')
+            ->assertOk()
+            ->assertJsonPath('user.cover_url', null);
+
+        $this->assertNull($user->fresh()->cover_path);
+        Storage::disk('local')->assertMissing($secondPath);
+    }
+
+    public function test_a_cover_is_served_without_a_session(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create([
+            'cover_path' => 'profile-covers/1/cover.png',
+        ]);
+
+        Storage::disk('local')->put($user->cover_path, $this->pngBytes());
+
+        $this->get("/api/v1/users/{$user->id}/cover")
+            ->assertOk()
+            ->assertHeader('content-type', 'image/png');
+    }
+
+    public function test_a_missing_cover_is_not_found(): void
+    {
+        $user = User::factory()->create();
+
+        $this->get("/api/v1/users/{$user->id}/cover")->assertNotFound();
+    }
+
     public function test_a_viewer_sees_the_owners_public_profile(): void
     {
         $owner = User::factory()->create([
             'bio' => 'Builds things.',
             'location' => 'Rabat',
             'photo_path' => 'profile-photos/owner/avatar.png',
+            'cover_path' => 'profile-covers/owner/cover.png',
         ]);
 
         $workspace = Workspace::create([
@@ -313,6 +380,10 @@ class ProfileTest extends TestCase
             ->assertJsonPath(
                 'data.owner.photo_url',
                 route('users.photo', ['user' => $owner->id])
+            )
+            ->assertJsonPath(
+                'data.owner.cover_url',
+                route('users.cover', ['user' => $owner->id])
             );
     }
 

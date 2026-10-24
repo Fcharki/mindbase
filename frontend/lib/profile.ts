@@ -57,6 +57,38 @@ export async function removeProfilePhoto(): Promise<{
   return response.data;
 }
 
+export async function uploadProfileCover(
+  cover: File,
+): Promise<{ user: User; message: string }> {
+  await fetchCsrfCookie();
+
+  const body = new FormData();
+  body.append("cover", cover);
+
+  const response = await api.post<{ user: User; message: string }>(
+    "/profile/cover",
+    body,
+    {
+      headers: { "Content-Type": null },
+    },
+  );
+
+  return response.data;
+}
+
+export async function removeProfileCover(): Promise<{
+  user: User;
+  message: string;
+}> {
+  await fetchCsrfCookie();
+
+  const response = await api.delete<{ user: User; message: string }>(
+    "/profile/cover",
+  );
+
+  return response.data;
+}
+
 export async function updatePassword(input: {
   currentPassword: string;
   password: string;

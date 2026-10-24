@@ -29,6 +29,7 @@ class UserResource extends JsonResource
             'bio' => $this->bio,
             'location' => $this->location,
             'photo_url' => $this->photoUrl(),
+            'cover_url' => $this->coverUrl(),
         ];
     }
 }

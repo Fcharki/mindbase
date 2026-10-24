@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at',
         'bio',
         'location',
+        'cover_path',
     ];
 
     /**
@@ -91,6 +92,17 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->photo_path === null
             ? null
             : route('users.photo', ['user' => $this->getKey()]);
+    }
+
+    /**
+     * The public URL of the uploaded cover image, or null when none was
+     * uploaded and the gradient fallback should be shown instead.
+     */
+    public function coverUrl(): ?string
+    {
+        return $this->cover_path === null
+            ? null
+            : route('users.cover', ['user' => $this->getKey()]);
     }
 
     public function workspaces()

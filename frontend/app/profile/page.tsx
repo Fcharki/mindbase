@@ -22,9 +22,11 @@ import { WorkspaceNav } from "@/app/features/workspaces/WorkspaceNav";
 import type { User } from "@/lib/auth";
 import {
   deleteAccount,
+  removeProfileCover,
   removeProfilePhoto,
   updatePassword,
   updateProfile,
+  uploadProfileCover,
   uploadProfilePhoto,
 } from "@/lib/profile";
 
@@ -73,6 +75,8 @@ function ProfileDetails({
   const [location, setLocation] = useState(user.location ?? "");
   const [photoUrl, setPhotoUrl] = useState(user.photo_url);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [coverUrl, setCoverUrl] = useState(user.cover_url);
+  const [coverBusy, setCoverBusy] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -143,8 +147,96 @@ function ProfileDetails({
     }
   }
 
+  async function handleCoverSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    setCoverBusy(true);
+    setProfileError(null);
+
+    try {
+      const result = await uploadProfileCover(file);
+      setCoverUrl(result.user.cover_url);
+      await refreshUser();
+      toast.success(result.message);
+    } catch (error) {
+      setProfileError(
+        errorMessage(error, "Could not update your cover image."),
+      );
+    } finally {
+      setCoverBusy(false);
+    }
+  }
+
+  async function handleRemoveCover() {
+    setCoverBusy(true);
+    setProfileError(null);
+
+    try {
+      const result = await removeProfileCover();
+      setCoverUrl(result.user.cover_url);
+      await refreshUser();
+      toast.success(result.message);
+    } catch (error) {
+      setProfileError(
+        errorMessage(error, "Could not remove your cover image."),
+      );
+    } finally {
+      setCoverBusy(false);
+    }
+  }
+
   return (
     <>
+      <div className="relative mb-6 h-32 overflow-hidden rounded-xl bg-gradient-to-r from-[#EEEDFF] via-[#E7F1FF] to-[#EAF7F6] dark:from-[#262449] dark:via-[#1c2b3a] dark:to-[#143036] sm:h-40">
+        {coverUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverUrl}
+            alt={`${user.username}'s profile cover`}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-2 p-3">
+          <label
+            className={`inline-flex items-center justify-center rounded-lg border border-white/30 bg-black/40 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/60 ${
+              coverBusy
+                ? "pointer-events-none opacity-50"
+                : "cursor-pointer"
+            }`}
+          >
+            {coverBusy
+              ? "Uploading…"
+              : coverUrl
+                ? "Change cover"
+                : "Add cover"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              onChange={handleCoverSelected}
+              disabled={coverBusy}
+            />
+          </label>
+
+          {coverUrl && (
+            <button
+              type="button"
+              onClick={handleRemoveCover}
+              disabled={coverBusy}
+              className="rounded-lg border border-white/30 bg-black/40 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/60 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="mb-6 flex flex-col gap-4 rounded-xl border border-[#E7E6ED] dark:border-[#2a2a31] bg-[#F2F0EA]/60 dark:bg-[#121214]/60 p-4 sm:flex-row sm:items-center">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EEEDFF] dark:bg-[#262449] text-2xl font-semibold text-[#5146E5]">
           {photoUrl ? (

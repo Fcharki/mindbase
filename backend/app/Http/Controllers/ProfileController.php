@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Profile\DeleteProfileRequest;
+use App\Http\Requests\Profile\UpdateCoverRequest;
 use App\Http\Requests\Profile\UpdatePasswordRequest;
 use App\Http\Requests\Profile\UpdatePhotoRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
@@ -132,6 +133,57 @@ class ProfileController extends Controller
     }
 
     /**
+     * Store a new profile cover image, replacing the previous one.
+     */
+    public function updateCover(UpdateCoverRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $disk = Storage::disk('local');
+        $previousPath = $user->cover_path;
+
+        $path = $request->file('cover')->store(
+            'profile-covers/'.$user->getKey(),
+            'local'
+        );
+
+        if ($path === false) {
+            abort(500, 'The cover image could not be stored.');
+        }
+
+        $user->cover_path = $path;
+        $user->save();
+
+        if ($previousPath !== null) {
+            $disk->delete($previousPath);
+        }
+
+        return response()->json([
+            'message' => 'Cover updated.',
+            'user' => UserResource::make($user->fresh()),
+        ]);
+    }
+
+    /**
+     * Remove the profile cover image.
+     */
+    public function destroyCover(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->cover_path !== null) {
+            Storage::disk('local')->delete($user->cover_path);
+
+            $user->cover_path = null;
+            $user->save();
+        }
+
+        return response()->json([
+            'message' => 'Cover removed.',
+            'user' => UserResource::make($user->fresh()),
+        ]);
+    }
+
+    /**
      * Serve a user's photo.
      *
      * Photos are deliberately public: they are part of the read-only profile a
@@ -147,6 +199,25 @@ class ProfileController extends Controller
         abort_unless($disk->exists($user->photo_path), 404);
 
         return $disk->response($user->photo_path, headers: [
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    /**
+     * Serve a user's cover image.
+     *
+     * The cover is shown on the same public profile as the photo, so it must
+     * be readable without a session as well.
+     */
+    public function cover(User $user): StreamedResponse
+    {
+        abort_if($user->cover_path === null, 404);
+
+        $disk = Storage::disk('local');
+
+        abort_unless($disk->exists($user->cover_path), 404);
+
+        return $disk->response($user->cover_path, headers: [
             'Cache-Control' => 'public, max-age=86400',
         ]);
     }
