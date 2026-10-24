@@ -66,24 +66,24 @@ export default function Home() {
       {/* Navbar */}
       <header className="border-b border-[#D7D5DE] dark:border-[#34343c]">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4 sm:px-10">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
             <Logomark />
             <span className="text-lg font-semibold tracking-tight">
               Mindbase
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm sm:flex">
+          <nav className="hidden items-center gap-5 text-sm md:flex lg:gap-8">
             <a
               href="#features"
-              className="text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#5146E5]"
+              className="whitespace-nowrap text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#5146E5]"
             >
               Features
             </a>
 
             <a
               href="#method"
-              className="text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#5146E5]"
+              className="whitespace-nowrap text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#5146E5]"
             >
               Method
             </a>
@@ -101,14 +101,14 @@ export default function Home() {
               <div className="flex items-center gap-5">
                 <Link
                   href="/auth/login"
-                  className="text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#20202A]"
+                  className="whitespace-nowrap text-[#686873] dark:text-[#b0b0b9] transition hover:text-[#20202A]"
                 >
                   Log in
                 </Link>
 
                 <Link
                   href="/auth/register"
-                  className="rounded-lg bg-[#5146E5] px-4 py-2 font-medium text-white transition hover:bg-[#4338CA]"
+                  className="whitespace-nowrap rounded-lg bg-[#5146E5] px-4 py-2 font-medium text-white transition hover:bg-[#4338CA]"
                 >
                   Get started free
                 </Link>
@@ -116,7 +116,7 @@ export default function Home() {
             )}
           </nav>
 
-          <div className="flex items-center gap-2 sm:hidden">
+          <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
 
             <button
@@ -132,7 +132,7 @@ export default function Home() {
         </div>
 
         {menuOpen && (
-          <div className="flex flex-col gap-4 border-t border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-6 py-4 text-sm sm:hidden">
+          <div className="flex flex-col gap-4 border-t border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-6 py-4 text-sm md:hidden">
             <a
               href="#features"
               onClick={() => setMenuOpen(false)}

@@ -67,9 +67,9 @@ export function WorkspaceNav({
 
   return (
     <header className="border-b border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f]">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-3.5 sm:px-10">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:gap-6 lg:px-10 lg:py-3.5">
         {/* Brand + navigation */}
-        <div className="flex min-w-0 items-center gap-8">
+        <div className="flex min-w-0 items-center gap-4 lg:gap-8">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2 text-[#20202A] dark:text-[#ececf1]"
@@ -81,10 +81,10 @@ export function WorkspaceNav({
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 sm:flex">
+          <nav className="hidden shrink-0 items-center gap-1 sm:flex">
             <Link
               href="/workspaces"
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+              className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
                 pathname === "/workspaces"
                   ? "bg-[#EEEDFF] dark:bg-[#262449] text-[#5146E5]"
                   : "text-[#686873] dark:text-[#b0b0b9] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A]"
@@ -94,7 +94,7 @@ export function WorkspaceNav({
             </Link>
             <Link
               href="/dashboard"
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+              className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
                 pathname === "/dashboard"
                   ? "bg-[#EEEDFF] dark:bg-[#262449] text-[#5146E5]"
                   : "text-[#686873] dark:text-[#b0b0b9] hover:bg-[#F2F0EA] dark:hover:bg-[#24242a] hover:text-[#20202A]"
@@ -106,9 +106,9 @@ export function WorkspaceNav({
         </div>
 
         {/* Workspace + account */}
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {effectiveWorkspaces.length > 0 && (
-            <div className="relative hidden sm:block">
+            <div className="relative hidden md:block">
               <select
                 aria-label="Switch workspace"
                 value={current?.id ?? ""}
@@ -117,7 +117,7 @@ export function WorkspaceNav({
                     router.push(`/workspaces/${event.target.value}`);
                   }
                 }}
-                className="h-9 max-w-[220px] appearance-none rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-[#F2F0EA] dark:bg-[#121214] py-0 pl-3 pr-9 text-sm font-medium text-[#20202A] dark:text-[#ececf1] outline-none transition hover:border-[#C9C7D0] dark:hover:border-[#474751] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a]"
+                className="h-9 w-36 appearance-none rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-[#F2F0EA] dark:bg-[#121214] py-0 pl-3 pr-9 text-sm font-medium text-[#20202A] dark:text-[#ececf1] outline-none transition hover:border-[#C9C7D0] dark:hover:border-[#474751] focus:border-[#5146E5] focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a] lg:w-52"
               >
                 {!current && (
                   <option value="">Switch workspace…</option>
@@ -151,21 +151,21 @@ export function WorkspaceNav({
 
           <NotificationBell />
 
-          <div className="hidden h-6 w-px bg-[#D7D5DE] dark:bg-[#333] sm:block" />
+          <div className="hidden h-6 w-px bg-[#D7D5DE] dark:bg-[#333] lg:block" />
 
           <Link
             href="/profile"
-            className="hidden max-w-[160px] truncate text-sm font-medium text-[#686873] transition hover:text-[#5146E5] dark:text-[#b0b0b9] dark:hover:text-[#a5b4fc] sm:block"
+            className="hidden max-w-[160px] truncate text-sm font-medium text-[#686873] transition hover:text-[#5146E5] dark:text-[#b0b0b9] dark:hover:text-[#a5b4fc] lg:block"
           >
             {user?.username ? `@${user.username}` : null}
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/profile"
               aria-label="Your profile"
               title="Your profile"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#D7D5DE] text-[#5C5A66] transition hover:bg-[#F2F0EA] hover:text-[#1A1A1A] dark:border-[#333] dark:text-[#B8B6C2] dark:hover:bg-[#232329] dark:hover:text-white sm:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#D7D5DE] text-[#5C5A66] transition hover:bg-[#F2F0EA] hover:text-[#1A1A1A] dark:border-[#333] dark:text-[#B8B6C2] dark:hover:bg-[#232329] dark:hover:text-white lg:hidden"
             >
               <UserRound className="h-4 w-4" aria-hidden="true" />
             </Link>
@@ -173,7 +173,7 @@ export function WorkspaceNav({
             <ThemeToggle />
             <button
               onClick={handleLogout}
-              className="rounded-lg border border-[#D7D5DE] bg-white px-3.5 py-2 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] hover:text-[#20202A] focus:outline-none focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a] dark:border-[#333] dark:bg-[#232329] dark:text-[#ececf1] dark:hover:bg-[#2c2c33]"
+              className="whitespace-nowrap rounded-lg border border-[#D7D5DE] bg-white px-3 py-2 text-sm font-medium text-[#686873] transition hover:border-[#C9C7D0] dark:hover:border-[#474751] hover:bg-[#F2F0EA] hover:text-[#20202A] focus:outline-none focus:ring-2 focus:ring-[#EEEDFF] dark:focus:ring-[#32324a] dark:border-[#333] dark:bg-[#232329] dark:text-[#ececf1] dark:hover:bg-[#2c2c33] sm:px-3.5"
             >
               Log out
             </button>
@@ -183,7 +183,7 @@ export function WorkspaceNav({
 
       {/* Mobile workspace switcher */}
       {effectiveWorkspaces.length > 0 && (
-        <div className="flex items-center gap-2 border-t border-[#E7E6ED] dark:border-[#2a2a31] px-6 py-3 sm:hidden">
+        <div className="flex items-center gap-2 border-t border-[#E7E6ED] dark:border-[#2a2a31] px-4 py-3 sm:px-6 md:hidden">
           <div className="relative min-w-0 flex-1">
             <select
               aria-label="Switch workspace"

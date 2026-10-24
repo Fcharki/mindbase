@@ -18,6 +18,7 @@ export function PublicThemeToggle() {
     pathname.startsWith("/workspaces") ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/profile") ||
+    pathname.startsWith("/users") ||
     pathname.startsWith("/auth")
   ) {
     return null;
