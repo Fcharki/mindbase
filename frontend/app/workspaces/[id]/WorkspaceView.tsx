@@ -79,6 +79,10 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const [memberError, setMemberError] = useState<string | null>(null);
   const [addingMember, setAddingMember] = useState(false);
   const [requestsError, setRequestsError] = useState<string | null>(null);
+  const [requestRoles, setRequestRoles] = useState<
+    Record<number, WorkspaceRole>
+  >({});
+  const [approvingId, setApprovingId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [ownerProfileOpen, setOwnerProfileOpen] = useState(false);
 
@@ -274,27 +278,36 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
     });
   }
 
-  function handleApproveSelection(
-    event: ChangeEvent<HTMLSelectElement>,
-    request: MembershipRequest,
-  ) {
-    const select = event.currentTarget;
-    const role = select.value as WorkspaceRole;
-
-    if (
-      !window.confirm(
-        `Approve @${request.user?.username ?? "this user"} as ${role} for "${workspace?.name ?? "this workspace"}"?`,
-      )
-    ) {
-      select.value = request.requested_role;
+  async function handleAcceptRequest(request: MembershipRequest) {
+    if (!workspace || approvingId !== null) {
       return;
     }
 
-    void handleApproveRequest(request.id, role).then((approved) => {
-      if (!approved) {
-        select.value = request.requested_role;
+    const role = requestRoles[request.id] ?? request.requested_role;
+
+    if (
+      !window.confirm(
+        `Approve @${request.user?.username ?? "this user"} as ${role} for "${workspace.name}"?`,
+      )
+    ) {
+      return;
+    }
+
+    setApprovingId(request.id);
+
+    try {
+      const approved = await handleApproveRequest(request.id, role);
+
+      if (approved) {
+        setRequestRoles((current) => {
+          const next = { ...current };
+          delete next[request.id];
+          return next;
+        });
       }
-    });
+    } finally {
+      setApprovingId(null);
+    }
   }
 
   async function handleRoleChange(
@@ -713,9 +726,17 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
 
                         <div className="flex shrink-0 items-center gap-2">
                           <select
-                            defaultValue={request.requested_role}
+                            aria-label={`Role for @${request.user?.username ?? "this user"}`}
+                            value={
+                              requestRoles[request.id] ??
+                              request.requested_role
+                            }
                             onChange={(event) =>
-                              handleApproveSelection(event, request)
+                              setRequestRoles((current) => ({
+                                ...current,
+                                [request.id]: event.target
+                                  .value as WorkspaceRole,
+                              }))
                             }
                             className="w-fit rounded-lg border border-[#D7D5DE] dark:border-[#34343c] bg-white dark:bg-[#1b1b1f] px-3 py-2 text-sm text-[#20202A] dark:text-[#ececf1] outline-none focus:border-[#5146E5]"
                           >
@@ -724,8 +745,19 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                           </select>
 
                           <button
+                            onClick={() => handleAcceptRequest(request)}
+                            disabled={approvingId !== null}
+                            className="rounded-lg bg-[#5146E5] px-3 py-2 text-sm font-medium text-white transition hover:bg-[#4338CA] disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {approvingId === request.id
+                              ? "Accepting…"
+                              : "Accept"}
+                          </button>
+
+                          <button
                             onClick={() => handleRejectRequest(request.id)}
-                            className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-3 py-2 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#F9DEE3] dark:hover:bg-[#4a2630]"
+                            disabled={approvingId !== null}
+                            className="rounded-lg border border-[#F2C9D1] dark:border-[#4a2630] bg-[#FCECEF] dark:bg-[#43212b] px-3 py-2 text-sm font-medium text-[#B13D55] dark:text-[#f0a0b0] transition hover:bg-[#F9DEE3] dark:hover:bg-[#4a2630] disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Reject
                           </button>
