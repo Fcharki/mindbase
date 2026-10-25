@@ -260,6 +260,12 @@ const Tiptap = ({ content = "", workspaceId, onChange }: TiptapProps) => {
         inline: false,
         allowBase64: false,
         HTMLAttributes: { class: "entry-image" },
+        resize: {
+          enabled: true,
+          minWidth: 120,
+          minHeight: 80,
+          alwaysPreserveAspectRatio: true,
+        },
       }),
     ],
     content,

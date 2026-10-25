@@ -193,9 +193,65 @@ body {
   border-radius: 0.75rem;
 }
 
-.tiptap-editor .ProseMirror img.ProseMirror-selectednode {
+/* Resizable image node view: the image sits inside a wrapper with corner
+   handles that write width and height back to the node attributes. */
+.tiptap-editor .ProseMirror [data-resize-container] {
+  margin: 1.25em 0;
+  justify-content: center;
+}
+
+.tiptap-editor .ProseMirror [data-resize-wrapper] {
+  max-width: 100%;
+}
+
+.tiptap-editor .ProseMirror [data-resize-wrapper] img {
+  margin: 0;
+}
+
+.tiptap-editor .ProseMirror img.ProseMirror-selectednode,
+.tiptap-editor
+  .ProseMirror
+  [data-resize-container].ProseMirror-selectednode
+  [data-resize-wrapper]
+  img {
   outline: 2px solid #5146e5;
   outline-offset: 2px;
+}
+
+.tiptap-editor .ProseMirror [data-resize-handle] {
+  height: 9px;
+  width: 9px;
+  border: 2px solid #5146e5;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 2;
+}
+
+.tiptap-editor .ProseMirror [data-resize-container]:hover [data-resize-handle],
+.tiptap-editor
+  .ProseMirror
+  [data-resize-container].ProseMirror-selectednode
+  [data-resize-handle],
+.tiptap-editor
+  .ProseMirror
+  [data-resize-container][data-resize-state="true"]
+  [data-resize-handle] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tiptap-editor .ProseMirror [data-resize-handle="top-left"],
+.tiptap-editor .ProseMirror [data-resize-handle="bottom-right"] {
+  cursor: nwse-resize;
+}
+
+.tiptap-editor .ProseMirror [data-resize-handle="top-right"],
+.tiptap-editor .ProseMirror [data-resize-handle="bottom-left"] {
+  cursor: nesw-resize;
 }
 
 .prose-content strong,
@@ -236,4 +292,18 @@ body {
 .dark .prose-content hr,
 .dark .tiptap-editor .ProseMirror hr {
   border-top-color: #34343c;
+}
+
+.dark .tiptap-editor .ProseMirror [data-resize-handle] {
+  border-color: #a5b4fc;
+  background: #1b1b1f;
+}
+
+.dark
+  .tiptap-editor
+  .ProseMirror
+  [data-resize-container].ProseMirror-selectednode
+  [data-resize-wrapper]
+  img {
+  outline-color: #a5b4fc;
 }
