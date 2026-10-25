@@ -128,7 +128,7 @@ Ask a question and get an answer grounded in the workspace's own passages, with
 citations. Answers stream in and can be regenerated or rated.
 
 <a href="doc/assets/ask-workspace.mp4">
-  <img src="doc/assets/ask-workspace.gif" alt="Summarization demo" width="720" />
+  <img src="doc/assets/ask-workspace.gif" alt="Ask a workspace demo" width="720" />
 </a>
 
 [Open the full-quality video](doc/assets/ask-workspace.mp4)
@@ -220,8 +220,8 @@ Two layers of logs sit behind the API:
 
 ## Database
 
-PostgreSQL 18 with pgvector, driven by Eloquent on Laravel 12. 32 migrations,
-25 tables — 18 for the app, 7 that Laravel brings along. The app tables fall into
+PostgreSQL 18 with pgvector, driven by Eloquent on Laravel 12. 34 migrations,
+26 tables — 18 for the app, 8 that Laravel brings along. The app tables fall into
 six areas:
 
 | Area           | Tables                                                          |
@@ -232,6 +232,9 @@ six areas:
 | Retrieval      | `entry_chunks` (pgvector, HNSW + GIN), `assistant_messages`     |
 | Discussion     | `comments`, `replies`, `notifications`                          |
 | Governance     | `audit_logs`                                                    |
+
+Laravel's own eight are `cache`, `cache_locks`, `failed_jobs`, `job_batches`,
+`jobs`, `migrations`, `password_reset_tokens` and `sessions`.
 
 `entry_images` holds each inline upload, its public UUID and URL metadata, and
 the text OCR read from it. `documents` holds attachment text the same way.
@@ -264,22 +267,59 @@ PaddleOCR models into `ai-service/app/models/paddlex`. None are in the image.
 
 ## Running it
 
+### Prerequisites
+
+- Docker Engine with Compose v2 (Docker Desktop on Windows or macOS).
+- About 6 GB of free disk for the images and model weights, and 8 GB of RAM.
+- Free host ports: `3001`, `8001`, `8002`, `8025`, `5435` (Postgres) and
+  `6379` (Redis). If another Postgres already listens on the chosen port,
+  change `POSTGRES_PORT` in the root `.env` and use the same value when
+  connecting from the host.
+
+### First start
+
+The root `.env` is read only by Compose; `backend/.env` is read by Laravel.
+Copy the templates before the first `up`:
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Set `POSTGRES_PASSWORD` in `.env` to a value of your choosing. Compose passes the
+root database settings into the backend, so `backend/.env` does not need to
+match for a Docker-only run; if you run Laravel natively instead, point
+`DB_HOST` at `127.0.0.1` and `DB_PORT` at `POSTGRES_PORT`.
+
 ```bash
 docker compose up -d --build
+docker compose exec backend php artisan key:generate
 docker compose exec backend php artisan migrate
 ```
 
-| Service    | URL                     |
-| ---------- | ----------------------- |
-| Frontend   | http://localhost:3001   |
-| API        | http://localhost:8001   |
-| AI service | http://localhost:8002   |
-| Mailpit    | http://localhost:8025   |
+The `knowledge_manager` database itself is created by the Postgres image on
+first boot from `POSTGRES_DB`; `migrate` creates the tables. The frontend, API
+and AI service then come up at:
 
-Redis (http://localhost:6379) and Ollama (http://localhost:11434) are optional
-and off by default; Redis backs the cache and queue, and Ollama can answer `/rag`
-in place of the bundled Qwen checkpoint. Start Ollama with
-`docker compose --profile ollama up -d`.
+| Service         | URL                              |
+| --------------- | -------------------------------- |
+| Frontend        | http://localhost:3001            |
+| API             | http://localhost:8001            |
+| AI service      | http://localhost:8002            |
+| Mailpit         | http://localhost:8025            |
+| Postgres (host) | `localhost:5435`                 |
+| Redis (host)    | `localhost:6379`                 |
+
+Optional demo data: `docker compose exec backend php artisan db:seed` creates
+four users (password `Password@123`). The knowledge-entry seeder additionally
+needs a workspace, so create one in the UI first.
+
+Redis is started by default and used for the cache (`CACHE_STORE=redis` in
+Compose); the queue stays on Postgres. Set `CACHE_STORE=database` to keep the
+cache in Postgres instead. Ollama is the only profile-gated service and is off
+by default; it can answer `/rag` in place of the bundled Qwen checkpoint. Start
+it with `docker compose --profile ollama up -d`.
 
 The backend container runs nginx, PHP-FPM and a queue worker under supervisord,
 since summaries, OCR and assistant answers are produced by queued jobs.
@@ -287,18 +327,40 @@ since summaries, OCR and assistant answers are produced by queued jobs.
 First start pulls roughly 3 GB of model weights and takes a few minutes.
 PaddleOCR downloads its models on the first image OCR rather than at startup.
 
+Stop the stack with `docker compose down`. Add `-v` to also delete the volumes,
+which drops the database and uploaded documents.
+
+### Troubleshooting
+
+- **`migrate` cannot connect**: wait for `docker compose ps` to report the
+  Postgres container healthy; the backend starts only after its healthcheck.
+- **Port already in use**: another Postgres (for example a native install on
+  `5434`) is bound to the same port. Change `POSTGRES_PORT` and reconnect.
+- **First search or answer returns 504**: the embedding or generation model is
+  still loading. The first call after a container start pays the model load;
+  see the timeout ordering under [Performance notes](#performance-notes).
+- **Queued work never finishes**: check `docker compose logs backend` for the
+  supervisord queue worker, and that `QUEUE_CONNECTION` is `database`.
+
 ## Tests
 
 ```bash
-cd backend    && php artisan test      # 387 tests (5 need Postgres)
-cd ai-service && python -m pytest -q   # 107 tests
-cd frontend   && npx tsc --noEmit && npm run lint
+cd backend    && php artisan test
+cd ai-service && python -m pytest -q
+cd frontend   && npm run typecheck && npm run lint
 ```
 
 Backend tests run on in-memory SQLite. Vector search only exists on Postgres, so
 retrieval falls back to a keyword match there and the tests exercise that path
-rather than pretending otherwise; the five Postgres-only tests skip unless
-`DB_CONNECTION=pgsql`.
+rather than pretending otherwise; the Postgres-only tests skip unless
+`DB_CONNECTION=pgsql`. `backend/phpunit.postgres.xml` opts into a real Postgres
+and expects a separate `knowledge_manager_testing` database:
+
+```bash
+cd backend && ./vendor/bin/phpunit -c phpunit.postgres.xml
+```
+
+The frontend has no test runner: the command above type-checks and lints.
 
 ## Performance notes
 
@@ -330,9 +392,15 @@ load, which otherwise killed the first request of a session as a bare 504.
 
 ## Configuration
 
-`backend/.env.example` documents the backend. The AI service reads its own
-settings in `ai-service`; see [`doc/AI_SERVICE.md`](doc/AI_SERVICE.md) for the
-model details and `docker-compose.yml` for the values passed into the containers.
+Three env files are involved: the root `.env` (Compose only: database name,
+user, password and host port), `backend/.env` (Laravel and AI budgets, see
+`backend/.env.example`), and `frontend/.env` (`NEXT_PUBLIC_API_URL`). All three
+are gitignored; only the `.example` templates are committed. Do not commit real
+secrets.
+
+The AI service reads its own settings in `ai-service`; see
+[`doc/AI_SERVICE.md`](doc/AI_SERVICE.md) for the model details and
+`docker-compose.yml` for the values passed into the containers.
 
 OCR settings are `OCR_LANG`, `OCR_MAX_IMAGE_BYTES` and `PADDLE_PDX_CACHE_HOME`,
 passed through `docker-compose.yml`. See [`doc/ocr.md`](doc/ocr.md).
