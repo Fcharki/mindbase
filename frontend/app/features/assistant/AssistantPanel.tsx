@@ -69,6 +69,68 @@ function toTurn(message: AskAnswer): Turn {
   };
 }
 
+interface SourceGroup {
+  entryId: number;
+  title: string | null;
+  sources: AskSource[];
+}
+
+/**
+ * Retrieval returns chunks, so one entry usually contributes several passages.
+ * Group them so the panel lists each entry once, in the order it was cited,
+ * while keeping every passage available to open.
+ */
+function groupSourcesByEntry(sources: AskSource[]): SourceGroup[] {
+  const groups = new Map<number, SourceGroup>();
+
+  for (const source of sources) {
+    const group = groups.get(source.entry_id);
+
+    if (group) {
+      group.sources.push(source);
+    } else {
+      groups.set(source.entry_id, {
+        entryId: source.entry_id,
+        title: source.title,
+        sources: [source],
+      });
+    }
+  }
+
+  return Array.from(groups.values());
+}
+
+function sourceKey(source: AskSource, index: number): string {
+  return String(source.chunk_id ?? source.position ?? index);
+}
+
+/**
+ * Positions restart for each source kind, so a summary and the first content
+ * chunk are both position 0. Label them by kind so the list does not show two
+ * "Passage 1"s under the same entry.
+ */
+function passageLabel(source: AskSource): string | null {
+  if (source.position === undefined) {
+    return null;
+  }
+
+  const position = source.position + 1;
+
+  if (source.source === "summary") {
+    return "Summary";
+  }
+
+  if (source.source?.startsWith("document:")) {
+    return `Attachment, passage ${position}`;
+  }
+
+  if (source.source?.startsWith("image:")) {
+    return `Image, passage ${position}`;
+  }
+
+  return `Passage ${position}`;
+}
+
 export function AssistantPanel({
   workspaceId,
 }: {
@@ -400,6 +462,7 @@ export function AssistantPanel({
               const stillWorking = turn.streaming || (pending && turn.answer?.status === "pending");
               const text = turn.streamed || turn.answer?.answer || "";
               const ready = turn.answer?.status === "ready" && text !== "";
+              const sourceGroups = groupSourcesByEntry(turn.answer?.sources ?? []);
 
               return (
                 <div key={turn.id} className="flex flex-col gap-3">
@@ -432,31 +495,43 @@ export function AssistantPanel({
                         {text}
                       </p>
 
-                      {turn.answer?.sources && turn.answer.sources.length > 0 && (
+                      {sourceGroups.length > 0 && (
                         <details className="mt-3 border-t border-[#D7D5DE] pt-3 dark:border-[#34343c]">
                           <summary className="cursor-pointer text-xs font-medium text-[#686873] dark:text-[#b0b0b9]">
-                            {turn.answer.sources.length}{" "}
-                            {turn.answer.sources.length === 1
-                              ? "source"
-                              : "sources"}
+                            {sourceGroups.length}{" "}
+                            {sourceGroups.length === 1 ? "entry" : "entries"}
+                            {sourceGroups.length <
+                              (turn.answer?.sources.length ?? 0) &&
+                              ` (${turn.answer?.sources.length} passages)`}
                           </summary>
 
-                          <ul className="mt-2 flex flex-col gap-2">
-                            {turn.answer.sources.map((source, sourceIndex) => (
-                              <li key={sourceIndex}>
-                                <button
-                                  type="button"
-                                  onClick={() => setActiveSource(source)}
-                                  className="w-full rounded-md px-2 py-1.5 text-left text-xs leading-relaxed text-[#686873] transition hover:bg-[#E7E6ED] dark:text-[#b0b0b9] dark:hover:bg-[#2c2c33]"
-                                >
-                                  <span className="font-medium text-[#20202A] dark:text-[#ececf1]">
-                                    {source.title ?? "Untitled entry"}
-                                  </span>
-                                  {" - "}
-                                  {source.body.length > 160
-                                    ? `${source.body.slice(0, 160)}…`
-                                    : source.body}
-                                </button>
+                          <ul className="mt-2 flex flex-col gap-3">
+                            {sourceGroups.map((group) => (
+                              <li key={group.entryId}>
+                                <p className="px-2 text-xs font-medium text-[#20202A] dark:text-[#ececf1]">
+                                  {group.title ?? "Untitled entry"}
+                                </p>
+
+                                <ul className="mt-1 flex flex-col gap-1">
+                                  {group.sources.map((source, sourceIndex) => (
+                                    <li key={sourceKey(source, sourceIndex)}>
+                                      <button
+                                        type="button"
+                                        onClick={() => setActiveSource(source)}
+                                        className="w-full rounded-md px-2 py-1.5 text-left text-xs leading-relaxed text-[#686873] transition hover:bg-[#E7E6ED] dark:text-[#b0b0b9] dark:hover:bg-[#2c2c33]"
+                                      >
+                                        {passageLabel(source) && (
+                                          <span className="mr-1 text-[#9897A1] dark:text-[#8b8b94]">
+                                            {passageLabel(source)}:
+                                          </span>
+                                        )}
+                                        {source.body.length > 160
+                                          ? `${source.body.slice(0, 160)}…`
+                                          : source.body}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
                               </li>
                             ))}
                           </ul>
